@@ -1,0 +1,127 @@
+@font-face {
+    font-family: Inter;
+    src: url(/src/font/Inter-VariableFont_opsz\,wght.ttf);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Inter;
+}
+
+:root {
+    --primary-color: #FFCE21;
+}
+
+body {
+    display: grid;
+    height: 100vh;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: 1fr;
+    grid-template-areas: 
+    "sidebar main main main";
+}
+
+.sidebar {
+    display: flex;
+    justify-content: flex-start;
+    flex-direction: column;
+    grid-area: sidebar;
+    padding: 6vh 20px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 60px;
+}
+
+.logo h1 {
+    font-size: 48px;
+    color: var(--primary-color);
+}
+
+.logo p {
+    text-align: center;
+}
+
+.sidebar-options {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 12px;
+}
+
+.sidebar-options div {
+    font-size: 20px;
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+}
+
+.sidebar-options div:nth-last-child(2) {
+    margin-top: auto;
+}
+
+.main {
+    background-color: #f6f6f6;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    grid-area: main;
+}
+
+.input-values form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.input-block, .input-process {
+    display: grid;
+    gap: 8px;
+}
+
+.input-values input[type="number"], .input-values button {
+    border: #e0e0e0 2px solid;
+    background-color: white;
+    padding: 12px; 
+    border-radius: 4px;
+}
+
+.input-values button {
+    cursor: pointer;
+}
+
+.input-values input[type="number"] {
+    border: #e0e0e0 2px solid;
+}
+
+.input-values input[type="number"]:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.input-block button, .input-process button {
+    color: var(--primary-color);
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    gap: 4px;
+}
+
+.input-action {
+    display: flex; flex-direction: column;
+    grid-column: span 2;
+    gap: 12px;
+}
+
+.input-action button {font-weight: 500;}
+
+.input-action button[type="submit"] {
+    border: none;
+    background-color: var(--primary-color);
+}
