@@ -17,7 +17,7 @@
 body {
     display: grid;
     height: 100vh;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: auto 1fr;
     grid-template-rows: 1fr;
     grid-template-areas: 
     "sidebar main main main";
@@ -30,6 +30,87 @@ body {
     grid-area: sidebar;
     padding: 6vh 20px;
 }
+#sidebar {
+    box-sizing: border-box;
+    height: 100vh;
+    width: 280px;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    text-wrap: nowrap;
+    transition: 300ms ease-in-out;
+    overflow: hidden;
+}
+#sidebar.close {
+    padding: 6vh 5px;
+    width: 60px;
+}
+#sidebar svg {
+    flex-shrink: 0 ;
+}
+#sidebar .sidebar-options .active a {
+    color: white;
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    svg {
+        stroke: white;
+    }
+}
+#sidebar a, #sidebar .dropdown-btn {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    padding: 12px;
+    font-size: 20px;
+}
+#sidebar a p, #sidebar .dropdown-btn p {
+    flex-grow: 1;
+}
+#sidebar .sub-menu {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: 300ms ease-in-out;
+    
+    > div {
+        overflow: hidden;
+    }
+}
+#sidebar .sub-menu div a {
+    padding-left: 2em;
+}
+#sidebar .sub-menu.show {
+    grid-template-rows: 1fr;
+}
+
+.dropdown-btn {
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    font: inherit;
+    
+}
+.dropdown-btn svg {
+    transition: transform 200ms ease-in-out;
+}
+.rotate svg:last-child {
+    transform: rotate(180deg);
+}
+#toggle-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 1em;
+    border: none;
+    background: none;
+    cursor: pointer;
+
+    svg {
+        transition: transform 150ms ease-in-out;
+    }
+}
 
 .logo {
     display: flex;
@@ -38,14 +119,21 @@ body {
     gap: 12px;
     margin-bottom: 60px;
 }
-
+.logo h1.hidden{
+    color: white;
+}
+.hidden{
+    color: white;
+}
 .logo h1 {
     font-size: 48px;
     color: var(--primary-color);
+    text-wrap: nowrap;
 }
 
 .logo p {
     text-align: center;
+    text-wrap: nowrap;
 }
 
 .sidebar-options {
@@ -55,8 +143,7 @@ body {
     gap: 12px;
 }
 
-.sidebar-options div {
-    font-size: 20px;
+.sidebar-options div a {
     display: flex;
     gap: 8px;
     padding: 12px;
@@ -67,6 +154,7 @@ body {
 }
 
 .main {
+    position: relative;
     background-color: #f6f6f6;
     display: flex;
     justify-content: center;
