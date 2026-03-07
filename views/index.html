@@ -1,238 +1,77 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <link rel="stylesheet" href="../src/output.css" />
-        <title>Document</title>
-    </head>
-    <body>
-        <section class="sidebar">
-            <div class="logo">
-                <h1>OS-MV</h1>
-                <p>
-                    Operating System <br />
-                    Management Visualizer
-                </p>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../src/output.css">
+    <title>Document</title>
+</head>
+<body>
+    <section class="sidebar">
+        <div class="logo">
+            <h1>OS-MV</h1>
+            <p>Operating System <br> Management Visualizer</p>
+        </div>
+        <div class="sidebar-options">
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <p>Dashboard</p>
             </div>
-            <div class="sidebar-options">
-                <div>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard"
-                    >
-                        <rect width="7" height="9" x="3" y="3" rx="1" />
-                        <rect width="7" height="5" x="14" y="3" rx="1" />
-                        <rect width="7" height="9" x="14" y="12" rx="1" />
-                        <rect width="7" height="5" x="3" y="16" rx="1" />
-                    </svg>
-                    <p>Dashboard</p>
-                </div>
-                <div>
-                    <p>Single Mode</p>
-                </div>
-                <div>
-                    <p>Comparison Mode</p>
-                </div>
-                <div style="display: flex; align-items: center">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="36"
-                        height="36"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-circle-user-icon lucide-circle-user"
-                    >
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="10" r="3" />
-                        <path
-                            d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"
-                        />
-                    </svg>
-                    <div
-                        style="
-                            display: flex;
-                            flex-direction: column;
-                            gap: 4px;
-                            padding: 0;
-                        "
-                    >
-                        <p>Fluffybun</p>
-                        <p style="font-size: 12px; font-weight: 300">
-                            Clarence.luna651@gmail.com
-                        </p>
-                    </div>
-                </div>
-                <div>
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        class="lucide lucide-log-out-icon lucide-log-out"
-                    >
-                        <path d="m16 17 5-5-5-5" />
-                        <path d="M21 12H9" />
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    </svg>
-                    <p>Logout</p>
+            <div>
+                <p>Single Mode</p>
+            </div>
+            <div>
+                <p>Comparison Mode</p>
+            </div>
+            <div style="display: flex; align-items: center;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-icon lucide-circle-user"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                <div style="display: flex; flex-direction: column; gap: 4px; padding: 0;">
+                    <p>Fluffybun</p>
+                    <p style="font-size: 12px; font-weight: 300;">Clarence.luna651@gmail.com</p>
                 </div>
             </div>
-        </section>
-        <section class="main">
-            <div class="input-values">
-                <form>
-                    <div class="input-block">
-                        <input
-                            type="number"
-                            name="block"
-                            id="block 1"
-                            placeholder="Block 1"
-                        />
-                        <input
-                            type="number"
-                            name="block"
-                            id="block 2"
-                            placeholder="Block 2"
-                        />
-                        <input
-                            type="number"
-                            name="block"
-                            id="block 3"
-                            placeholder="Block 3"
-                        />
-                        <input
-                            type="number"
-                            name="block"
-                            id="block 4"
-                            placeholder="Block 4"
-                        />
-                        <button type="button">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-plus-icon lucide-plus"
-                            >
-                                <path d="M5 12h14" />
-                                <path d="M12 5v14" />
-                            </svg>
-                            Add New Block
-                        </button>
-                    </div>
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>
+                <p>Logout</p>
+            </div>
+        </div>
+    </section>
+    <section class="main">
+        <div class="input-values">
+            <form>
+                <div class="input-block">
+                    <input type="number" name="block" id="block 1" placeholder="Block 1">
+                    <input type="number" name="block" id="block 2" placeholder="Block 2">
+                    <input type="number" name="block" id="block 3" placeholder="Block 3">
+                    <input type="number" name="block" id="block 4" placeholder="Block 4">
+                    <button type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        Add New Block
+                    </button>
+                </div>
+                
+                <div class="input-process">
+                    <input type="number" name="process" id="block 1" placeholder="Process 1">
+                    <input type="number" name="process" id="block 2" placeholder="Process 2">
+                    <input type="number" name="process" id="block 3" placeholder="Process 3">
+                    <input type="number" name="process" id="block 4" placeholder="Process 4">
+                    <button type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        Add New Process
+                    </button>
+                </div>
 
-                    <div class="input-process">
-                        <input
-                            type="number"
-                            name="process"
-                            id="block 1"
-                            placeholder="Process 1"
-                        />
-                        <input
-                            type="number"
-                            name="process"
-                            id="block 2"
-                            placeholder="Process 2"
-                        />
-                        <input
-                            type="number"
-                            name="process"
-                            id="block 3"
-                            placeholder="Process 3"
-                        />
-                        <input
-                            type="number"
-                            name="process"
-                            id="block 4"
-                            placeholder="Process 4"
-                        />
-                        <button type="button">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-plus-icon lucide-plus"
-                            >
-                                <path d="M5 12h14" />
-                                <path d="M12 5v14" />
-                            </svg>
-                            Add New Process
-                        </button>
-                    </div>
-
-                    <div class="input-action">
-                        <button
-                            type="button"
-                            style="
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                gap: 8px;
-                            "
-                        >
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                width="16"
-                                height="16"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                class="lucide lucide-dices-icon lucide-dices"
-                            >
-                                <rect
-                                    width="12"
-                                    height="12"
-                                    x="2"
-                                    y="10"
-                                    rx="2"
-                                    ry="2"
-                                />
-                                <path
-                                    d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"
-                                />
-                                <path d="M6 18h.01" />
-                                <path d="M10 14h.01" />
-                                <path d="M15 6h.01" />
-                                <path d="M18 9h.01" />
-                            </svg>
-                            Random Values
-                        </button>
-                        <button type="submit">Start Simulation</button>
-                    </div>
-                </form>
-            </div>
-        </section>
-    </body>
+                <div class="input-action">
+                    <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
+                        Random Values
+                    </button>
+                    <button type="submit">
+                        Start Simulation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </section>
+</body>
 </html>
