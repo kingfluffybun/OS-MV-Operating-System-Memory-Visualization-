@@ -23,3 +23,18 @@ const toggleSubMenu = button => {
     button.nextElementSibling.classList.toggle('show');
     button.classList.toggle('rotate');
 }
+
+const toggleModalForm = () => {
+    const modalForm = document.getElementById('modal-form');
+    const openBtn = document.getElementById('open-form');
+    const closeBtn = document.getElementById('close-form');
+    const isOpen = modalForm.classList.toggle('show');
+
+    if (isOpen) {
+        openBtn.classList.add('hide');
+        closeBtn.classList.add('show');
+    } else {
+        openBtn.classList.remove('hide');
+        closeBtn.classList.remove('show');
+    }
+}
