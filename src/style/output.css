@@ -1,6 +1,6 @@
 @font-face {
     font-family: Inter;
-    src: url(/src/font/Inter-VariableFont_opsz\,wght.ttf);
+    src: url(font/Inter-VariableFont_opsz\,wght.ttf);
 }
 
 * {
@@ -57,6 +57,7 @@ body {
     }
 }
 #sidebar a, #sidebar .dropdown-btn {
+    color: black;
     text-decoration: none;
     display: flex;
     align-items: center;
@@ -71,7 +72,6 @@ body {
     display: grid;
     grid-template-rows: 0fr;
     transition: 300ms ease-in-out;
-    
     > div {
         overflow: hidden;
     }
@@ -129,11 +129,13 @@ body {
     font-size: 48px;
     color: var(--primary-color);
     text-wrap: nowrap;
+    transition: 300ms ease-in-out;
 }
 
 .logo p {
     text-align: center;
     text-wrap: nowrap;
+    transition: 300ms ease-in-out;
 }
 
 .sidebar-options {
@@ -166,6 +168,9 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
+    background: #f6f6f6;
+    padding: 50px;
+    border-radius: 5px;
 }
 
 .input-block, .input-process {
@@ -212,4 +217,58 @@ body {
 .input-action button[type="submit"] {
     border: none;
     background-color: var(--primary-color);
+}
+#modal-form {
+    transition: opacity 200ms ease-in-out;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    opacity: 0;
+    visibility: hidden;
+    z-index: 67;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+}
+#modal-form.show {
+    opacity: 1;
+    visibility: visible;
+}
+#open-form, #close-form {
+    transition: 200ms ease-in-out;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: none;
+}
+#open-form {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    z-index: 68;
+}
+#open-form.hide { 
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: scale(0.8);
+}
+#close-form {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 1001;
+}
+#close-form.show {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: scale(1);
 }
