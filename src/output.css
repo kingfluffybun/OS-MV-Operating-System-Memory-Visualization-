@@ -10,8 +10,12 @@
     font-family: Inter;
 }
 
+svg {
+    flex-shrink: 0;
+}
+
 :root {
-    --primary-color: #FFCE21;
+    --primary-color: #4CAF50;
 }
 
 body {
@@ -144,6 +148,7 @@ body {
 }
 
 .sidebar-options div a {
+    color: black;
     display: flex;
     gap: 8px;
     padding: 12px;
