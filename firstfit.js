@@ -1,37 +1,41 @@
-/**
- * FIRST FIT: FIXED PARTITION
- */
-function firstFitFixed(memoryBlocks, processSizes) {
-    let allocatedSize = 0;
-    let successfulAllocations = 0;
-    // Fixed the naming here: 'sum' and 'current' for clarity
-    let totalMemory = memoryBlocks.reduce((sum, current) => sum + current, 0);
-    let freeSize = totalMemory;
+function firstFitFixed(memBlockNum, processNum) {
+    let allocatedSize = 0;           
+    let successfulAllocations = 0;   
     let intFragmentation = 0;
-    
-    let status = new Array(memoryBlocks.length).fill("Free");
+    let totalMemory = memBlockNum.reduce((sum, current) => sum + current, 0);
+    let freeSize = totalMemory;
+    let status = new Array(memBlockNum.length).fill("Free");
     let allocationResults = [];
 
-    for (let countP = 0; countP < processSizes.length; countP++) {
-        let currentProcessSize = processSizes[countP];
+    // 2. Process Loop (Connector 'b' logic)
+    for (let countP = 0; countP < processNum.length; countP++) {
+        let currentProcessSize = processNum[countP];
         let allocated = false;
 
-        for (let countM = 0; countM < memoryBlocks.length; countM++) {
-            if (status[countM] === "Free" && currentProcessSize <= memoryBlocks[countM]) {
-                intFragmentation += (memoryBlocks[countM] - currentProcessSize);
-                status[countM] = "Occupied";
-                allocatedSize += currentProcessSize;
-                freeSize -= currentProcessSize;
-                successfulAllocations++;
+        // 3. Memory Block Loop (Connector 'a' logic)
+        for (let countM = 0; countM < memBlockNum.length; countM++) {
+            
+            // Flowchart check: Status[CountM] == "Occupied"?
+            if (status[countM] === "Free") {
                 
-                allocationResults.push({
-                    process: countP + 1,
-                    size: currentProcessSize,
-                    block: countM + 1,
-                    status: "Allocated"
-                });
-                allocated = true;
-                break; 
+                // Flowchart check: Process[CountP] <= MemoryBlock[CountM]?
+                if (currentProcessSize <= memBlockNum[countM]) {
+                    // Allocation logic from the large rectangle
+                    intFragmentation += (memBlockNum[countM] - currentProcessSize);
+                    status[countM] = "Occupied";
+                    allocatedSize += currentProcessSize;
+                    freeSize -= currentProcessSize;
+                    successfulAllocations++;
+                    
+                    allocationResults.push({
+                        process: countP + 1,
+                        size: currentProcessSize,
+                        block: countM + 1,
+                        status: "Allocated"
+                    });
+                    allocated = true;
+                    break; // Exit inner loop (Connector 'b')
+                }
             }
         }
 
@@ -51,48 +55,55 @@ function firstFitFixed(memoryBlocks, processSizes) {
     };
 }
 
-/**
- * FIRST FIT: DYNAMIC PARTITION WITH COMPACTION
- */
-function firstFitDynamicWithCompaction(memoryBlocks, processSizes) {
+function firstFitDynamic(memBlockNum, processNum) {
     let allocatedSize = 0;
     let successfulAllocations = 0;
-    let totalMemory = memoryBlocks.reduce((a, b) => a + b, 0);
+    let totalMemory = memBlockNum.reduce((sum, current) => sum + current, 0);
     let freeSize = totalMemory;
     
-    // Map initial blocks to objects to track status
-    let memory = memoryBlocks.map(size => ({ size, status: "Free" }));
+    // Track memory blocks as objects to follow "MemoryBlock[CountM] > 0"
+    let memory = memBlockNum.map(size => ({ size, status: "Free" }));
     let allocationResults = [];
 
-    for (let countP = 0; countP < processSizes.length; countP++) {
-        let currentProcessSize = processSizes[countP];
+    for (let countP = 0; countP < processNum.length; countP++) {
+        let currentProcessSize = processNum[countP];
         let allocated = false;
 
         for (let countM = 0; countM < memory.length; countM++) {
+            // Flowchart check: MemoryBlock[CountM] > 0 and size check
             if (memory[countM].status === "Free" && currentProcessSize <= memory[countM].size) {
+                
                 let originalSize = memory[countM].size;
+                
+                // Logic from the large rectangle in Dynamic Flowchart
                 memory[countM].size = currentProcessSize;
                 memory[countM].status = "Occupied";
-                
+
                 allocatedSize += currentProcessSize;
                 freeSize -= currentProcessSize;
                 successfulAllocations++;
 
+                // Dynamic Splitting (creating the "leftover" block)
                 let leftover = originalSize - currentProcessSize;
                 if (leftover > 0) {
                     memory.splice(countM + 1, 0, { size: leftover, status: "Free" });
                 }
 
-                allocationResults.push({ process: countP + 1, size: currentProcessSize, status: "Allocated" });
+                allocationResults.push({
+                    process: countP + 1,
+                    size: currentProcessSize,
+                    block: countM + 1,
+                    status: "Allocated"
+                });
                 allocated = true;
                 break;
             }
         }
 
+        // Check for Compaction (Decision: FreeSize >= Process[CountP])
         if (!allocated) {
             if (freeSize >= currentProcessSize) {
-                console.log(`\n[!] Compacting memory for Process ${countP + 1} (${currentProcessSize})...`);
-                
+                // Flowchart: Memory Compaction process
                 let totalFreeSpace = memory
                     .filter(m => m.status === "Free")
                     .reduce((sum, m) => sum + m.size, 0);
@@ -100,33 +111,23 @@ function firstFitDynamicWithCompaction(memoryBlocks, processSizes) {
                 memory = memory.filter(m => m.status === "Occupied");
                 memory.push({ size: totalFreeSpace, status: "Free" });
 
-                countP--; 
+                countP--; // Retry allocation for the same process (Back to 'a')
                 continue;
             } else {
-                allocationResults.push({ process: countP + 1, size: currentProcessSize, status: "Unallocated" });
+                allocationResults.push({
+                    process: countP + 1,
+                    size: currentProcessSize,
+                    block: "None",
+                    status: "Unallocated"
+                });
             }
         }
     }
 
-    return { results: allocationResults, stats: { successfulAllocations, allocatedSize, freeSize } };
+    return { 
+        results: allocationResults, 
+        stats: { successfulAllocations, allocatedSize, intFragmentation: 0, freeSize } 
+    };
 }
-
-// --- MAIN EXECUTION ---
-const blocks = [100, 500, 200, 300, 600];
-const processes = [212, 417, 112, 426];
-
-// Use spread operator [...] to pass copies so the functions don't interfere with each other
-const fixedOutput = firstFitFixed([...blocks], [...processes]);
-const dynamicOutput = firstFitDynamicWithCompaction([...blocks], [...processes]);
-
-console.log("\n========================================");
-console.log("       FIXED PARTITION RESULTS");
-console.log("========================================");
-console.log(`Success: ${fixedOutput.stats.successfulAllocations} | Frag: ${fixedOutput.stats.छात्राओं}`);
-console.table(fixedOutput.results);
-
-console.log("\n========================================");
-console.log("      DYNAMIC + COMPACTION RESULTS");
-console.log("========================================");
-console.log(`Success: ${dynamicOutput.stats.successfulAllocations} | Free: ${dynamicOutput.stats.freeSize}`);
-console.table(dynamicOutput.results);
+console.log("First Fit Fixed:", firstFitFixed([100, 500, 200, 300, 600], [212, 417, 112, 426]));
+console.log("First Fit Dynamic:", firstFitDynamic([100, 500, 200, 300, 600], [212, 417, 112, 426]));
