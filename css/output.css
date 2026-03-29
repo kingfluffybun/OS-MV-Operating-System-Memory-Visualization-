@@ -75,13 +75,12 @@ body {
     display: grid;
     grid-template-rows: 0fr;
     transition: 300ms ease-in-out;
-    
     > div {
         overflow: hidden;
     }
 }
 #sidebar .sub-menu div a {
-    padding-left: 2em;
+    padding-left: 1em;
 }
 #sidebar .sub-menu.show {
     grid-template-rows: 1fr;
