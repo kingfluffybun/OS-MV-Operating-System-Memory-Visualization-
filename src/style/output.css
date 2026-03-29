@@ -81,7 +81,7 @@ body {
     }
 }
 #sidebar .sub-menu div a {
-    padding-left: 1em;
+    padding-left: 2em;
 }
 #sidebar .sub-menu.show {
     grid-template-rows: 1fr;
