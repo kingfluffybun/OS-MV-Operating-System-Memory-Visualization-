@@ -121,6 +121,15 @@
                     justify-content: space-between;
                     align-items: center;
                     > p {font-size: 12px;}
+                    & [contenteditable="true"],
+                    .inline-editable {
+                        width: 70px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 6px;
+                        padding: 4px 6px;
+                        font-size: 12px;
+                        min-width: 60px;
+                    }
                 }
                 > .process-action {
                     display: flex;
