@@ -134,7 +134,7 @@ function stepThrough() {
 
 function startInterval() {
     clearInterval(autoInterval);
-    const sliderValue = 50;
+    const sliderValue = document.getElementById("slider").value;
     const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
     const baseDelay = 1000;
     const speed = baseDelay / multiplier;
