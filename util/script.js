@@ -45,7 +45,40 @@ const createProcessElement = (id, sizeKb) => {
 };
 
 const simulationContainer = document.querySelector('.simulation .container');
-let blockIdCounter = simulationContainer ? simulationContainer.querySelectorAll('.block').length + 1 : 1;
+const totalMemoryValue = document.getElementById('total-memory-value');
+
+const updateTotalMemory = () => {
+    const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block h2') : [];
+    const total = Array.from(blocks).reduce((sum, sizeElement) => {
+        const parsed = parseInt(sizeElement.textContent, 10);
+        return sum + (Number.isNaN(parsed) ? 0 : parsed);
+    }, 0);
+    if (totalMemoryValue) {
+        totalMemoryValue.textContent = `${total} KB`;
+    }
+};
+
+const renumberBlocks = () => {
+    const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
+    blocks.forEach((block, index) => {
+        const label = block.querySelector('p');
+        if (label) {
+            label.textContent = `Block ${index + 1}`;
+        }
+        block.id = `block-${index + 1}`;
+    });
+};
+
+const renumberProcesses = () => {
+    const processes = processContainer ? processContainer.querySelectorAll('.process') : [];
+    processes.forEach((process, index) => {
+        const label = process.querySelector('.process-content p:first-child');
+        if (label) {
+            label.textContent = `Process ${index + 1}`;
+        }
+        process.id = `process-${index + 1}`;
+    });
+};
 
 const createBlockElement = (id, sizeKb) => {
     const block = document.createElement('div');
@@ -65,6 +98,13 @@ const createBlockElement = (id, sizeKb) => {
     return block;
 };
 
+const removeElement = (button, selector) => {
+    const wrapper = button.closest(selector);
+    if (wrapper && wrapper.parentElement) {
+        wrapper.parentElement.removeChild(wrapper);
+    }
+};
+
 const add_process_btn = document.getElementById('add-process-btn');
 add_process_btn.addEventListener('click', () => {
     const processSizeInput = document.getElementById('process-size');
@@ -74,9 +114,9 @@ add_process_btn.addEventListener('click', () => {
         return;
     }
 
-    const newProcess = createProcessElement(processIdCounter, processSize);
+    const nextProcessId = processContainer.querySelectorAll('.process').length + 1;
+    const newProcess = createProcessElement(nextProcessId, processSize);
     processContainer.appendChild(newProcess);
-    processIdCounter += 1;
     processSizeInput.value = '';
 });
 
@@ -87,13 +127,127 @@ if (add_block_btn) {
             return;
         }
 
-        const newBlock = createBlockElement(blockIdCounter, 100);
+        const nextBlockId = simulationContainer.querySelectorAll('.block').length + 1;
+        const newBlock = createBlockElement(nextBlockId, 100);
         simulationContainer.insertBefore(newBlock, add_block_btn);
-        blockIdCounter += 1;
+        updateTotalMemory();
+    });
+}
+
+const startInlineEdit = (element, onCommit) => {
+    const oldText = element.textContent.trim();
+    const oldValue = parseInt(oldText, 10);
+    element.contentEditable = 'true';
+    element.dataset.editing = 'true';
+    element.classList.add('inline-editable');
+
+    const cleanup = commitValue => {
+        element.removeAttribute('contenteditable');
+        element.classList.remove('inline-editable');
+        delete element.dataset.editing;
+        element.removeEventListener('blur', onBlur);
+        element.removeEventListener('keydown', onKeyDown);
+        if (commitValue !== null) {
+            element.textContent = `${commitValue} KB`;
+            onCommit(commitValue);
+        } else {
+            element.textContent = `${oldValue} KB`;
+        }
+    };
+
+    const onBlur = () => {
+        const text = element.textContent.trim();
+        const parsed = parseInt(text, 10);
+        const valid = !Number.isNaN(parsed) && parsed > 0;
+        cleanup(valid ? parsed : null);
+    };
+
+    const onKeyDown = event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            element.blur();
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            element.textContent = `${oldValue} KB`;
+            cleanup(null);
+        }
+    };
+
+    element.addEventListener('blur', onBlur);
+    element.addEventListener('keydown', onKeyDown);
+    element.focus();
+
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+};
+
+const editProcess = process => {
+    const sizeEl = process.querySelector('.process-content p:last-child');
+    startInlineEdit(sizeEl, parsedSize => {
+    });
+};
+
+const editBlock = block => {
+    const sizeEl = block.querySelector('h2');
+    startInlineEdit(sizeEl, parsedSize => {
+        block.style.width = `${Math.max(100, parsedSize)}px`;
+        updateTotalMemory();
+    });
+};
+
+if (processContainer) {
+    processContainer.addEventListener('click', event => {
+        const target = event.target.closest('button');
+        if (!target) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (target.classList.contains('delete-process-btn')) {
+            removeElement(target, '.process');
+            renumberProcesses();
+            return;
+        }
+
+        if (target.classList.contains('edit-process-btn')) {
+            const process = target.closest('.process');
+            if (process) {
+                editProcess(process);
+            }
+        }
     });
 }
 
 if (simulationContainer) {
+    simulationContainer.addEventListener('click', event => {
+        const target = event.target.closest('button');
+        if (!target) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (target.classList.contains('delete-block-btn')) {
+            removeElement(target, '.block');
+            renumberBlocks();
+            updateTotalMemory();
+            return;
+        }
+
+        if (target.classList.contains('edit-block-btn')) {
+            const block = target.closest('.block');
+            if (block) {
+                editBlock(block);
+            }
+            return;
+        }
+    });
+
     simulationContainer.addEventListener('mouseover', event => {
         const block = event.target.closest('.block');
         if (block && simulationContainer.contains(block)) {
@@ -108,4 +262,8 @@ if (simulationContainer) {
             block.classList.remove('hovered');
         }
     });
+}
+
+if (simulationContainer) {
+    updateTotalMemory();
 }

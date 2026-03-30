@@ -112,7 +112,14 @@
                 }
                 > .process-action {
                     display: flex;
-                    gap: 8px; 
+                    gap: 8px;
+
+                    .edit-process-btn:hover svg {
+                        fill: yellow;
+                    }
+                    .delete-process-btn:hover svg {
+                        fill: red;
+                    }
                     > button {
                         display: flex;
                         align-items: center;
