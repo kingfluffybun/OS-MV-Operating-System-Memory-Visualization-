@@ -31,6 +31,18 @@
 }
 
 .simulation-controls {
+    button {
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 1em;
+        font-size: 16px;
+        cursor: pointer;
+    }
+}
+
+.simulation-controls {
     display: grid;
     padding: 16px 0 16px 0;
     grid-template-columns: 1fr 1fr 1fr 1.5fr;
@@ -153,18 +165,14 @@
         overflow-x: auto;
         gap: 10px;
         > .block, .add-block {
-            flex: 0 0 auto;
-            min-width: 100px;
+            min-width: 120px;
             border-radius: 12px;
             height: 100%;
             padding: 12px;
             position: relative;
             > p {font-weight: 200; font-size: 12px;}
             > h2 {
-                width: 80px;
-                display: block;
-                margin: 0 auto;
-                font-size: 1rem;
+                font-size: 1rem; 
                 text-align: center;
                 place-self: center;
             }
@@ -175,13 +183,11 @@
             display: grid;
             grid-template-rows: 1fr 1fr 1fr;
         }
-        .block .process-action {
+        .process-action {
             border: none;
             position: absolute;
-            top: 10px; right: 10px;
+            top: 8px; right: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 8px;
             opacity: 0;
             transform: translateY(8px);
             transition: opacity 180ms ease, transform 180ms ease;
@@ -199,20 +205,8 @@
             border-radius: 8px;
             padding: 4px;
         }
-        .inline-edit-input,
-        .block .inline-editable,
-        .process-content .inline-editable {
-            width: 80px;
-            border: none;
-            outline: none;
-            background: transparent;
-            padding: 4px 6px;
-            font-size: auto;
-        }
-        .block .process-action > .edit-block-btn:hover svg {
-            fill: yellow;
-        }.block .process-action > .delete-block-btn:hover svg {
-            fill: red;
+        .block .process-action > button:hover svg {
+            stroke: var(--primary-color);
         }
         .add-block {
             cursor: pointer;
@@ -229,9 +223,7 @@
                 border: #4CAF50 2px solid;
                 /* background-color: #4CAF50; */
                 border-radius: 50%;
-                > svg {
-                    color: var(--primary-color);
-                }
+                > svg {color: var(--primary-color);}
             }
         }
     }
