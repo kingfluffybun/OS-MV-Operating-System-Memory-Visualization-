@@ -153,6 +153,7 @@
         overflow-x: auto;
         gap: 10px;
         > .block, .add-block {
+            flex: 0 0 auto;
             min-width: 100px;
             border-radius: 12px;
             height: 100%;
@@ -160,7 +161,10 @@
             position: relative;
             > p {font-weight: 200; font-size: 12px;}
             > h2 {
-                font-size: 1rem; 
+                width: 80px;
+                display: block;
+                margin: 0 auto;
+                font-size: 1rem;
                 text-align: center;
                 place-self: center;
             }
@@ -199,10 +203,11 @@
         .block .inline-editable,
         .process-content .inline-editable {
             width: 80px;
-            border: 1px solid #cbd5e1;
-            border-radius: 6px;
+            border: none;
+            outline: none;
+            background: transparent;
             padding: 4px 6px;
-            font-size: 12px;
+            font-size: auto;
         }
         .block .process-action > .edit-block-btn:hover svg {
             fill: yellow;

@@ -45,7 +45,28 @@ const createProcessElement = (id, sizeKb) => {
 };
 
 const simulationContainer = document.querySelector('.simulation .container');
-let blockIdCounter = simulationContainer ? simulationContainer.querySelectorAll('.block').length + 1 : 1;
+
+const renumberBlocks = () => {
+    const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
+    blocks.forEach((block, index) => {
+        const label = block.querySelector('p');
+        if (label) {
+            label.textContent = `Block ${index + 1}`;
+        }
+        block.id = `block-${index + 1}`;
+    });
+};
+
+const renumberProcesses = () => {
+    const processes = processContainer ? processContainer.querySelectorAll('.process') : [];
+    processes.forEach((process, index) => {
+        const label = process.querySelector('.process-content p:first-child');
+        if (label) {
+            label.textContent = `Process ${index + 1}`;
+        }
+        process.id = `process-${index + 1}`;
+    });
+};
 
 const createBlockElement = (id, sizeKb) => {
     const block = document.createElement('div');
@@ -65,6 +86,13 @@ const createBlockElement = (id, sizeKb) => {
     return block;
 };
 
+const removeElement = (button, selector) => {
+    const wrapper = button.closest(selector);
+    if (wrapper && wrapper.parentElement) {
+        wrapper.parentElement.removeChild(wrapper);
+    }
+};
+
 const add_process_btn = document.getElementById('add-process-btn');
 add_process_btn.addEventListener('click', () => {
     const processSizeInput = document.getElementById('process-size');
@@ -74,9 +102,9 @@ add_process_btn.addEventListener('click', () => {
         return;
     }
 
-    const newProcess = createProcessElement(processIdCounter, processSize);
+    const nextProcessId = processContainer.querySelectorAll('.process').length + 1;
+    const newProcess = createProcessElement(nextProcessId, processSize);
     processContainer.appendChild(newProcess);
-    processIdCounter += 1;
     processSizeInput.value = '';
 });
 
@@ -87,18 +115,11 @@ if (add_block_btn) {
             return;
         }
 
-        const newBlock = createBlockElement(blockIdCounter, 100);
+        const nextBlockId = simulationContainer.querySelectorAll('.block').length + 1;
+        const newBlock = createBlockElement(nextBlockId, 100);
         simulationContainer.insertBefore(newBlock, add_block_btn);
-        blockIdCounter += 1;
     });
 }
-
-const removeElement = (button, selector) => {
-    const parent = button.closest(selector);
-    if (parent) {
-        parent.remove();
-    }
-};
 
 const startInlineEdit = (element, onCommit) => {
     const oldText = element.textContent.trim();
@@ -175,6 +196,7 @@ if (processContainer) {
 
         if (target.classList.contains('delete-process-btn')) {
             removeElement(target, '.process');
+            renumberProcesses();
             return;
         }
 
@@ -198,6 +220,7 @@ if (simulationContainer) {
 
         if (target.classList.contains('delete-block-btn')) {
             removeElement(target, '.block');
+            renumberBlocks();
             return;
         }
 
