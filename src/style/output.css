@@ -1,11 +1,6 @@
 @font-face {
     font-family: Inter;
-    src: url(../font/Inter-VariableFont_opsz\,wght.ttf);
-}
-
-@font-face {
-    font-family: Terminus;
-    src: url(../font/TerminusTTFWindows-4.49.3.ttf);
+    src: url(font/Inter-VariableFont_opsz\,wght.ttf);
 }
 
 * {
@@ -30,7 +25,6 @@ body {
     grid-template-rows: 1fr;
     grid-template-areas: 
     "sidebar main main main";
-    overflow: hidden;
 }
 
 .sidebar {
@@ -87,8 +81,7 @@ body {
     }
 }
 #sidebar .sub-menu div a {
-    padding-left: 1em;
-    margin-bottom: 12px;
+    padding-left: 2em;
 }
 #sidebar .sub-menu.show {
     grid-template-rows: 1fr;
@@ -101,7 +94,7 @@ body {
     background: none;
     border: none;
     font: inherit;
-    margin-bottom: 12px;
+    
 }
 .dropdown-btn svg {
     transition: transform 200ms ease-in-out;
@@ -117,6 +110,7 @@ body {
     border: none;
     background: none;
     cursor: pointer;
+
     svg {
         transition: transform 150ms ease-in-out;
     }
@@ -152,7 +146,6 @@ body {
     display: flex;
     flex-direction: column;
     height: 100%;
-    flex-grow: 1;
     gap: 12px;
 }
 
