@@ -1,5 +1,12 @@
 :root {
     --primary-color: #4CAF50;
+    --error-color: #E26465;
+    --warning-color: #fae39f;
+    --success-color: #74d99f;
+}
+
+svg {
+    transition: all 200ms ease;
 }
 
 .main-grid {
@@ -95,11 +102,11 @@
             }
             > button {
                 cursor: pointer;
-                color: white;
                 padding: 4px;
+                min-width: 36px;
                 border: none;
-                background-color: var(--primary-color);
-            }
+            } #add-process-btn {background-color: var(--primary-color); color: white;}
+            #randomize-value {background-color: white; color: black;}
         } > .process-container {
             display: flex;
             flex-direction: column;
@@ -119,13 +126,13 @@
                 > .process-content {
                     display: flex;
                     width: 100%;
-                    justify-content: space-between;
                     align-items: center;
                     > p {font-size: 12px;}
+                    > p:first-child {margin-right: auto;}
                     & [contenteditable="true"],
                     .inline-editable {
                         width: 70px;
-                        border: 1px solid #cbd5e1;
+                        border: none;
                         border-radius: 6px;
                         padding: 4px 6px;
                         font-size: 12px;
@@ -135,25 +142,15 @@
                 > .process-action {
                     display: flex;
                     gap: 8px;
-
-                    .edit-process-btn:hover svg {
-                        fill: yellow;
-                    }
-                    .delete-process-btn:hover svg {
-                        fill: red;
-                    }
+                    .edit-process-btn:hover svg {stroke: #F2911B;}
+                    .delete-process-btn:hover svg {stroke: var(--error-color);}
                     > button {
                         display: flex;
                         align-items: center;
                         background: transparent;
                         border: none;
                     }
-                    button.edit-process-btn:hover {
-                        cursor: pointer;
-                    }
-                    button.delete-process-btn:hover {
-                        cursor: pointer;
-                    }
+                    button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
                 }
             }
         }
@@ -171,10 +168,11 @@
             padding: 12px;
             position: relative;
             > p {font-weight: 200; font-size: 12px;}
-            > h2 {
-                font-size: 1rem; 
-                text-align: center;
-                place-self: center;
+            > h2 {font-size: 1rem; }
+            > .block-size {
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
         } .block {
             background-color: white;
