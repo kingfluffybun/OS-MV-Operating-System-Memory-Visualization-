@@ -190,6 +190,8 @@ svg {
             transform: translateY(8px);
             transition: opacity 180ms ease, transform 180ms ease;
             pointer-events: none;
+            > .edit-block-btn svg:hover {stroke: #F2911B;}
+            > .delete-block-btn svg:hover {stroke: var(--error-color);}
         }
         .block:hover .process-action,
         .block.hovered .process-action {
@@ -198,13 +200,11 @@ svg {
             pointer-events: auto;
         }
         .block .process-action > button {
+            cursor: pointer;
             background: rgba(255,255,255,0.9);
             border: none;
             border-radius: 8px;
             padding: 4px;
-        }
-        .block .process-action > button:hover svg {
-            stroke: var(--primary-color);
         }
         .add-block {
             cursor: pointer;
@@ -218,10 +218,19 @@ svg {
                 justify-content: center;
                 width: 32px; height: 32px;
                 padding: 8px;
-                border: #4CAF50 2px solid;
-                /* background-color: #4CAF50; */
-                border-radius: 50%;
+                /* border: #4CAF50 2px solid;
+                background-color: #4CAF50;
+                border-radius: 50%; */
                 > svg {color: var(--primary-color);}
+            }
+        } .add-block:hover {
+            transition: all 250ms ease;
+            border-style: solid;
+            background-color: var(--primary-color);
+            border-bottom: #39833C 8px solid;
+            > div {
+                /* border-color: white; */
+                > svg {color: white;}
             }
         }
     }
