@@ -10,6 +10,7 @@
     grid-template-rows: auto minmax(0, 1.25fr) minmax(0, 1fr);
     padding: 48px;
     gap: 20px;
+    position: relative;
 }
 
 .container {
@@ -109,10 +110,26 @@
                     justify-content: space-between;
                     align-items: center;
                     > p {font-size: 12px;}
+                    & [contenteditable="true"],
+                    .inline-editable {
+                        width: 70px;
+                        border: 1px solid #cbd5e1;
+                        border-radius: 6px;
+                        padding: 4px 6px;
+                        font-size: 12px;
+                        min-width: 60px;
+                    }
                 }
                 > .process-action {
                     display: flex;
-                    gap: 8px; 
+                    gap: 8px;
+
+                    .edit-process-btn:hover svg {
+                        fill: yellow;
+                    }
+                    .delete-process-btn:hover svg {
+                        fill: red;
+                    }
                     > button {
                         display: flex;
                         align-items: center;
@@ -136,6 +153,7 @@
         overflow-x: auto;
         gap: 10px;
         > .block, .add-block {
+            flex: 0 0 auto;
             min-width: 100px;
             border-radius: 12px;
             height: 100%;
@@ -143,7 +161,10 @@
             position: relative;
             > p {font-weight: 200; font-size: 12px;}
             > h2 {
-                font-size: 1rem; 
+                width: 80px;
+                display: block;
+                margin: 0 auto;
+                font-size: 1rem;
                 text-align: center;
                 place-self: center;
             }
@@ -178,8 +199,20 @@
             border-radius: 8px;
             padding: 4px;
         }
-        .block .process-action > button:hover svg {
-            stroke: var(--primary-color);
+        .inline-edit-input,
+        .block .inline-editable,
+        .process-content .inline-editable {
+            width: 80px;
+            border: none;
+            outline: none;
+            background: transparent;
+            padding: 4px 6px;
+            font-size: auto;
+        }
+        .block .process-action > .edit-block-btn:hover svg {
+            fill: yellow;
+        }.block .process-action > .delete-block-btn:hover svg {
+            fill: red;
         }
         .add-block {
             cursor: pointer;
@@ -196,7 +229,9 @@
                 border: #4CAF50 2px solid;
                 /* background-color: #4CAF50; */
                 border-radius: 50%;
-                > svg {color: var(--primary-color);}
+                > svg {
+                    color: var(--primary-color);
+                }
             }
         }
     }
