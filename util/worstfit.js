@@ -25,27 +25,27 @@ const memorySimulator = {
         return newHead;
     },
 
-    bestFitFixed(memoryHead, processes) {
-        const head = this.cloneLinkedMemory(memoryHead);
+    worstFitFixed(memoryHead, processes) {
+        const head = memoryHead;
         const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
         const results = {};
 
         processes.forEach((size, i) => {
             const pId = `process ${stepIndex + 1}`;
 
-            let bestBlock = null;
+            let worstBlock = null;
             for (let block = head; block; block = block.next) {
                 if (block.status === "Free" && size <= block.size) {
-                    if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
+                    if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
                 }
             }
 
-            if (bestBlock) {
-                stats.intFragmentation += bestBlock.size - size;
+            if (worstBlock) {
+                stats.intFragmentation += worstBlock.size - size;
                 stats.allocatedSize += size;
                 stats.successfulAllocations++;
-                bestBlock.status = "Occupied";
-                results[pId] = { size, block: bestBlock.id, status: "Allocated" };
+                worstBlock.status = "Occupied";
+                results[pId] = { size, block: worstBlock.id, status: "Allocated" };
             } else {
                 results[pId] = { size, block: "None", status: "Unallocated" };
             }
@@ -54,8 +54,8 @@ const memorySimulator = {
         return { results, stats };
     },
     
-    bestFitDynamic(memoryHead, processes) {
-    const head = this.cloneLinkedMemory(memoryHead);
+    worstFitDynamic(memoryHead, processes) {
+    const head = memoryHead;
     const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
     const results = {};
 
@@ -67,20 +67,20 @@ const memorySimulator = {
     processes.forEach((size, i) => {
         const pId = `process ${stepIndex + 1}`;
 
-        // Find best fit block
-        let bestBlock = null;
+        // Find worst fit block
+        let worstBlock = null;
         for (let block = head; block; block = block.next) {
             if (block.status === "Free" && size <= block.size) {
-                if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
+                if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
             }
         }
 
-        if (bestBlock) {
-            const leftover = bestBlock.size - size;
+        if (worstBlock) {
+            const leftover = worstBlock.size - size;
 
             // Allocate the block
-            bestBlock.size = size;
-            bestBlock.status = "Occupied";
+            worstBlock.size = size;
+            worstBlock.status = "Occupied";
 
             stats.allocatedSize += size;
             stats.successfulAllocations++;
@@ -91,12 +91,12 @@ const memorySimulator = {
                     id: splitId++,
                     size: leftover,
                     status: "Free",
-                    next: bestBlock.next 
+                    next: worstBlock.next 
                 };
-                bestBlock.next = newNode;
+                worstBlock.next = newNode;
             }
 
-            results[pId] = { size, block: bestBlock.id, status: "Allocated" };
+            results[pId] = { size, block: worstBlock.id, status: "Allocated" };
         } else {
             results[pId] = { size, block: "None", status: "Unallocated" };
         }
@@ -109,6 +109,29 @@ const memorySimulator = {
 const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
 const processes = [212, 417, 112, 426];
 let stepIndex = 0;
+let currentIntervalSpeed = null;
+
+function getSliderValue() {
+    const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
+    return slider ? Number(slider.value) : 50;
+}
+
+function getIntervalSpeed() {
+    const sliderValue = getSliderValue();
+    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
+    const baseDelay = 1000;
+    return baseDelay / multiplier;
+}
+
+function updateIntervalSpeed() {
+    const speed = getIntervalSpeed();
+    if (autoInterval && speed !== currentIntervalSpeed) {
+        clearInterval(autoInterval);
+        currentIntervalSpeed = speed;
+        autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+        console.log("Adjusted interval speed to:", currentIntervalSpeed, "ms");
+    }
+}
 
 function stepThrough() {
     if (stepIndex >= processes.length) {
@@ -116,17 +139,19 @@ function stepThrough() {
         clearInterval(autoInterval);
         return;
     }
+
+    updateIntervalSpeed();
     console.log("Allocating process:", processes[stepIndex]);
 
     if (Partition === "fixed") {
-        const resultFixed = memorySimulator.bestFitFixed(memory, [processes[stepIndex]]);
-        console.log("Fixed Best Fit Partition");
+        const resultFixed = memorySimulator.worstFitFixed(memory, [processes[stepIndex]]);
+        console.log("Fixed Worst Fit Partition");
         console.log(resultFixed);
     }
 
     if (Partition === "dynamic") {
-        const resultDynamic = memorySimulator.bestFitDynamic(memory, [processes[stepIndex]]);
-        console.log("Dynamic Best Fit Partition");
+        const resultDynamic = memorySimulator.worstFitDynamic(memory, [processes[stepIndex]]);
+        console.log("Dynamic Worst Fit Partition");
         console.log(resultDynamic);
     }
     stepIndex++;
@@ -134,12 +159,9 @@ function stepThrough() {
 
 function startInterval() {
     clearInterval(autoInterval);
-    const sliderValue = 50;
-    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
-    const baseDelay = 1000;
-    const speed = baseDelay / multiplier;
-    autoInterval = setInterval(stepThrough, speed);
-    console.log("Interval started at speed:", speed, "ms");
+    currentIntervalSpeed = getIntervalSpeed();
+    autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+    console.log("Interval started at speed:", currentIntervalSpeed, "ms");
 }
 
 let Partition = "fixed";

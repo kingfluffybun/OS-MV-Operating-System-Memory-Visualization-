@@ -134,17 +134,172 @@ const memorySimulator = {
         });
 
         return { results, stats };
+    },
+
+    nextFitFixedStep(memoryHead, processSize, lastBlock) {
+        let block = lastBlock || memoryHead;
+        const start = block;
+        let allocated = false;
+        let allocatedBlock = null;
+
+        while (block) {
+            if (block.status === "Free" && processSize <= block.size) {
+                block.status = "Occupied";
+                allocated = true;
+                allocatedBlock = block;
+                break;
+            }
+            block = block.next;
+        }
+
+        if (!allocated) {
+            block = memoryHead;
+            while (block && block !== start) {
+                if (block.status === "Free" && processSize <= block.size) {
+                    block.status = "Occupied";
+                    allocated = true;
+                    allocatedBlock = block;
+                    break;
+                }
+                block = block.next;
+            }
+        }
+
+        if (allocated) {
+            return {
+                result: { size: processSize, block: allocatedBlock.id, status: "Allocated" },
+                lastBlock: allocatedBlock
+            };
+        }
+
+        return { result: { size: processSize, block: "None", status: "Unallocated" }, lastBlock };
+    },
+
+    nextFitDynamicStep(memoryHead, processSize, lastBlock, nextSplitId) {
+        let block = lastBlock || memoryHead;
+        const start = block;
+        let allocated = false;
+        let allocatedBlock = null;
+        let splitId = nextSplitId;
+
+        const tryAllocate = (b) => {
+            if (b.status === "Free" && processSize <= b.size) {
+                const leftover = b.size - processSize;
+                b.size = processSize;
+                b.status = "Occupied";
+                if (leftover > 0) {
+                    b.next = { id: splitId++, size: leftover, status: "Free", next: b.next };
+                }
+                allocated = true;
+                allocatedBlock = b;
+                return true;
+            }
+            return false;
+        };
+
+        while (block) {
+            if (tryAllocate(block)) break;
+            block = block.next;
+        }
+
+        if (!allocated) {
+            block = memoryHead;
+            while (block && block !== start) {
+                if (tryAllocate(block)) break;
+                block = block.next;
+            }
+        }
+
+        if (allocated) {
+            return {
+                result: { size: processSize, block: allocatedBlock.id, status: "Allocated" },
+                lastBlock: allocatedBlock,
+                nextSplitId: splitId
+            };
+        }
+
+        return { result: { size: processSize, block: "None", status: "Unallocated" }, lastBlock, nextSplitId: splitId };
     }
 };
 
-// --- Execution ---
+let autoInterval = null;
+
+function getSliderValue() {
+    const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
+    return slider ? Number(slider.value) : 50;
+}
+
+function getIntervalSpeed() {
+    const sliderValue = getSliderValue();
+    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
+    const baseDelay = 1000;
+    return baseDelay / multiplier;
+}
+
+function updateIntervalSpeed() {
+    const speed = getIntervalSpeed();
+    if (autoInterval && speed !== currentIntervalSpeed) {
+        clearInterval(autoInterval);
+        currentIntervalSpeed = speed;
+        autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+        console.log("Adjusted interval speed to:", currentIntervalSpeed, "ms");
+    }
+}
+
 const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
+const memoryState = memorySimulator.cloneLinkedMemory(memory);
 const processes = [212, 417, 112, 426];
+let stepIndex = 0;
+let Partition = "fixed";
+let lastFixedBlock = memoryState;
+let lastDynamicBlock = memoryState;
+let nextSplitId = (() => {
+    let max = 0;
+    for (let n = memoryState; n; n = n.next) max = Math.max(max, n.id);
+    return max + 1;
+})();
+let currentIntervalSpeed = null;
 
-const fixed   = memorySimulator.nextFitFixed(memory, processes);
-console.log("NEXT FIT FIXED RESULTS:", fixed.results);
-console.log("NEXT FIT FIXED STATS:", fixed.stats + "\n");
+function stepThrough() {
+    if (stepIndex >= processes.length) {
+        console.log("Simulation complete");
+        clearInterval(autoInterval);
+        return;
+    }
 
-const dynamic = memorySimulator.nextFitDynamic(memory, processes);
-console.log("NEXT FIT DYNAMIC RESULTS:", dynamic.results);
-console.log("NEXT FIT DYNAMIC STATS:", dynamic.stats);
+    updateIntervalSpeed();
+
+    const processSize = processes[stepIndex];
+    console.log("Allocating process:", processSize);
+
+    if (Partition === "fixed") {
+        const result = memorySimulator.nextFitFixedStep(memoryState, processSize, lastFixedBlock);
+        lastFixedBlock = result.lastBlock;
+        console.log("Fixed Next Fit Partition");
+        console.log(result.result);
+    }
+
+    if (Partition === "dynamic") {
+        const result = memorySimulator.nextFitDynamicStep(memoryState, processSize, lastDynamicBlock, nextSplitId);
+        lastDynamicBlock = result.lastBlock;
+        nextSplitId = result.nextSplitId;
+        console.log("Dynamic Next Fit Partition");
+        console.log(result.result);
+    }
+
+    stepIndex++;
+}
+
+function startInterval() {
+    clearInterval(autoInterval);
+    currentIntervalSpeed = getIntervalSpeed();
+    autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+    console.log("Interval started at speed:", currentIntervalSpeed, "ms");
+}
+
+function stopInterval() {
+    clearInterval(autoInterval);
+    console.log("Interval stopped");
+}
+
+startInterval();
