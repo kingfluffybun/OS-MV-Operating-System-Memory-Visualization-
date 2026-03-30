@@ -45,6 +45,18 @@ const createProcessElement = (id, sizeKb) => {
 };
 
 const simulationContainer = document.querySelector('.simulation .container');
+const totalMemoryValue = document.getElementById('total-memory-value');
+
+const updateTotalMemory = () => {
+    const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block h2') : [];
+    const total = Array.from(blocks).reduce((sum, sizeElement) => {
+        const parsed = parseInt(sizeElement.textContent, 10);
+        return sum + (Number.isNaN(parsed) ? 0 : parsed);
+    }, 0);
+    if (totalMemoryValue) {
+        totalMemoryValue.textContent = `${total} KB`;
+    }
+};
 
 const renumberBlocks = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
@@ -118,6 +130,7 @@ if (add_block_btn) {
         const nextBlockId = simulationContainer.querySelectorAll('.block').length + 1;
         const newBlock = createBlockElement(nextBlockId, 100);
         simulationContainer.insertBefore(newBlock, add_block_btn);
+        updateTotalMemory();
     });
 }
 
@@ -182,6 +195,7 @@ const editBlock = block => {
     const sizeEl = block.querySelector('h2');
     startInlineEdit(sizeEl, parsedSize => {
         block.style.width = `${Math.max(100, parsedSize)}px`;
+        updateTotalMemory();
     });
 };
 
@@ -221,6 +235,7 @@ if (simulationContainer) {
         if (target.classList.contains('delete-block-btn')) {
             removeElement(target, '.block');
             renumberBlocks();
+            updateTotalMemory();
             return;
         }
 
@@ -247,4 +262,8 @@ if (simulationContainer) {
             block.classList.remove('hovered');
         }
     });
+}
+
+if (simulationContainer) {
+    updateTotalMemory();
 }
