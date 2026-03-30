@@ -93,7 +93,123 @@ if (add_block_btn) {
     });
 }
 
+const removeElement = (button, selector) => {
+    const parent = button.closest(selector);
+    if (parent) {
+        parent.remove();
+    }
+};
+
+const startInlineEdit = (element, onCommit) => {
+    const oldText = element.textContent.trim();
+    const oldValue = parseInt(oldText, 10);
+    element.contentEditable = 'true';
+    element.dataset.editing = 'true';
+    element.classList.add('inline-editable');
+
+    const cleanup = commitValue => {
+        element.removeAttribute('contenteditable');
+        element.classList.remove('inline-editable');
+        delete element.dataset.editing;
+        element.removeEventListener('blur', onBlur);
+        element.removeEventListener('keydown', onKeyDown);
+        if (commitValue !== null) {
+            element.textContent = `${commitValue} KB`;
+            onCommit(commitValue);
+        } else {
+            element.textContent = `${oldValue} KB`;
+        }
+    };
+
+    const onBlur = () => {
+        const text = element.textContent.trim();
+        const parsed = parseInt(text, 10);
+        const valid = !Number.isNaN(parsed) && parsed > 0;
+        cleanup(valid ? parsed : null);
+    };
+
+    const onKeyDown = event => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            element.blur();
+        }
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            element.textContent = `${oldValue} KB`;
+            cleanup(null);
+        }
+    };
+
+    element.addEventListener('blur', onBlur);
+    element.addEventListener('keydown', onKeyDown);
+    element.focus();
+
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+};
+
+const editProcess = process => {
+    const sizeEl = process.querySelector('.process-content p:last-child');
+    startInlineEdit(sizeEl, parsedSize => {
+    });
+};
+
+const editBlock = block => {
+    const sizeEl = block.querySelector('h2');
+    startInlineEdit(sizeEl, parsedSize => {
+        block.style.width = `${Math.max(100, parsedSize)}px`;
+    });
+};
+
+if (processContainer) {
+    processContainer.addEventListener('click', event => {
+        const target = event.target.closest('button');
+        if (!target) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (target.classList.contains('delete-process-btn')) {
+            removeElement(target, '.process');
+            return;
+        }
+
+        if (target.classList.contains('edit-process-btn')) {
+            const process = target.closest('.process');
+            if (process) {
+                editProcess(process);
+            }
+        }
+    });
+}
+
 if (simulationContainer) {
+    simulationContainer.addEventListener('click', event => {
+        const target = event.target.closest('button');
+        if (!target) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (target.classList.contains('delete-block-btn')) {
+            removeElement(target, '.block');
+            return;
+        }
+
+        if (target.classList.contains('edit-block-btn')) {
+            const block = target.closest('.block');
+            if (block) {
+                editBlock(block);
+            }
+            return;
+        }
+    });
+
     simulationContainer.addEventListener('mouseover', event => {
         const block = event.target.closest('.block');
         if (block && simulationContainer.contains(block)) {
