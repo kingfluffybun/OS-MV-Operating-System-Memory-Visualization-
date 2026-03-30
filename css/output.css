@@ -1,6 +1,11 @@
 @font-face {
     font-family: Inter;
-    src: url(font/Inter-VariableFont_opsz\,wght.ttf);
+    src: url(../font/Inter-VariableFont_opsz\,wght.ttf);
+}
+
+@font-face {
+    font-family: Terminus;
+    src: url(../font/TerminusTTFWindows-4.49.3.ttf);
 }
 
 * {
