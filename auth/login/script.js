@@ -4,8 +4,8 @@ async function handleUrlLogin() {
     const urlPassword = urlParams.get('password');
 
     if (urlUsername && urlPassword) {
-        document.getElementById('username').value = urlUsername;
-        document.getElementById('password').value = urlPassword;
+        document.getElementById('login-user').value = urlUsername;
+        document.getElementById('login-pass').value = urlPassword;
 
         const messageEl = document.getElementById('message');
         messageEl.textContent = 'Attempting login with URL parameters...';
@@ -14,25 +14,23 @@ async function handleUrlLogin() {
 
         if (result.success) {
             messageEl.textContent = 'Login successful! Redirecting...';
-            messageEl.style.color = 'green';
 
             setTimeout(() => {
                 location.href = '/';
             }, 1500);
         } else {
             messageEl.textContent = 'Login failed: ' + result.message;
-            messageEl.style.color = 'red';
         }
     }
 }
 
 handleUrlLogin();
 
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
+document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
+    const username = document.getElementById('login-user').value;
+    const password = document.getElementById('login-pass').value;
     const messageEl = document.getElementById('message');
 
     const result = await login(username, password);
@@ -46,6 +44,5 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         }, 1500);
     } else {
         messageEl.textContent = 'Login failed: ' + result.message;
-        messageEl.style.color = 'red';
     }
 });

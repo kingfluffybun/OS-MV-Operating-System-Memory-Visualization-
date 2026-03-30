@@ -1,9 +1,9 @@
 document.getElementById('regForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
-    const username = document.getElementById('username').value;
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
+    const username = document.getElementById('reg-user').value;
+    const password = document.getElementById('reg-pass').value;
+    const confirmPassword = document.getElementById('reg-confirm-pass').value;
     const messageEl = document.getElementById('message');
 
     if (password !== confirmPassword) {

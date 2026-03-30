@@ -46,12 +46,14 @@ async function initDB() {
 }
 
 function createTables() {
+    console.log('Creating tables if they do not exist...');
+
     db.run(`
         CREATE TABLE IF NOT EXISTS users (
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            user_role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
+            user_role TEXT DEFAULT 'user' CHECK(user_role IN ('user', 'admin')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
@@ -74,36 +76,9 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Register
 async function register(username, password) {
     await initDB();
-
-    if (!username || !password) {
-        return {
-            success: false,
-            message: 'Username and password are required'
-        };
-    }
-
-    if (password.length < 8) {
-        return {
-            success: false,
-            message: 'Password must be at least 8 characters'
-        };
-    }
-
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(password)) {
-        return {
-            success: false,
-            message: 'Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character'
-        };
-    }
-
-    if (username.length < 3) {
-        return {
-            success: false,
-            message: 'Username must be at least 3 characters'
-        };
-    }
 
     const hashedPassword = await hashPassword(password);
     
@@ -131,16 +106,17 @@ async function register(username, password) {
         saveDB();
         return {
             success: true,
-            message: 'User registered successfully'
+            message: 'Registration successful'
         };
     } catch (e) {
         return {
             success: false,
-            message: 'Error registering user: ' + e.message
+            message: e.message
         };
     }
 }
 
+// Login
 async function login(username, password) {
     await initDB();
 
@@ -185,7 +161,7 @@ async function login(username, password) {
         } else {
             return {
                 success: false,
-                message: 'Username mismatch'
+                message: 'Invalid username or password'
             };
         }
     } else {
@@ -195,6 +171,7 @@ async function login(username, password) {
         };
     }
 }
+
 
 function isLoggedIn() {
     return sessionStorage.getItem('currentUser') !== null;

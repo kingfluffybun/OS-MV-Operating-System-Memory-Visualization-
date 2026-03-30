@@ -6,134 +6,114 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <section class="container" id="container">
+        <!-- Sign Up -->
+        <section class="form-container sign-up-container">
+            <form action="#" id="reg-form">
 
-    <div class="container" id="container">
-        <div class="form-container sign-up-container">
-                <form action="#">
-                    <h1>Create Account</h1>
-                    
-                    <div class="input-group">
-                        <input type="text" id="reg-user" placeholder=" " required>
-                        <label for="reg-user">Username</label>
+                <h1>Create Account</h1>
+                
+                <!-- Username -->
+                <section class="input-group">
+                    <input type="text" id="reg-user" placeholder=" " required>
+                    <label for="reg-user">Username</label>
                     <div class="input-icon">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
-                </div>
+                </section>
 
-                            <div class="input-group">
-                                <input type="password" id="reg-pass" placeholder=" " required>
-                                <label for="reg-pass">Password</label>
-                            <div class="input-icon password-toggle" onclick="togglePassword(this)">
-                                <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
-                            <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                        </div>
+                <!-- Password -->
+                <section class="input-group">
+                    <input type="password" id="reg-pass" placeholder=" " required>
+                    <label for="reg-pass">Password</label>
+                    <div class="input-icon password-toggle" onclick="togglePassword(this)">
+                        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                        <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
                     </div>
-                
-                <ul class="requirements-list">
-                        <li id="reg-length">At least 8 characters</li>
-                        <li id="reg-case">Upper and lowercase letters</li>
-                        <li id="reg-number">At least one number</li>
-                        <li id="reg-special">One or more special characters</li>
-                        </ul>
+                </section>
 
+                <!-- Confirm Password -->
+                <section class="input-group">
+                    <input type="password" id="reg-confirm-pass" placeholder=" " required>
+                    <label for="reg-confirm-pass">Confirm Password</label>
+                    <div class="input-icon password-toggle" onclick="togglePassword(this)">
+                        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                        <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                </section>
 
-                    <button type="submit" class="primary-btn">Sign Up</button>
-                </form>
-            </div>
+                <!-- Error -->
+                <p id="message"></p>
 
-                <div class="form-container sign-in-container">
-                    <form action="#" id="login-form">
-                        <h1>Sign In</h1>
-                    
-                    <div class="input-group">
-                        <input type="text" id="login-user" placeholder=" " required>
-                        <label for="login-user">Username</label>
-                                <div class="input-icon">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                </div>
-                                </div>
+                <button type="submit" class="primary-btn">Sign Up</button>
 
-                        <div class="input-group">
-                            <input type="password" id="login-pass" placeholder=" " required>
-                            <label for="login-pass">Password</label>
-                            <div class="input-icon password-toggle" onclick="togglePassword(this)">
-                                <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
-                                    <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
-                            </div>
-                            </div>
-
-                        <a href="#" class="forgot-link" onclick="toggleForgot(true)">Forgot your password?</a>
-                        <button type="submit" class="primary-btn">Sign In</button>
-                </form>
-
-                <form action="#" id="forgot-form" style="display: none;">
-                    <h1>Forgot Password</h1>
-                    
-                        <div class="input-group">
-                                <input type="text" id="recovery-key" placeholder=" " required>
-                                <label for="recovery-key">Recovery key</label>
-                        </div>
-                
-                <button type="submit" class="primary-btn">Confirm Recovery Key</button>
-                <a href="#" class="forgot-link" onclick="toggleForgot(false)">Back to Login</a>
             </form>
-        </div>
+        </section>
 
-            <div class="overlay-container">
-                    <div class="overlay">
-                        <div class="overlay-panel overlay-left">
-                            <h1>Welcome Back!</h1>
-                            <button class="ghost-btn" id="signIn">Sign In</button>
+        <!-- Sign In -->
+        <section class="form-container sign-in-container">
+            <form action="#" id="login-form">
+
+                <h1>Sign In</h1>
+                
+                <!-- Username -->
+                <section class="input-group">
+                    <input type="text" id="login-user" name="username" placeholder=" " required>
+                    <label for="login-user">Username</label>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                     </div>
-                    <div class="overlay-panel overlay-right">
-                        <h1>Hello!</h1>
-                        <button class="ghost-btn" id="signUp">Sign Up</button>
+                </section>
+
+                <!-- Password -->
+                <section class="input-group">
+                    <input type="password" id="login-pass" name="password" placeholder=" " required>
+                    <label for="login-pass">Password</label>
+                    <div class="input-icon password-toggle" onclick="togglePassword(this)">
+                        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                        <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                </section>
+
+                <!-- Error -->
+                <p id="message"></p>
+
+                <a href="#forgot-password" class="forgot-link" onclick="toggleForgot(true)">Forgot your password?</a>
+                <button type="submit" class="primary-btn">Sign In</button>
+            </form>
+
+        <!-- Forgot Password -->
+            <form action="#forgot-password" id="forgot-form" style="display: none;">
+
+                <h1>Forgot Password</h1>
+                
+                <div class="input-group">
+                    <input type="text" id="recovery-key" placeholder=" " required>
+                    <label for="recovery-key">Recovery key</label>
+                </div>
+            
+                <button type="submit" class="primary-btn">Confirm Recovery Key</button>
+                <a href="#login" class="forgot-link" onclick="toggleForgot(false)">Back to Login</a>
+            </form>
+        </section>
+
+        <section class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Create Account</h1>
+                    <p>Already have an account? Click the button below.</p>
+                    <button class="ghost-btn" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>WELCOME BACK!</h1>
+                    <p>Don't have an account? Click the button below.</p>
+                    <button class="ghost-btn" id="signUp">Sign Up</button>
                 </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </section>
 
-    <script>
-        const container = document.getElementById('container');
-        const signUpButton = document.getElementById('signUp');
-        const signInButton = document.getElementById('signIn');
-        const loginForm = document.getElementById('login-form');
-        const forgotForm = document.getElementById('forgot-form');
-
-        signUpButton.addEventListener('click', () => {
-            container.classList.add("right-panel-active");
-            toggleForgot(false);
-            });
-
-            signInButton.addEventListener('click', () => {
-                container.classList.remove("right-panel-active");
-        });
-
-        function togglePassword(element) {
-            const input = element.parentElement.querySelector('input');
-                const eyeOff = element.querySelector('.eye-off');
-                const eyeOpen = element.querySelector('.eye-open');
-
-                if (input.type === "password") {
-                    input.type = "text";
-                    eyeOff.style.display = "none";
-                    eyeOpen.style.display = "block";
-            } else {
-                input.type = "password";
-                eyeOff.style.display = "block";
-                eyeOpen.style.display = "none";
-            }
-        }
-
-        function toggleForgot(show) {
-            if(show) {
-                loginForm.style.display = "none";
-                forgotForm.style.display = "flex";
-            } else {
-                loginForm.style.display = "flex";
-                forgotForm.style.display = "none";
-            }
-        }
-    </script>
+    <script src="../database/db.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
