@@ -30,6 +30,21 @@
 }
 
 .simulation-controls {
+<<<<<<< HEAD
+=======
+    button {
+        border: none;
+        background: transparent;
+        display: flex;
+        align-items: center;
+        gap: 1em;
+        font-size: 16px;
+        cursor: pointer;
+    }
+}
+
+.simulation-controls {
+>>>>>>> 923eec167e60f8aedf61f91a1646ff5cf955fdd7
     display: grid;
     padding: 16px 0 16px 0;
     grid-template-columns: 1fr 1fr 1fr 1.5fr;
