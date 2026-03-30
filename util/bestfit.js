@@ -91,7 +91,7 @@ const memorySimulator = {
                     id: splitId++,
                     size: leftover,
                     status: "Free",
-                    next: bestBlock.next
+                    next: bestBlock.next 
                 };
                 bestBlock.next = newNode;
             }
@@ -134,7 +134,7 @@ function stepThrough() {
 
 function startInterval() {
     clearInterval(autoInterval);
-    const sliderValue = 1;
+    const sliderValue = 50;
     const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
     const baseDelay = 1000;
     const speed = baseDelay / multiplier;
@@ -142,7 +142,7 @@ function startInterval() {
     console.log("Interval started at speed:", speed, "ms");
 }
 
-let Partition = "fixed";
+let Partition = "dynamic";
 startInterval();
 
 function stopInterval() {
