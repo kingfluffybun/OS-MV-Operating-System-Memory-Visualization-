@@ -420,6 +420,15 @@ const prepareSimulation = () => {
     resetBlocksUI();
     currentStep = 0;
     highlightCurrentProcess();
+
+    // Disable buttons during simulation
+    document.getElementById('add-block-btn').disabled = true;
+    document.getElementById('add-process-btn').disabled = true;
+    document.getElementById('randomize-value').disabled = true;
+    document.querySelectorAll('.process-action').forEach(action => action.style.display = 'none');
+    document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = true);
+    document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = true);
+
     return true;
 };
 
@@ -517,6 +526,14 @@ const runReset = () => {
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
     setTotalMemoryDisplay(0);
     appendConsoleMessage('Simulation reset.');
+
+    // Enable buttons after reset
+    document.getElementById('add-block-btn').disabled = false;
+    document.getElementById('add-process-btn').disabled = false;
+    document.getElementById('randomize-value').disabled = false;
+    document.querySelectorAll('.process-action').forEach(action => action.style.display = '');
+    document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = false);
+    document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = false);
 };
 
 const playBtn = document.getElementById('play-btn');
