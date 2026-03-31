@@ -62,7 +62,6 @@ h1 {
 form {
     background-color: #FFFFFF;
     display: flex;
-    align-items: center;
     justify-content: center;
     flex-direction: column;
     padding: 0 60px;
@@ -74,7 +73,7 @@ form {
     position: relative;
     width: 100%;
     max-width: 420px;
-    margin: 12px 0;
+    margin: 8px 0;
     display: flex;
     align-items: center;
     transition: transform 0.3s ease;
@@ -87,7 +86,7 @@ form {
 input {
     background-color: #f1f5f9;
     border: 2px solid transparent;
-    padding: 18px 55px 12px 20px;
+    padding: 18px 55px 18px 44px;
     width: 100%;
     font-size: 16px;
     font-weight: 500;
@@ -101,7 +100,7 @@ input {
 
 .input-group label {
     position: absolute;
-    left: 20px;
+    left: 40px;
     top: 50%;
     transform: translateY(-50%);
     color: #94a3b8;
@@ -114,12 +113,18 @@ input {
 
 input:focus + label,
 input:not(:placeholder-shown) + label {
-    top: 0;
+    top: -8px;
     font-size: 12px;
     color: #4CAF50;
     background-color: #fff;
     font-weight: 700;
-    transform: translateY(-50%) scale(0.9);
+    transform: translateY(100%);
+    transform: translateX(-20px);
+}
+
+input:not(:placeholder-shown) {
+    border-color: #4CAF50;
+    background-color: #fff;
 }
 
 input:focus {
@@ -128,9 +133,8 @@ input:focus {
     box-shadow: 0 10px 20px rgba(76, 175, 80, 0.1);
 }
 
-.input-icon {
+.input-icon, .password-toggle {
     position: absolute;
-    right: 20px;
     color: #94a3b8;
     display: flex;
     align-items: center;
@@ -141,9 +145,13 @@ input:focus {
     transition: 0.3s;
 }
 
-.input-group:focus-within .input-icon {
+input:not(:placeholder-shown) ~ .input-icon, input:not(:placeholder-shown) ~ .password-toggle {
     color: #4CAF50;
 }
+
+.input-icon {left: 16px;}
+.password-toggle {right: 16px;}
+.input-group:focus-within .input-icon, .input-group:focus-within .password-toggle {color: #4CAF50;}
 
 .password-toggle { 
     cursor: pointer; 
@@ -168,16 +176,24 @@ input:focus {
     font-size: 13px;
     color: #64748b;
     margin-bottom: 5px;
-    padding-left: 20px;
+    gap: 8px;
     position: relative;
     transition: 0.3s;
     display: flex;
     vertical-align: middle;
 }
 
+#pass-not-message-su {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: red;
+}
+
 .forgot-link {
     color: #64748b;
     font-size: 14px;
+    padding: 4px 0;
     text-decoration: none;
     margin: 15px 0;
     transition: 0.3s;
