@@ -118,6 +118,7 @@ body {
     background: none;
     cursor: pointer;
     svg {
+        color: var(--primary-color);
         transition: transform 150ms ease-in-out;
     }
 }

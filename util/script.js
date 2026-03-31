@@ -34,7 +34,8 @@ const createProcessElement = (id, sizeKb) => {
     process.innerHTML = `
         <div class="process-content">
             <p>Process ${id}</p>
-            <p>${sizeKb} KB</p>
+            <p>${sizeKb}</p>
+            <p>&nbsp;KB</p>
         </div>
         <div class="process-action">
             <button type="button" class="edit-process-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
@@ -88,7 +89,10 @@ const createBlockElement = (id, sizeKb) => {
     block.style.position = 'relative';
     block.innerHTML = `
         <p>Block ${id}</p>
-        <h2>${sizeKb} KB</h2>
+        <div class="block-size">
+            <h2>${sizeKb}</h2>
+            <h2>&nbsp;KB</h2>
+        </div>
         <div></div>
         <div class="process-action">
             <button type="button" class="edit-block-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
@@ -148,10 +152,10 @@ const startInlineEdit = (element, onCommit) => {
         element.removeEventListener('blur', onBlur);
         element.removeEventListener('keydown', onKeyDown);
         if (commitValue !== null) {
-            element.textContent = `${commitValue} KB`;
+            element.textContent = `${commitValue}`;
             onCommit(commitValue);
         } else {
-            element.textContent = `${oldValue} KB`;
+            element.textContent = `${oldValue}`;
         }
     };
 
@@ -186,7 +190,7 @@ const startInlineEdit = (element, onCommit) => {
 };
 
 const editProcess = process => {
-    const sizeEl = process.querySelector('.process-content p:last-child');
+    const sizeEl = process.querySelector('.process-content p:nth-child(2)');
     startInlineEdit(sizeEl, parsedSize => {
     });
 };

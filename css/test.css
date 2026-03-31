@@ -1,5 +1,12 @@
 :root {
     --primary-color: #4CAF50;
+    --error-color: #E26465;
+    --warning-color: #fae39f;
+    --success-color: #74d99f;
+}
+
+svg {
+    transition: all 200ms ease;
 }
 
 .main-grid {
@@ -95,11 +102,11 @@
             }
             > button {
                 cursor: pointer;
-                color: white;
                 padding: 4px;
+                min-width: 36px;
                 border: none;
-                background-color: var(--primary-color);
-            }
+            } #add-process-btn {background-color: var(--primary-color); color: white;}
+            #randomize-value {background-color: white; color: black;}
         } > .process-container {
             display: flex;
             flex-direction: column;
@@ -119,13 +126,13 @@
                 > .process-content {
                     display: flex;
                     width: 100%;
-                    justify-content: space-between;
                     align-items: center;
                     > p {font-size: 12px;}
+                    > p:first-child {margin-right: auto;}
                     & [contenteditable="true"],
                     .inline-editable {
                         width: 70px;
-                        border: 1px solid #cbd5e1;
+                        border: none;
                         border-radius: 6px;
                         padding: 4px 6px;
                         font-size: 12px;
@@ -135,25 +142,15 @@
                 > .process-action {
                     display: flex;
                     gap: 8px;
-
-                    .edit-process-btn:hover svg {
-                        fill: yellow;
-                    }
-                    .delete-process-btn:hover svg {
-                        fill: red;
-                    }
+                    .edit-process-btn:hover svg {stroke: #F2911B;}
+                    .delete-process-btn:hover svg {stroke: var(--error-color);}
                     > button {
                         display: flex;
                         align-items: center;
                         background: transparent;
                         border: none;
                     }
-                    button.edit-process-btn:hover {
-                        cursor: pointer;
-                    }
-                    button.delete-process-btn:hover {
-                        cursor: pointer;
-                    }
+                    button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
                 }
             }
         }
@@ -171,10 +168,11 @@
             padding: 12px;
             position: relative;
             > p {font-weight: 200; font-size: 12px;}
-            > h2 {
-                font-size: 1rem; 
-                text-align: center;
-                place-self: center;
+            > h2 {font-size: 1rem; }
+            > .block-size {
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
         } .block {
             background-color: white;
@@ -192,6 +190,8 @@
             transform: translateY(8px);
             transition: opacity 180ms ease, transform 180ms ease;
             pointer-events: none;
+            > .edit-block-btn svg:hover {stroke: #F2911B;}
+            > .delete-block-btn svg:hover {stroke: var(--error-color);}
         }
         .block:hover .process-action,
         .block.hovered .process-action {
@@ -200,13 +200,11 @@
             pointer-events: auto;
         }
         .block .process-action > button {
+            cursor: pointer;
             background: rgba(255,255,255,0.9);
             border: none;
             border-radius: 8px;
             padding: 4px;
-        }
-        .block .process-action > button:hover svg {
-            stroke: var(--primary-color);
         }
         .add-block {
             cursor: pointer;
@@ -220,10 +218,19 @@
                 justify-content: center;
                 width: 32px; height: 32px;
                 padding: 8px;
-                border: #4CAF50 2px solid;
-                /* background-color: #4CAF50; */
-                border-radius: 50%;
+                /* border: #4CAF50 2px solid;
+                background-color: #4CAF50;
+                border-radius: 50%; */
                 > svg {color: var(--primary-color);}
+            }
+        } .add-block:hover {
+            transition: all 250ms ease;
+            border-style: solid;
+            background-color: var(--primary-color);
+            border-bottom: #39833C 8px solid;
+            > div {
+                /* border-color: white; */
+                > svg {color: white;}
             }
         }
     }
