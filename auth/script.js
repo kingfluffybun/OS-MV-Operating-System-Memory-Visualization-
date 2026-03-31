@@ -212,10 +212,11 @@ document.getElementById('reg-form').addEventListener('submit', async function(e)
         messageEl.textContent = '';
     }
 
-    const result = await register(username, password, confirmPassword);
+    const result = await validateRegistration(username, password, confirmPassword);
 
     if (result.success) {
-        messageEl.textContent = result.message + 'Successful! Redirecting to login...';
+        storeTempRegistration(username, password);
+        messageEl.textContent = result.message + 'Proceeding to recovery...';
         messageEl.style.color = 'green';
         setTimeout(() => {
             location.href = '/auth/recovery/';

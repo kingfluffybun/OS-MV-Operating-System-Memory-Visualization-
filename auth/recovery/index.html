@@ -11,6 +11,25 @@
     <p>Please input your recovery key</p>
     <p>Why? Achuchuchu</p>
 
-    
+    <form id="recovery-form">
+        <div>
+            <label for="recovery-key">Recovery Key</label>
+            <input type="text" id="recovery-key" placeholder="Enter your favorite word (an object, phrase, action)" minlength="3" required>
+        </div>
+
+        <br>
+
+        <div>
+            <label for="confirm-recovery-key">Confirm Recovery Key</label>
+            <input type="text" id="confirm-recovery-key" placeholder="Re-enter your recovery key" minlength="3" required>
+        </div>
+
+        <button type="submit">Submit Recovery Key</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script src="/database/db.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

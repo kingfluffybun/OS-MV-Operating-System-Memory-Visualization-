@@ -1,3 +1,7 @@
+// 
+// DB SETUP
+// 
+
 const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
 const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm';
 
@@ -77,85 +81,193 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// Register
-async function register(username, password, confirmPassword) {
+// 
+// REGISTRATION WITH RECOVERY
+// 
+
+let pendingRegistration = null;
+
+function storeTempRegistration(username, password) {
+    tempRegistration = {username, password};
+    sessionStorage.setItem('tempRegistration', JSON.stringify(tempRegistration));
+}
+
+function getTempRegistration() {
+    const data = sessionStorage.getItem('tempRegistration');
+    return data ? JSON.parse(data) : null;
+}
+
+function clearTempRegistration() {
+    tempRegistration = null;
+    sessionStorage.removeItem('tempRegistration');
+}
+
+async function validateRegistration(username, password, confirmPassword) {
+    if (username.length < 3) {
+        return {
+            success: false,
+            message: '1'
+        };
+    }
+    
+    if  (password.length < 8) {
+        return {
+            success: false,
+            message: '2'
+        };
+    }
+    
+    if (password !== confirmPassword) {
+        return {
+            success: false,
+            message: '3'
+        };
+    }
+    
+    if (!/[A-Z]/.test(password) && /[a-z]/.test(password)) {
+        return {
+            success: false,
+            message: '4'
+        };
+    }
+    
+    if (!/[0-9]/.test(password)) {
+        return {
+            success: false,
+            message: '5'
+        };
+    }
+    
+    if (!/[@$!%*?&]/.test(password)) {
+        return {
+            success: false,
+            message: '6'
+        };
+    }
+    
+    await initDB();
+    const checkStmt = db.prepare(`SELECT user_id from users WHERE username = ?`);
+    checkStmt.bind([username]);
+    const exists = checkStmt.step();
+    checkStmt.free();
+
+    if (exists) {
+        return {
+            success: false,
+            message: '7'
+        };
+    }
+
+    return {
+        success: true,
+        message: ''
+    };
+}
+
+async function registerWithRecovery(recoveryKey) {
+    const temp = getTempRegistration();
+    if (!temp) {
+        return {
+            success: false,
+            message: 'No pending registration found'
+        };
+    }
+
+    if (!recoveryKey || recoveryKey.length < 3) {
+        return {
+            success: false,
+            message: 'Recovery key must be at least 3 characters'
+        };
+    }
+
     await initDB();
 
-    const hashedPassword = await hashPassword(password);
-    
-    try {
-        const checkStmt = db.prepare(`SELECT * FROM users WHERE username = :username;`);
-        checkStmt.bind({ ':username': username });
-        const exists = checkStmt.step();
-        checkStmt.free();
+    const hashedPassword = await hashPassword(temp.password);
+    const hashedRecoveryKey = await hashPassword(recoveryKey);
 
-        if (exists) {
+    try {
+        const stmt = db.prepare(`INSERT INTO users (username, password, recovery_key, created_at, updated_at) VALUES (?, ?, ?, datetime('now'), datetime('now'))`);
+        stmt.run([temp.username, hashedPassword, hashedRecoveryKey]);
+        stmt.free();
+        saveDB();
+
+        clearTempRegistration();
+
+        return {
+            success: true,
+            message: 'Registration successful! Redirecting...'
+        };
+    } catch(e) {
+        if (e.message.includes('UNIQUE constraint failed')) {
             return {
                 success: false,
                 message: 'Username already exists'
             };
         }
 
-        if (username.length < 3) {
-            return {
-                success: false,
-                message: '1'
-            };
-        }
-
-        if (password.length < 8) {
-            return {
-                success: false,
-                message: '2'
-            };
-        }
-
-        if (password !== confirmPassword) {
-            return {
-                success: false,
-                message: '3'
-            };
-        }
-
-        if (!/[A-Z]/.test(password) && /[a-z]/.test(password)) {
-            return {
-                success: false,
-                message: '4'
-            }
-        }
-
-        if (!/[0-9]/.test(password)) {
-            return {
-                success: false,
-                message: '5'
-            }
-        }
-
-        if (!/[@$!%*?&]/.test(password)) {
-            return {
-                success: false,
-                message: '6'
-            }
-        }
-
-        const stmt = db.prepare(`
-            INSERT INTO users (username, password, created_at, updated_at) VALUES (:username, :password, datetime('now'), datetime('now'));`
-        );
-        stmt.run({
-            ':username': username,
-            ':password': hashedPassword
-        });
-        stmt.free();
-        saveDB();
-        return {
-            success: true,
-            message: ''
-        };
-    } catch (e) {
         return {
             success: false,
             message: e.message
         };
+    }
+}
+
+async function verifyRecoveryKey(username, recoveryKey) {
+    await initDB();
+
+    if (!username || !recoveryKey) {
+        return {
+            success: false,
+            message: 'Username and recovery key are required'
+        };
+    }
+
+    const hashedRecoveryKey = await hashPassword(recoveryKey);
+    const stmt = db.prepare(`SELECT user_id FROM users WHERE username = ? AND recovery_key = ?`);
+    stmt.bind([username, hashedRecoveryKey]);
+
+    let valid = false;
+    if (stmt.step()) {
+        valid = true;
+    }
+    stmt.free();
+
+    return {
+        success: valid,
+        message: valid ? 'Recovery Key verified' : 'Invalid Recovery Key'
+    };
+}
+
+async function resetPassword(username, recoveryKey, newPassword, confirmNewPassword) {
+    if (newPassword.length < 8) {
+        return {
+            success: false,
+            message: 'Password must be at least 8 characters'
+        };
+    }
+
+    if (newPassword !== confirmNewPassword) {
+        return {
+            success: false,
+            message: 'Passwords do not match'
+        };
+    }
+
+    const verify = await verifyRecoveryKey(username, recoveryKey);
+
+    if (!verify.success) {
+        return verify;
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+    const stmt = db.prepare(`UPDATE users SET password = ?, updated_at = datetime('now') WHERE username = ?`);
+    stmt.run([hashedPassword, username]);
+    stmt.free();
+    saveDB();
+
+    return {
+        success: true,
+        message: 'Password reset successful! Redirecting...'
     }
 }
 
@@ -214,9 +326,6 @@ async function login(username, password) {
         };
     }
 }
-
-// Recovery
-
 
 function isLoggedIn() {
     return sessionStorage.getItem('currentUser') !== null;
