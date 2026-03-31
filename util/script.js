@@ -510,6 +510,8 @@ const runReset = () => {
     }
 
     simulationState = null;
+    currentStep = 0;
+    highlightCurrentProcess();
     resetConsole();
     resetBlocksUI();
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
