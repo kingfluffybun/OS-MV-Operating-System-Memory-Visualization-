@@ -24,6 +24,17 @@ const toggleSubMenu = button => {
     button.classList.toggle('rotate');
 }
 
+const processColors = [
+    { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
+    { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
+    { bg: "#FDFFB6", border: "#BEBF88" }, // Cream
+    { bg: "#CAFFBF", border: "#98BF8F" }, // Tea Green
+    { bg: "#9BF6FF", border: "#7DC6CE" },  // Electric Aqua
+    { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
+    { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
+    { bg: "#FFC6FF", border: "#BF94BF" }  // Mavue
+];
+
 const processContainer = document.querySelector('.process-container');
 let processIdCounter = processContainer ? processContainer.querySelectorAll('.process').length + 1 : 1;
 
@@ -44,6 +55,14 @@ const createProcessElement = (id, sizeKb) => {
     const process = document.createElement('div');
     process.className = 'process';
     process.id = `process-${id}`;
+
+    const colorIndex = (id - 1) % processColors.length;
+    const colorPair = processColors[colorIndex];
+    process.setAttribute('data-bg', colorPair.bg);
+    process.setAttribute('data-border', colorPair.border);
+    process.style.backgroundColor = colorPair.bg;
+    process.style.borderBottomColor =  colorPair.border;
+
     process.innerHTML = `
         <div class="process-content">
             <p>Process ${id}</p>
@@ -87,10 +106,19 @@ const renumberProcesses = () => {
     const processes = processContainer ? processContainer.querySelectorAll('.process') : [];
     processes.forEach((process, index) => {
         const label = process.querySelector('.process-content p:first-child');
+        const newId = index + 1;
         if (label) {
             label.textContent = `Process ${index + 1}`;
         }
-        process.id = `Process-${index + 1}`;
+        process.id = `process-${newId}`;
+
+        const colorIndex = index % processColors.length;
+        const colorPair = processColors[colorIndex];
+
+        process.setAttribute('data-bg', colorPair.bg);
+        process.setAttribute('data-border', colorPair.border);
+        process.style.backgroundColor = colorPair.bg;
+        process.style.borderBottomColor = colorPair.border;
     });
 };
 
@@ -336,12 +364,20 @@ const updateBlockVisuals = results => {
         const blockId = parseInt(block.id.replace('block-', ''), 10);
         const blockSizeEl = block.querySelector('h2');
         const blockSize = blockSizeEl ? parseInt(blockSizeEl.textContent, 10) : 0;
+        let bgColor = 'var(--primary-color)';
+        let borderColor = 'transparent';
         
         // Calculate total allocated size for this block
         let totalAllocated = 0;
         Object.entries(results).forEach(([processKey, result]) => {
             if (result.status === 'Allocated' && result.block === blockId) {
                 const processIndex = parseInt(processKey.replace('Process ', ''), 10) - 1;
+                const processElem = document.getElementById(`process-${processIndex + 1}`);
+                if (processElem) {
+                    bgColor = processElem.getAttribute('data-bg');
+                    borderColor = processElem.getAttribute('data-border');
+                }
+
                 if (simulationState && simulationState.processes[processIndex]) {
                     totalAllocated += simulationState.processes[processIndex];
                 }
@@ -350,8 +386,9 @@ const updateBlockVisuals = results => {
         
         if (totalAllocated > 0 && blockSize > 0) {
             const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
-            block.style.background = `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${percentage}%, white ${percentage}%, white 100%)`; //ITO yung color ng block, pwede mo palitan yan
-            const hatchColor = "#81c783"; 
+            block.style.background = `linear-gradient(to right, ${bgColor} 0%,  ${bgColor} ${percentage}%, white ${percentage}%, white 100%)`; //ITO yung color ng block, pwede mo palitan yan
+            block.style.borderBottomColor = `${borderColor}`;
+            const hatchColor =  `${bgColor}`; 
             const hatchPattern = `repeating-linear-gradient(
                 45deg, 
                 ${hatchColor}, 
@@ -361,7 +398,7 @@ const updateBlockVisuals = results => {
             )`;
 
             block.style.background = `
-                linear-gradient(to right, var(--primary-color) ${percentage}%, transparent ${percentage}%),
+                linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%),
                 ${hatchPattern}
             `;
         }
