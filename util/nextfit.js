@@ -23,20 +23,17 @@ const memorySimulator = {
         return newHead;
     },
 
-    // 1. NEXT FIT FIXED
     nextFitFixed(memoryHead, processes) {
         const head = this.cloneLinkedMemory(memoryHead);
         const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
         const results = {};
-
-        let lastBlock = head; // Next Fit: resume from last allocated block
+        let lastBlock = head;
 
         processes.forEach((size, i) => {
             const pId = `process_${i + 1}`;
-            let block = lastBlock;  // start from where we left off
+            let block = lastBlock;
             let allocated = false;
 
-            // Search from lastBlock to end of list
             while (block) {
                 if (block.status === "Free" && size <= block.size) {
                     stats.intFragmentation += block.size - size;
