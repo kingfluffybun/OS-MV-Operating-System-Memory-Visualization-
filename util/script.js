@@ -90,7 +90,7 @@ const renumberProcesses = () => {
         if (label) {
             label.textContent = `Process ${index + 1}`;
         }
-        process.id = `process-${index + 1}`;
+        process.id = `Process-${index + 1}`;
     });
 };
 
@@ -102,9 +102,14 @@ const createBlockElement = (id, sizeKb) => {
     block.style.position = 'relative';
     block.innerHTML = `
         <p>Block ${id}</p>
-        <div class="block-size">
-            <h2>${sizeKb}</h2>
-            <h2>&nbsp;KB</h2>
+        <div class="block-content">
+            <div>
+                <p id="block-status"></p>
+            </div>
+            <div class="block-size">
+                <h2>${sizeKb}</h2>
+                <h2>&nbsp;KB</h2>
+            </div>
         </div>
         <div></div>
         <div class="process-action">
@@ -336,7 +341,7 @@ const updateBlockVisuals = results => {
         let totalAllocated = 0;
         Object.entries(results).forEach(([processKey, result]) => {
             if (result.status === 'Allocated' && result.block === blockId) {
-                const processIndex = parseInt(processKey.replace('process ', ''), 10) - 1;
+                const processIndex = parseInt(processKey.replace('Process ', ''), 10) - 1;
                 if (simulationState && simulationState.processes[processIndex]) {
                     totalAllocated += simulationState.processes[processIndex];
                 }
@@ -345,8 +350,20 @@ const updateBlockVisuals = results => {
         
         if (totalAllocated > 0 && blockSize > 0) {
             const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
-            block.style.background = `linear-gradient(to right, #c3f7c3 0%, #c3f7c3 ${percentage}%, #f6ff8f ${percentage}%, #f6ff8f 100%)`; //ITO yung color ng block, pwede mo palitan yan
-            block.style.borderColor = '#2cb02c';
+            block.style.background = `linear-gradient(to right, var(--primary-color) 0%, var(--primary-color) ${percentage}%, white ${percentage}%, white 100%)`; //ITO yung color ng block, pwede mo palitan yan
+            const hatchColor = "#81c783"; 
+            const hatchPattern = `repeating-linear-gradient(
+                45deg, 
+                ${hatchColor}, 
+                ${hatchColor} 5px, 
+                transparent 5px, 
+                transparent 10px
+            )`;
+
+            block.style.background = `
+                linear-gradient(to right, var(--primary-color) ${percentage}%, transparent ${percentage}%),
+                ${hatchPattern}
+            `;
         }
     });
 };
@@ -387,6 +404,8 @@ const resetBlocksUI = () => {
         const bId = block.id.replace('block-', '');
         const text = block.querySelector('p');
         const size = block.querySelector('h2');
+        const process = block.querySelector('#block-status');
+        process.textContent = "";
         if (text && size) text.textContent = `Block ${bId}`;
     });
 };
@@ -435,7 +454,7 @@ const runStep = () => {
     highlightCurrentProcess();
 
     const size = simulationState.processes[simulationState.currentIndex];
-    const processId = `process ${simulationState.currentIndex + 1}`;
+    const processId = `Process ${simulationState.currentIndex + 1}`;
     const isFixed = true; // TODO: hook to partition mode selection
 
     const stepResult = isFixed
@@ -457,8 +476,8 @@ const runStep = () => {
     if (stepResult.result.status === 'Allocated') {
         const blockEl = document.getElementById(`block-${stepResult.result.block}`);
         if (blockEl) {
-            const label = blockEl.querySelector('p');
-            if (label) label.textContent = `Block ${stepResult.result.block} (${size} KB)`;
+            const label = blockEl.querySelector('#block-status');
+            if (label) label.textContent = `${processId}`;
         }
     }
 

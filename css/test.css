@@ -1,14 +1,3 @@
-:root {
-    --primary-color: #4CAF50;
-    --error-color: #E26465;
-    --warning-color: #fae39f;
-    --success-color: #74d99f;
-}
-
-svg {
-    transition: all 200ms ease;
-}
-
 .main-grid {
     background-color: #f6f6f6;
     display: grid;
@@ -170,13 +159,15 @@ svg {
             height: 100%;
             padding: 12px;
             position: relative;
-            > p {font-weight: 200; font-size: 12px;}
+            > p {font-weight: 400; font-size: 12px;}
             > h2 {font-size: 1rem; }
-            > .block-size {
+            > .block-content {display: flex; flex-direction: column; justify-content: center;}
+            > div .block-size {
                 display: flex;
                 justify-content: center;
                 align-items: center;
             }
+            > div #block-status {text-align: center; font-weight: 300; font-size: 12px;}
         } .block {
             background-color: white;
             border-bottom: 8px solid rgba(0, 0, 0, 0.25);

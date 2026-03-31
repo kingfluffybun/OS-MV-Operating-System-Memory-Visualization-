@@ -17,10 +17,14 @@
 
 svg {
     flex-shrink: 0;
+    transition: all 200ms ease;
 }
 
 :root {
     --primary-color: #4CAF50;
+    --error-color: #E26465;
+    --warning-color: #fae39f;
+    --success-color: #74d99f;
 }
 
 body {
