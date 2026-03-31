@@ -2,12 +2,13 @@ const container = document.getElementById('container');
 const signUpButton = document.getElementById('signUp');
 const signInButton = document.getElementById('signIn');
 const loginForm = document.getElementById('login-form');
+const recoveryForm = document.getElementById('recovery-form');
 const forgotForm = document.getElementById('forgot-form');
 
 // Show Sign Up
 signUpButton.addEventListener('click', () => {
     container.classList.add("right-panel-active");
-    toggleForgot(false);
+    toggleRecovery(false);
 });
 
 // Show Sign In
@@ -32,13 +33,26 @@ function togglePassword(element) {
     }
 }
 
-function toggleForgot(show) {
+// recovery form
+function toggleRecovery(show) {
     if(show) {
         loginForm.style.display = "none";
-        forgotForm.style.display = "flex";
+        recoveryForm.style.display = "flex";
+        forgotForm.style.display = "none";
     } else {
         loginForm.style.display = "flex";
+        recoveryForm.style.display = "none";
         forgotForm.style.display = "none";
+    }
+}
+
+// forgot password form
+function toggleForgot(show) {
+    if(show) {
+        recoveryForm.style.display = "none";
+        forgotForm.style.display = "flex";
+    } else {
+        toggleRecovery(false);
     }
 }
 
