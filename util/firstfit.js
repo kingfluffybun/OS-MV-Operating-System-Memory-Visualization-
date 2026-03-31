@@ -30,15 +30,57 @@ const memorySimulator = {
         return total;
     },
 
+    totalFreeSize(head) {
+        let total = 0;
+        for (let n = head; n; n = n.next) {
+            if (n.status === "Free") total += n.size;
+        }
+        return total;
+    },
+
+    externalFragmentation(head, results) {
+        const entries = Array.isArray(results) ? results : Object.values(results);
+        const unallocated = entries.filter(r => r.status === "Unallocated").map(r => r.size);
+        if (unallocated.length === 0) return 0;
+
+        const smallestUnallocated = Math.min(...unallocated);
+        let fragmentation = 0;
+        for (let n = head; n; n = n.next) {
+            if (n.status === "Free" && n.size < smallestUnallocated) fragmentation += n.size;
+        }
+        return fragmentation;
+    },
+
+    computeStats(head, processes, results, stats) {
+        const totalMemory = this.totalSize(head);
+        const totalFree = this.totalFreeSize(head);
+        const allocatedSize = stats.allocatedSize;
+        const successfulAllocations = stats.successfulAllocations;
+        const externalFragmentation = this.externalFragmentation(head, results);
+        const memoryUtilization = totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
+        const successRate = processes.length > 0 ? (successfulAllocations / processes.length) * 100 : 0;
+
+        return {
+            totalMemory,
+            allocatedSize,
+            totalFree,
+            intFragmentation: stats.intFragmentation,
+            externalFragmentation,
+            memoryUtilization,
+            successRate
+        };
+    },
+
     firstFitFixed(memoryHead, processes) {
         const head = this.cloneLinkedMemory(memoryHead);
         let allocatedSize = 0, successfulAllocations = 0, intFragmentation = 0;
         let freeSize = this.totalSize(head);
-        const results = [];
+        const results = {};
 
         for (let countP = 0; countP < processes.length; countP++) {
             const currentProcessSize = processes[countP];
             let allocated = false;
+            const pId = `process ${countP + 1}`;
 
             // Walk the linked list (replaces inner for loop over memBlockNum)
             for (let block = head; block; block = block.next) {
@@ -49,28 +91,29 @@ const memorySimulator = {
                     freeSize -= currentProcessSize;
                     successfulAllocations++;
 
-                    results.push({ process: countP + 1, size: currentProcessSize, block: block.id, status: "Allocated" });
+                    results[pId] = { size: currentProcessSize, block: block.id, status: "Allocated" };
                     allocated = true;
                     break;
                 }
             }
 
             if (!allocated) {
-                results.push({ process: countP + 1, size: currentProcessSize, block: "None", status: "Unallocated" });
+                results[pId] = { size: currentProcessSize, block: "None", status: "Unallocated" };
             }
         }
 
-        return { results, stats: { successfulAllocations, allocatedSize, intFragmentation, freeSize } };
+        return { results, stats: this.computeStats(head, processes, results, { allocatedSize, successfulAllocations, intFragmentation }) };
     },
 
     firstFitFixedStep(memoryHead, processSize) {
         for (let block = memoryHead; block; block = block.next) {
             if (block.status === "Free" && processSize <= block.size) {
+                const fragmentation = block.size - processSize;
                 block.status = "Occupied";
-                return { size: processSize, block: block.id, status: "Allocated" };
+                return { result: { size: processSize, block: block.id, status: "Allocated", fragmentation }, allocatedSize: processSize, successfulAllocations: 1 };
             }
         }
-        return { size: processSize, block: "None", status: "Unallocated" };
+        return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0 };
     },
 
     firstFitDynamic(memoryHead, processes) {
@@ -94,11 +137,12 @@ const memorySimulator = {
         for (let countP = 0; countP < processes.length; countP++) {
             const processSize = processes[countP];
             let allocated = false;
+            const pId = `process ${countP + 1}`;
 
             for (let block = head; block; block = block.next) {
                 if (block.status === "Free" && block.id <= 5 && processSize <= block.size) {
                     block.status = "Occupied";
-                    results.push({ process: countP + 1, size: processSize, block: block.id, status: "Allocated" });
+                    results[pId] = { size: processSize, block: block.id, status: "Allocated" };
                     allocated = true;
                     break;
                 }
@@ -127,27 +171,27 @@ const memorySimulator = {
 
                 if (processSize === freeSize) {
                     mergedFree.status = "Occupied";
-                    results.push({ process: countP + 1, size: processSize, block: 6, status: "Allocated" });
+                    results[pId] = { size: processSize, block: 6, status: "Allocated" };
                 } else {
                     const newId = maxNodeId() + 1;
                     const allocatedBlock = { id: newId, size: processSize, status: "Occupied", next: mergedFree };
                     if (!tail) head = allocatedBlock;
                     else tail.next = allocatedBlock;
                     mergedFree.size = freeSize - processSize;
-                    results.push({ process: countP + 1, size: processSize, block: newId, status: "Allocated" });
+                    results[pId] = { size: processSize, block: newId, status: "Allocated" };
                 }
 
                 continue;
             }
 
-            results.push({ process: countP + 1, size: processSize, block: "None", status: "Unallocated" });
+            results[pId] = { size: processSize, block: "None", status: "Unallocated" };
         }
 
-        const successfulAllocations = results.filter(r => r.status === "Allocated").length;
-        const allocatedSize = results.filter(r => r.status === "Allocated").reduce((sum, r) => sum + r.size, 0);
-        const freeSize = totalFreeSize();
+        const entries = Object.values(results);
+        const successfulAllocations = entries.filter(r => r.status === "Allocated").length;
+        const allocatedSize = entries.filter(r => r.status === "Allocated").reduce((sum, r) => sum + r.size, 0);
 
-        return { results, stats: { successfulAllocations, allocatedSize, intFragmentation: 0, freeSize } };
+        return { results, stats: this.computeStats(head, processes, results, { allocatedSize, successfulAllocations, intFragmentation: 0 }) };
     },
 
     firstFitDynamicStep(memoryHead, processSize) {
@@ -168,7 +212,7 @@ const memorySimulator = {
 
         if (originalFit) {
             originalFit.status = "Occupied";
-            return { result: { size: processSize, block: originalFit.id, status: "Allocated" }, newHead: head };
+            return { result: { size: processSize, block: originalFit.id, status: "Allocated", fragmentation: 0 }, newHead: head, allocatedSize: processSize, successfulAllocations: 1 };
         }
 
         if (totalFree >= processSize) {
@@ -185,7 +229,7 @@ const memorySimulator = {
             if (block6 && block6.status === "Free") {
                 if (processSize === block6.size) {
                     block6.status = "Occupied";
-                    return { result: { size: processSize, block: 6, status: "Allocated" }, newHead: head };
+                    return { result: { size: processSize, block: 6, status: "Allocated", fragmentation: 0 }, newHead: head, allocatedSize: processSize, successfulAllocations: 1 };
                 }
 
                 const leftover = block6.size - processSize;
@@ -193,7 +237,7 @@ const memorySimulator = {
                 if (prev) prev.next = allocatedBlock;
                 else head = allocatedBlock;
                 block6.size = leftover;
-                return { result: { size: processSize, block: allocatedBlock.id, status: "Allocated" }, newHead: head };
+                return { result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation: 0 }, newHead: head, allocatedSize: processSize, successfulAllocations: 1 };
             }
 
             // Compact all free space into block 6
@@ -215,7 +259,7 @@ const memorySimulator = {
 
             if (processSize === totalFree) {
                 mergedFree.status = "Occupied";
-                return { result: { size: processSize, block: 6, status: "Allocated" }, newHead: head };
+                return { result: { size: processSize, block: 6, status: "Allocated", fragmentation: 0 }, newHead: head, allocatedSize: processSize, successfulAllocations: 1 };
             }
 
             const allocatedBlock = { id: maxId + 1, size: processSize, status: "Occupied", next: mergedFree };
@@ -225,10 +269,10 @@ const memorySimulator = {
                 tail.next = allocatedBlock;
             }
             mergedFree.size = totalFree - processSize;
-            return { result: { size: processSize, block: allocatedBlock.id, status: "Allocated" }, newHead: head };
+            return { result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation: 0 }, newHead: head, allocatedSize: processSize, successfulAllocations: 1 };
         }
 
-        return { result: { size: processSize, block: "None", status: "Unallocated" }, newHead: head };
+        return { result: { size: processSize, block: "None", status: "Unallocated" }, newHead: head, allocatedSize: 0, successfulAllocations: 0 };
     }
 };
 
@@ -238,12 +282,14 @@ let currentIntervalSpeed = null;
 const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
 let memoryState = memorySimulator.cloneLinkedMemory(memory);
 const processes = [212, 417, 112, 426];
+const stepResults = {};
+const overallStats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
 let stepIndex = 0;
 let Partition = "dynamic";
 
 function getSliderValue() {
     const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
-    return slider ? Number(slider.value) : 50;
+    return slider ? Number(slider.value) : 1;
 }
 
 function getIntervalSpeed() {
@@ -266,6 +312,9 @@ function updateIntervalSpeed() {
 function stepThrough() {
     if (stepIndex >= processes.length) {
         console.log("Simulation complete");
+        const finalStats = memorySimulator.computeStats(memoryState, processes, stepResults, overallStats);
+        console.log("Final allocation results:", stepResults);
+        console.log("Final statistics:", finalStats);
         clearInterval(autoInterval);
         return;
     }
@@ -273,21 +322,22 @@ function stepThrough() {
     updateIntervalSpeed();
 
     const processSize = processes[stepIndex];
-    console.log("Allocating process:", processSize);
 
+    let stepResult;
+    const pId = `process ${stepIndex + 1}`;
     if (Partition === "fixed") {
-        const resultFixed = memorySimulator.firstFitFixedStep(memoryState, processSize);
-        console.log("Fixed First Fit Partition");
-        console.log(resultFixed);
-    }
-
-    if (Partition === "dynamic") {
-        const stepResult = memorySimulator.firstFitDynamicStep(memoryState, processSize);
+        stepResult = memorySimulator.firstFitFixedStep(memoryState, processSize);
+    } else {
+        stepResult = memorySimulator.firstFitDynamicStep(memoryState, processSize);
         memoryState = stepResult.newHead;
-        console.log("Dynamic First Fit Partition");
-        console.log(stepResult.result);
     }
 
+    stepResults[pId] = stepResult.result;
+    overallStats.allocatedSize += stepResult.allocatedSize;
+    overallStats.successfulAllocations += stepResult.successfulAllocations;
+    overallStats.intFragmentation += stepResult.result.fragmentation || 0;
+
+    console.log("Allocated process:", processSize, "->", stepResult.result);
     stepIndex++;
 }
 
@@ -304,6 +354,4 @@ function stopInterval() {
 }
 
 // --- Execution ---
-console.log("First Fit Fixed:",   memorySimulator.firstFitFixed(memory, processes));
-console.log("First Fit Dynamic:", memorySimulator.firstFitDynamic(memory, processes));
 startInterval();
