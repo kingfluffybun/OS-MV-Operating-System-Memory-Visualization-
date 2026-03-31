@@ -77,7 +77,7 @@ async function hashPassword(password) {
 }
 
 // Register
-async function register(username, password) {
+async function register(username, password, confirmPassword) {
     await initDB();
 
     const hashedPassword = await hashPassword(password);
@@ -95,6 +95,48 @@ async function register(username, password) {
             };
         }
 
+        if (username.length < 3) {
+            return {
+                success: false,
+                message: 'Username must be at least 3 characters'
+            };
+        }
+
+        if (password.length < 8) {
+            return {
+                success: false,
+                message: 'Password must be at least 8 characters'
+            };
+        }
+
+        if (password !== confirmPassword) {
+            return {
+                success: false,
+                message: 'Passwords do not match'
+            };
+        }
+
+        if (/[A-Z]/.test(password) && /[a-z]/.test(password)) {
+            return {
+                success: false,
+                message: 'Password must contain at least one uppercase and lowercase letter'
+            }
+        }
+
+        if (/[0-9]/.test(password)) {
+            return {
+                success: false,
+                message: 'Password must contain at least one number'
+            }
+        }
+
+        if (/[@$!%*?&]/.test(password)) {
+            return {
+                success: false,
+                message: 'Password must contain at least one special character'
+            }
+        }
+
         const stmt = db.prepare(`
             INSERT INTO users (username, password, created_at, updated_at) VALUES (:username, :password, datetime('now'), datetime('now'));`
         );
@@ -106,7 +148,7 @@ async function register(username, password) {
         saveDB();
         return {
             success: true,
-            message: 'Registration successful'
+            message: ''
         };
     } catch (e) {
         return {
