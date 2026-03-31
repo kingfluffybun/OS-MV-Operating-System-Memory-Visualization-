@@ -345,11 +345,8 @@ const updateBlockVisuals = results => {
         
         if (totalAllocated > 0 && blockSize > 0) {
             const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
-            block.style.background = `linear-gradient(to right, #c3f7c3 0%, #c3f7c3 ${percentage}%, #f7f7f7 ${percentage}%, #f7f7f7 100%)`;
+            block.style.background = `linear-gradient(to right, #c3f7c3 0%, #c3f7c3 ${percentage}%, #f6ff8f ${percentage}%, #f6ff8f 100%)`; //ITO yung color ng block, pwede mo palitan yan
             block.style.borderColor = '#2cb02c';
-        } else {
-            // block.style.background = 'rgb(247, 247, 247)';
-            // block.style.borderColor = '#ccc';
         }
     });
 };
@@ -385,8 +382,8 @@ const resetConsole = () => {
 
 const resetBlocksUI = () => {
     simulationContainer.querySelectorAll('.block').forEach(block => {
-        // block.style.background = '';
-        // block.style.borderColor = '';
+        block.style.background = '';
+        block.style.borderColor = '';
         const bId = block.id.replace('block-', '');
         const text = block.querySelector('p');
         const size = block.querySelector('h2');
