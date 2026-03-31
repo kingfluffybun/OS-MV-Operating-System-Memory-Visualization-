@@ -124,6 +124,16 @@ add_process_btn.addEventListener('click', () => {
     processSizeInput.value = '';
 });
 
+const randomize_value = document.getElementById('randomize-value');
+randomize_value.addEventListener('click', () => {
+    const processSize = Math.floor(Math.random() * 501);
+
+    const nextProcessId = processContainer.querySelectorAll('.process').length + 1;
+    const newProcess = createProcessElement(nextProcessId, processSize);
+    processContainer.appendChild(newProcess);
+    processSizeInput.value = '';
+});
+
 const add_block_btn = document.getElementById('add-block-btn');
 if (add_block_btn) {
     add_block_btn.addEventListener('click', () => {
