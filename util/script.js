@@ -27,6 +27,19 @@ const toggleSubMenu = button => {
 const processContainer = document.querySelector('.process-container');
 let processIdCounter = processContainer ? processContainer.querySelectorAll('.process').length + 1 : 1;
 
+// Simulation state
+let currentStep = 0;
+let isPlaying = false;
+let speed = 1;
+
+const highlightCurrentProcess = () => {
+    document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
+    const processes = document.querySelectorAll('.process');
+    if (currentStep < processes.length) {
+        processes[currentStep].classList.add('current');
+    }
+};
+
 const createProcessElement = (id, sizeKb) => {
     const process = document.createElement('div');
     process.className = 'process';
@@ -278,6 +291,254 @@ if (simulationContainer) {
     });
 }
 
+const consoleContainer = document.querySelector('.console .container');
+
+const appendConsoleMessage = message => {
+    if (!consoleContainer) return;
+    const p = document.createElement('p');
+    const timestamp = new Date().toLocaleTimeString();
+    p.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+    consoleContainer.appendChild(p);
+    consoleContainer.scrollTop = consoleContainer.scrollHeight;
+};
+
+const getProcessSizes = () => {
+    if (!processContainer) return [];
+    return Array.from(processContainer.querySelectorAll('.process')).map(process => {
+        const sizeEl = process.querySelector('.process-content p:nth-child(2)');
+        const size = sizeEl ? parseInt(sizeEl.textContent, 10) : NaN;
+        return Number.isNaN(size) ? null : size;
+    }).filter(size => size !== null);
+};
+
+const getBlockSizes = () => {
+    if (!simulationContainer) return [];
+    return Array.from(simulationContainer.querySelectorAll('.block')).map(block => {
+        const sizeEl = block.querySelector('h2');
+        const size = sizeEl ? parseInt(sizeEl.textContent, 10) : NaN;
+        return Number.isNaN(size) ? null : size;
+    }).filter(size => size !== null);
+};
+
+const updateBlockVisuals = results => {
+    if (!simulationContainer) return;
+    
+    simulationContainer.querySelectorAll('.block').forEach(block => {
+        const blockId = parseInt(block.id.replace('block-', ''), 10);
+        const blockSizeEl = block.querySelector('h2');
+        const blockSize = blockSizeEl ? parseInt(blockSizeEl.textContent, 10) : 0;
+        
+        // Calculate total allocated size for this block
+        let totalAllocated = 0;
+        Object.entries(results).forEach(([processKey, result]) => {
+            if (result.status === 'Allocated' && result.block === blockId) {
+                const processIndex = parseInt(processKey.replace('process ', ''), 10) - 1;
+                if (simulationState && simulationState.processes[processIndex]) {
+                    totalAllocated += simulationState.processes[processIndex];
+                }
+            }
+        });
+        
+        if (totalAllocated > 0 && blockSize > 0) {
+            const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
+            block.style.background = `linear-gradient(to right, #c3f7c3 0%, #c3f7c3 ${percentage}%, #f7f7f7 ${percentage}%, #f7f7f7 100%)`;
+            block.style.borderColor = '#2cb02c';
+        } else {
+            // block.style.background = 'rgb(247, 247, 247)';
+            // block.style.borderColor = '#ccc';
+        }
+    });
+};
+
+const updateStatistics = stats => {
+    const allocatedEl = document.getElementById('allocated-value');
+    const totalFreeEl = document.getElementById('total-free-value');
+    const internalFragEl = document.getElementById('internal-frag-value');
+    const externalFragEl = document.getElementById('external-frag-value');
+    const utilEl = document.getElementById('util-value');
+    const successEl = document.getElementById('success-rate-value');
+
+    if (allocatedEl) allocatedEl.textContent = `${Math.round(stats.allocatedSize)} KB`;
+    if (totalFreeEl) totalFreeEl.textContent = `${Math.round(stats.totalFree)} KB`;
+    if (internalFragEl) internalFragEl.textContent = `${Math.round(stats.intFragmentation)} KB`;
+    if (externalFragEl) externalFragEl.textContent = `${Math.round(stats.externalFragmentation)} KB`;
+    if (utilEl) utilEl.textContent = `${stats.memoryUtilization.toFixed(1)}%`;
+    if (successEl) successEl.textContent = `${stats.successRate.toFixed(1)}%`;
+};
+
+let playInterval = null;
+let simulationState = null;
+
+const setTotalMemoryDisplay = total => {
+    const totalMemoryEl = document.getElementById('total-memory-value');
+    if (totalMemoryEl) totalMemoryEl.textContent = `${Math.round(total)} KB`;
+};
+
+const resetConsole = () => {
+    if (!consoleContainer) return;
+    consoleContainer.innerHTML = '';
+};
+
+const resetBlocksUI = () => {
+    simulationContainer.querySelectorAll('.block').forEach(block => {
+        // block.style.background = '';
+        // block.style.borderColor = '';
+        const bId = block.id.replace('block-', '');
+        const text = block.querySelector('p');
+        const size = block.querySelector('h2');
+        if (text && size) text.textContent = `Block ${bId}`;
+    });
+};
+
+const prepareSimulation = () => {
+    const processes = getProcessSizes();
+    const blocks = getBlockSizes();
+
+    if (!processes.length) {
+        appendConsoleMessage('No processes in queue to allocate.');
+        return false;
+    }
+
+    if (!blocks.length) {
+        appendConsoleMessage('No memory blocks defined.');
+        return false;
+    }
+
+    simulationState = {
+        processes,
+        memoryHead: memorySimulator.createLinkedMemory(blocks),
+        currentIndex: 0,
+        results: {},
+        stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 }
+    };
+
+    resetConsole();
+    appendConsoleMessage('Simulation ready. Use Next or Play.');
+    setTotalMemoryDisplay(memorySimulator.totalMemory(simulationState.memoryHead));
+    updateStatistics(memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats));
+    resetBlocksUI();
+    currentStep = 0;
+    highlightCurrentProcess();
+    return true;
+};
+
+const runStep = () => {
+    if (!simulationState && !prepareSimulation()) return;
+
+    if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage('All processes have already been run.');
+        return false;
+    }
+
+    currentStep = simulationState.currentIndex;
+    highlightCurrentProcess();
+
+    const size = simulationState.processes[simulationState.currentIndex];
+    const processId = `process ${simulationState.currentIndex + 1}`;
+    const isFixed = true; // TODO: hook to partition mode selection
+
+    const stepResult = isFixed
+        ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
+        : memorySimulator.bestFitDynamicStep(simulationState.memoryHead, size);
+
+    simulationState.results[processId] = stepResult.result;
+    simulationState.stats.allocatedSize += stepResult.allocatedSize;
+    simulationState.stats.successfulAllocations += stepResult.successfulAllocations;
+    simulationState.stats.intFragmentation += stepResult.result.fragmentation || 0;
+
+    const compiledStats = memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
+    updateStatistics(compiledStats);
+    setTotalMemoryDisplay(compiledStats.totalMemory);
+    updateBlockVisuals(simulationState.results);
+
+    appendConsoleMessage(`${processId} (${size} KB) -> ${stepResult.result.status}${stepResult.result.block !== 'None' ? ` to Block ${stepResult.result.block}` : ''}`);
+
+    if (stepResult.result.status === 'Allocated') {
+        const blockEl = document.getElementById(`block-${stepResult.result.block}`);
+        if (blockEl) {
+            const label = blockEl.querySelector('p');
+            if (label) label.textContent = `Block ${stepResult.result.block} (${size} KB)`;
+        }
+    }
+
+    simulationState.currentIndex += 1;
+
+    if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage('Simulation complete');
+        clearInterval(playInterval);
+        playInterval = null;
+        return false;
+    }
+
+    return true;
+};
+
+const getStepDelay = () => {
+    const slider = document.getElementById('slider');
+    const value = parseFloat(slider ? slider.value : 1) || 1;
+    const maxDelay = 1200;
+    const minDelay = 250;
+    const normalized = (value - 1) / 2; // 1..3 => 0..1
+    return maxDelay - normalized * (maxDelay - minDelay);
+};
+
+const runPlay = () => {
+    if (!simulationState) {
+        if (!prepareSimulation()) return;
+    }
+
+    if (playInterval) {
+        clearInterval(playInterval);
+    }
+
+    runStep();
+
+    const delay = getStepDelay();
+    playInterval = setInterval(() => {
+        if (!runStep()) {
+            clearInterval(playInterval);
+            playInterval = null;
+        }
+    }, delay);
+};
+
+const runReset = () => {
+    if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+    }
+
+    simulationState = null;
+    resetConsole();
+    resetBlocksUI();
+    updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
+    setTotalMemoryDisplay(0);
+    appendConsoleMessage('Simulation reset.');
+};
+
+const playBtn = document.getElementById('play-btn');
+if (playBtn) {
+    playBtn.addEventListener('click', runPlay);
+}
+
+const nextBtn = document.getElementById('next-btn');
+if (nextBtn) {
+    nextBtn.addEventListener('click', runStep);
+}
+
+const resetBtn = document.getElementById('reset-btn');
+if (resetBtn) {
+    resetBtn.addEventListener('click', runReset);
+}
+
+const slider = document.getElementById('slider');
+if (slider) {
+    slider.addEventListener('input', (e) => {
+        speed = parseFloat(e.target.value);
+    });
+}
+
 if (simulationContainer) {
     updateTotalMemory();
 }
+

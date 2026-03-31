@@ -80,7 +80,7 @@ const memorySimulator = {
         const results = {};
 
         processes.forEach((size, i) => {
-            const pId = `process ${stepIndex + 1}`;
+            const pId = `process ${i + 1}`;
 
             let bestBlock = null;
             for (let block = head; block; block = block.next) {
@@ -100,7 +100,7 @@ const memorySimulator = {
             }
         });
 
-        return { results, stats: this.computeStats(head, processes, results, stats) };
+        return { results, stats: this.computeStats(head, processes, results, stats), finalMemory: head };
     },
     
     bestFitDynamic(memoryHead, processes) {
@@ -114,7 +114,7 @@ const memorySimulator = {
     splitId++;
 
     processes.forEach((size, i) => {
-        const pId = `process ${stepIndex + 1}`;
+        const pId = `process ${i + 1}`;
 
         // Find best fit block
         let bestBlock = null;
@@ -151,7 +151,7 @@ const memorySimulator = {
         }
     });
 
-    return { results, stats: this.computeStats(head, processes, results, stats) };
+    return { results, stats: this.computeStats(head, processes, results, stats), finalMemory: head };
 },
 
     bestFitFixedStep(memoryHead, processSize) {
@@ -200,59 +200,3 @@ const memorySimulator = {
         return ids;
     }
 };
-
-const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
-const memoryState = memorySimulator.cloneLinkedMemory(memory);
-const processes = [212, 417, 112, 426];
-const stepResults = [];
-const overallStats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-let stepIndex = 0;
-
-function stepThrough() {
-    if (stepIndex >= processes.length) {
-        console.log("Simulation complete");
-        const finalStats = memorySimulator.computeStats(memoryState, processes, stepResults, overallStats);
-        console.log("Final allocation results:", stepResults);
-        console.log("Final statistics:", finalStats);
-        clearInterval(autoInterval);
-        return;
-    }
-
-    const processSize = processes[stepIndex];
-    let stepResult;
-
-    if (Partition === "fixed") {
-        stepResult = memorySimulator.bestFitFixedStep(memoryState, processSize);
-    } else {
-        stepResult = memorySimulator.bestFitDynamicStep(memoryState, processSize);
-    }
-
-    stepResults.push(stepResult.result);
-    overallStats.allocatedSize += stepResult.allocatedSize;
-    overallStats.successfulAllocations += stepResult.successfulAllocations;
-    if (stepResult.result.status === "Allocated") {
-        overallStats.intFragmentation += stepResult.result.fragmentation || 0;
-    }
-
-    console.log("Allocated process:", processSize, "->", stepResult.result);
-    stepIndex++;
-}
-
-function startInterval() {
-    clearInterval(autoInterval);
-    // document.getElementById("slider").value
-    const sliderValue = 100;
-    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
-    const baseDelay = 1000;
-    const speed = baseDelay / multiplier;
-    autoInterval = setInterval(stepThrough, speed);
-    console.log("Interval started at speed:", speed, "ms");
-}
-
-let Partition = "fixed";
-startInterval();
-
-function stopInterval() {
-    clearInterval(autoInterval);
-    console.log("Interval stopped");
-}
