@@ -105,6 +105,7 @@ button:disabled svg {
                 transition: all 250ms ease;
             }
             #add-process-btn:hover {background-color: var(--primary-color); color: white;}
+            #add-process-btn:disabled {border-color: #999;}
             #randomize-value {background-color: white; color: black; transition: all 250ms ease;}
             #randomize-value:hover{
                 > svg {transform: rotate(15deg);}
@@ -151,8 +152,7 @@ button:disabled svg {
                         align-items: center;
                         background: transparent;
                         border: none;
-                    }
-                    button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
+                    } button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
                 }
             }
         }
@@ -237,6 +237,8 @@ button:disabled svg {
                 /* border-color: white; */
                 > svg {color: white;}
             }
+        } .add-block:disabled {
+            border-color: #999;
         }
     }
 }

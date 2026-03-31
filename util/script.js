@@ -444,6 +444,8 @@ const prepareSimulation = () => {
     document.getElementById('add-block-btn').disabled = true;
     document.getElementById('add-process-btn').disabled = true;
     document.getElementById('randomize-value').disabled = true;
+    document.getElementsByClassName('add-block').disabled = true;
+    document.getElementsByClassName('input-prcs').disabled = true;
     document.querySelectorAll('.process-action').forEach(action => action.style.display = 'none');
     document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = true);
     document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = true);
