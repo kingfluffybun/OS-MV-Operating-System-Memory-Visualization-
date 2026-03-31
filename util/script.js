@@ -126,7 +126,9 @@ add_process_btn.addEventListener('click', () => {
 
 const randomize_value = document.getElementById('randomize-value');
 randomize_value.addEventListener('click', () => {
-    const processSize = Math.floor(Math.random() * 501);
+    const min = 3;
+    const max = 7;
+    const processSize = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min)
 
     const nextProcessId = processContainer.querySelectorAll('.process').length + 1;
     const newProcess = createProcessElement(nextProcessId, processSize);
@@ -141,8 +143,10 @@ if (add_block_btn) {
             return;
         }
 
+        const min = 4;
+        const max = 8;
         const nextBlockId = simulationContainer.querySelectorAll('.block').length + 1;
-        const newBlock = createBlockElement(nextBlockId, 100);
+        const newBlock = createBlockElement(nextBlockId, Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min));
         simulationContainer.insertBefore(newBlock, add_block_btn);
         updateTotalMemory();
     });
