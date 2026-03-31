@@ -53,6 +53,7 @@ function createTables() {
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            recovery_key TEXT NOT NULL,
             user_role TEXT DEFAULT 'user' CHECK(user_role IN ('user', 'admin')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -98,42 +99,42 @@ async function register(username, password, confirmPassword) {
         if (username.length < 3) {
             return {
                 success: false,
-                message: 'Username must be at least 3 characters'
+                message: '1'
             };
         }
 
         if (password.length < 8) {
             return {
                 success: false,
-                message: 'Password must be at least 8 characters'
+                message: '2'
             };
         }
 
         if (password !== confirmPassword) {
             return {
                 success: false,
-                message: 'Passwords do not match'
+                message: '3'
             };
         }
 
-        if (/[A-Z]/.test(password) && /[a-z]/.test(password)) {
+        if (!/[A-Z]/.test(password) && /[a-z]/.test(password)) {
             return {
                 success: false,
-                message: 'Password must contain at least one uppercase and lowercase letter'
+                message: '4'
             }
         }
 
-        if (/[0-9]/.test(password)) {
+        if (!/[0-9]/.test(password)) {
             return {
                 success: false,
-                message: 'Password must contain at least one number'
+                message: '5'
             }
         }
 
-        if (/[@$!%*?&]/.test(password)) {
+        if (!/[@$!%*?&]/.test(password)) {
             return {
                 success: false,
-                message: 'Password must contain at least one special character'
+                message: '6'
             }
         }
 
@@ -213,6 +214,8 @@ async function login(username, password) {
         };
     }
 }
+
+// Recovery
 
 
 function isLoggedIn() {

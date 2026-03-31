@@ -57,34 +57,11 @@ function toggleForgot(show) {
 }
 
 // Login
-async function handleUrlLogin() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlUsername = urlParams.get('username');
-    const urlPassword = urlParams.get('password');
+document.getElementById('login-form').addEventListener('input', async function(e) {
+    
+})
 
-    if (urlUsername && urlPassword) {
-        document.getElementById('login-user').value = urlUsername;
-        document.getElementById('login-pass').value = urlPassword;
-
-        const messageEl = document.getElementById('message');
-        const result = await login(urlUsername, urlPassword);
-
-        if (result.success) {
-            messageEl.textContent = 'Login successful! Redirecting...';
-            messageEl.style.color = 'green';
-
-            setTimeout(() => {
-                location.href = '/';
-            }, 1500);
-        } else {
-            messageEl.textContent = 'Login failed: ' + result.message;
-            messageEl.style.color = 'red';
-        }
-    }
-}
-
-handleUrlLogin();
-
+// Login Submit
 document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
 
@@ -102,7 +79,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
             location.href = '/';
         }, 1500);
     } else {
-        messageEl.textContent = 'Login failed: ' + result.message;
+        messageEl.textContent = result.message;
         messageEl.style.color = 'red';
     }
 });
@@ -111,21 +88,41 @@ document.getElementById('login-form').addEventListener('submit', async function(
 // Requirements Check
 document.getElementById('reg-form').addEventListener('input', async function(e) {
     e.preventDefault();
-
+    
+    const usernameInput = document.getElementById('reg-user');
     const passwordInput = document.getElementById('reg-pass');
     const password = passwordInput.value;
-    const req1T = document.getElementById('req1-text');
-    const req1N = document.getElementById('req1-no-check');
-    const req1C = document.getElementById('req1-check');
-    const req2T = document.getElementById('req2-text');
-    const req2N = document.getElementById('req2-no-check');
-    const req2C = document.getElementById('req2-check');
-    const req3T = document.getElementById('req3-text');
-    const req3N = document.getElementById('req3-no-check');
-    const req3C = document.getElementById('req3-check');
-    const req4T = document.getElementById('req4-text');
-    const req4N = document.getElementById('req4-no-check');
-    const req4C = document.getElementById('req4-check');
+    const messageEl = document.getElementById('message-su');
+    const req1T = document.getElementById('req1-text-su');
+    const req1N = document.getElementById('req1-no-check-su');
+    const req1C = document.getElementById('req1-check-su');
+    const req2T = document.getElementById('req2-text-su');
+    const req2N = document.getElementById('req2-no-check-su');
+    const req2C = document.getElementById('req2-check-su');
+    const req3T = document.getElementById('req3-text-su');
+    const req3N = document.getElementById('req3-no-check-su');
+    const req3C = document.getElementById('req3-check-su');
+    const req4T = document.getElementById('req4-text-su');
+    const req4N = document.getElementById('req4-no-check-su');
+    const req4C = document.getElementById('req4-check-su');
+
+    // Username at least 3 characters
+    if (usernameInput.value.length >= 3) {
+        messageEl.textContent = '';
+    }
+
+    req1T.style.color = '#64748b';
+    req1N.style.color = '#64748b';
+    req1C.style.color = '#64748b';
+    req2T.style.color = '#64748b';
+    req2N.style.color = '#64748b';
+    req2C.style.color = '#64748b';
+    req3T.style.color = '#64748b';
+    req3N.style.color = '#64748b';
+    req3C.style.color = '#64748b';
+    req4T.style.color = '#64748b';
+    req4N.style.color = '#64748b';
+    req4C.style.color = '#64748b';
 
     // At least 8 characters
     if (passwordInput.value.length >= 8) {
@@ -133,6 +130,12 @@ document.getElementById('reg-form').addEventListener('input', async function(e) 
         req1C.style.display = 'block';
         req1C.style.color = '#4CAF50';
         req1T.style.color = '#4CAF50';
+        req2N.style.color = '#ce1e1e';
+        req2T.style.color = '#ce1e1e';
+        req3N.style.color = '#ce1e1e';
+        req3T.style.color = '#ce1e1e';
+        req4N.style.color = '#ce1e1e';
+        req4T.style.color = '#ce1e1e';
     } else if (passwordInput.value.length < 8 && passwordInput.value.length > 0) {
         req1N.style.display = 'block';
         req1C.style.display = 'none';
@@ -147,14 +150,6 @@ document.getElementById('reg-form').addEventListener('input', async function(e) 
     } else {
         req1N.style.display = 'block';
         req1C.style.display = 'none';
-        req1N.style.color = '#64748b';
-        req1T.style.color = '#64748b';
-        req2N.style.color = '#64748b';
-        req2T.style.color = '#64748b';
-        req3N.style.color = '#64748b';
-        req3T.style.color = '#64748b';
-        req4N.style.color = '#64748b';
-        req4T.style.color = '#64748b';
     }
 
     // At least one number
@@ -198,20 +193,23 @@ document.getElementById('reg-form').addEventListener('submit', async function(e)
     const username = document.getElementById('reg-user').value;
     const password = document.getElementById('reg-pass').value;
     const confirmPassword = document.getElementById('reg-confirm-pass').value;
-    const messageEl = document.getElementById('message');
-    const nocheck = document.getElementById('no-check');
-    const check = document.getElementById('check');
+    const messageEl = document.getElementById('message-su');
+    const passNotMatch = document.getElementById('pass-not-message-su');
 
     if (password !== confirmPassword) {
-        messageEl.textContent = 'Passwords do not match';
-        messageEl.style.color = 'red';
+        passNotMatch.textContent = 'Passwords do not match';
+        passNotMatch.style.color = 'red';
         return;
+    } else {
+        passNotMatch.textContent = '';
     }
 
     if (username.length < 3) {
         messageEl.textContent = 'Username must be at least 3 characters';
         messageEl.style.color = 'red';
         return;
+    } else {
+        messageEl.textContent = '';
     }
 
     const result = await register(username, password, confirmPassword);
@@ -220,10 +218,40 @@ document.getElementById('reg-form').addEventListener('submit', async function(e)
         messageEl.textContent = result.message + 'Successful! Redirecting to login...';
         messageEl.style.color = 'green';
         setTimeout(() => {
-            location.href = '/auth/';
+            location.href = '/auth/recovery/';
+            clearField();
         }, 1500);
     } else {
         messageEl.textContent = result.message;
         messageEl.style.color = 'red';
     }
 });
+
+// Clear Field
+function clearField() {
+    document.getElementById('reg-user').value = '';
+    document.getElementById('reg-pass').value = '';
+    document.getElementById('reg-confirm-pass').value = '';
+    document.getElementById('message-su').textContent = '';
+    document.getElementById('pass-not-message-su').textContent = '';
+    document.getElementById('req1-text-su').style.color = '#64748b';
+    document.getElementById('req1-no-check-su').style.display = 'block';
+    document.getElementById('req1-no-check-su').style.color = '#64748b';
+    document.getElementById('req1-check-su').style.display = 'none';
+    document.getElementById('req1-check-su').style.color = '#64748b';
+    document.getElementById('req2-text-su').style.color = '#64748b';
+    document.getElementById('req2-no-check-su').style.display = 'block';
+    document.getElementById('req2-no-check-su').style.color = '#64748b';
+    document.getElementById('req2-check-su').style.display = 'none';
+    document.getElementById('req2-check-su').style.color = '#64748b';
+    document.getElementById('req3-text-su').style.color = '#64748b';
+    document.getElementById('req3-no-check-su').style.display = 'block';
+    document.getElementById('req3-no-check-su').style.color = '#64748b';
+    document.getElementById('req3-check-su').style.display = 'none';
+    document.getElementById('req3-check-su').style.color = '#64748b';
+    document.getElementById('req4-text-su').style.color = '#64748b';
+    document.getElementById('req4-no-check-su').style.display = 'block';
+    document.getElementById('req4-no-check-su').style.color = '#64748b';
+    document.getElementById('req4-check-su').style.display = 'none';
+    document.getElementById('req4-check-su').style.color = '#64748b';
+}
