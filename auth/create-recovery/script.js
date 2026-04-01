@@ -28,7 +28,7 @@ document.getElementById('recovery-form').addEventListener('submit', async functi
     if (result.success) {
         messageEl.textContent = 'Registration successful! Redirecting...';
         messageEl.style.color = 'green';
-        setTImeout(() => {
+        setTimeout(() => {
             location.href = '/auth/';
         }, 1500);
     } else {
