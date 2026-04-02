@@ -91,6 +91,130 @@ const updateTotalMemory = () => {
     }
 };
 
+const ALGORITHM_DEFINITIONS = {
+    'first-fit': { moduleName: 'firstFit', displayName: 'First Fit', fixed: 'firstFitFixedStep', dynamic: 'firstFitDynamicStep' },
+    'firstfit': { moduleName: 'firstFit', displayName: 'First Fit', fixed: 'firstFitFixedStep', dynamic: 'firstFitDynamicStep' },
+    'next-fit': { moduleName: 'nextFit', displayName: 'Next Fit', fixed: 'nextFitFixedStep', dynamic: 'nextFitDynamicStep' },
+    'nextfit': { moduleName: 'nextFit', displayName: 'Next Fit', fixed: 'nextFitFixedStep', dynamic: 'nextFitDynamicStep' },
+    'best-fit': { moduleName: 'bestFit', displayName: 'Best Fit', fixed: 'bestFitFixedStep', dynamic: 'bestFitDynamicStep' },
+    'bestfit': { moduleName: 'bestFit', displayName: 'Best Fit', fixed: 'bestFitFixedStep', dynamic: 'bestFitDynamicStep' },
+    'worst-fit': { moduleName: 'worstFit', displayName: 'Worst Fit', fixed: 'worstFitFixedStep', dynamic: 'worstFitDynamicStep' },
+    'worstfit': { moduleName: 'worstFit', displayName: 'Worst Fit', fixed: 'worstFitFixedStep', dynamic: 'worstFitDynamicStep' }
+};
+
+const getQueryParam = (key) => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(key);
+};
+
+const normalizeAlgorithmKey = key => (key || '').toString().trim().toLowerCase().replace(/[\s_-]+/g, '');
+const getSelectedAlgorithmKey = () => getQueryParam('algo') || getQueryParam('algo[]') || localStorage.getItem('selectedAlgorithm') || 'best-fit';
+const getSelectedPartitionMode = () => getQueryParam('mode') || localStorage.getItem('selectedPartitionMode') || 'fixed';
+const getSelectedAlgorithmDefinition = () => {
+    const selectedKey = getSelectedAlgorithmKey();
+    const normalizedKey = normalizeAlgorithmKey(selectedKey);
+    return ALGORITHM_DEFINITIONS[selectedKey] || ALGORITHM_DEFINITIONS[normalizedKey] || ALGORITHM_DEFINITIONS['best-fit'];
+};
+
+const debugMemorySimulators = () => {
+    const definition = getSelectedAlgorithmDefinition();
+    console.log('Location search:', window.location.search);
+    console.log('Selected algorithm key:', getSelectedAlgorithmKey());
+    console.log('Selected algorithm definition:', definition);
+    console.log('Selected partition mode:', getSelectedPartitionMode());
+    console.log('LocalStorage selectedAlgorithm:', localStorage.getItem('selectedAlgorithm'));
+    console.log('Available memorySimulators:', window.memorySimulators ? Object.keys(window.memorySimulators) : []);
+};
+
+window.memorySimulators = window.memorySimulators || {};
+
+const getSelectedSimulator = () => {
+    const definition = getSelectedAlgorithmDefinition();
+    const selectedKey = getSelectedAlgorithmKey();
+    const normalizedSelectedKey = normalizeAlgorithmKey(selectedKey);
+    const normalizedModuleKey = normalizeAlgorithmKey(definition.moduleName);
+    const simulators = window.memorySimulators || {};
+
+    const candidateKeys = [
+        definition.moduleName,
+        selectedKey,
+        normalizedSelectedKey,
+        normalizedModuleKey
+    ];
+
+    let simulator;
+    for (const candidate of candidateKeys) {
+        if (!candidate) continue;
+        simulator = simulators[candidate] || simulators[candidate.toLowerCase()];
+        if (simulator) {
+            console.log('Selected simulator resolved from key:', candidate);
+            break;
+        }
+    }
+
+    if (!simulator) {
+        const fallbackEntry = Object.entries(simulators).find(([key]) => {
+            const normalizedKey = normalizeAlgorithmKey(key);
+            return normalizedKey === normalizedModuleKey || normalizedKey === normalizedSelectedKey;
+        });
+        if (fallbackEntry) {
+            simulator = fallbackEntry[1];
+            console.warn('Using fallback simulator module for', definition.moduleName, 'found', fallbackEntry[0]);
+        } else {
+            console.warn('Missing simulator module for', definition.moduleName, 'with available keys:', Object.keys(simulators));
+        }
+    }
+
+    return simulator;
+};
+
+const totalMemory = head => {
+    let total = 0;
+    for (let node = head; node; node = node.next) {
+        total += node.size;
+    }
+    return total;
+};
+
+const totalFreeSize = head => {
+    let total = 0;
+    for (let node = head; node; node = node.next) {
+        if (node.status === 'Free') total += node.size;
+    }
+    return total;
+};
+
+const externalFragmentation = (head, results) => {
+    const entries = Array.isArray(results) ? results : Object.values(results);
+    const unallocatedSizes = entries.filter(r => r.status === 'Unallocated').map(r => r.size);
+    if (!unallocatedSizes.length) return 0;
+    const smallestUnallocated = Math.min(...unallocatedSizes);
+    let fragmentation = 0;
+    for (let node = head; node; node = node.next) {
+        if (node.status === 'Free' && node.size < smallestUnallocated) {
+            fragmentation += node.size;
+        }
+    }
+    return fragmentation;
+};
+
+const computeStats = (head, processes, results, stats) => {
+    const total = totalMemory(head);
+    const totalFree = totalFreeSize(head);
+    const memoryUtilization = total > 0 ? (stats.allocatedSize / total) * 100 : 0;
+    const successRate = processes.length > 0 ? (stats.successfulAllocations / processes.length) * 100 : 0;
+
+    return {
+        totalMemory: total,
+        allocatedSize: stats.allocatedSize,
+        totalFree,
+        intFragmentation: stats.intFragmentation,
+        externalFragmentation: externalFragmentation(head, results),
+        memoryUtilization,
+        successRate
+    };
+};
+
 const renumberBlocks = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
     blocks.forEach((block, index) => {
@@ -448,6 +572,7 @@ const resetBlocksUI = () => {
 };
 
 const prepareSimulation = () => {
+    debugMemorySimulators();
     const processes = getProcessSizes();
     const blocks = getBlockSizes();
 
@@ -461,21 +586,45 @@ const prepareSimulation = () => {
         return false;
     }
 
+    const selectedSimulator = getSelectedSimulator();
+    if (!selectedSimulator || typeof selectedSimulator.createLinkedMemory !== 'function') {
+        appendConsoleMessage('Selected algorithm is not available.');
+        return false;
+    }
+
     simulationState = {
         processes,
-        memoryHead: memorySimulator.createLinkedMemory(blocks),
+        memoryHead: selectedSimulator.createLinkedMemory(blocks),
         currentIndex: 0,
         results: {},
-        stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 }
+        stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+        lastBlock: null,
+        nextSplitId: 0
     };
+
+    simulationState.lastBlock = simulationState.memoryHead;
+    simulationState.nextSplitId = (() => {
+        let maxId = 0;
+        for (let node = simulationState.memoryHead; node; node = node.next) {
+            maxId = Math.max(maxId, node.id);
+        }
+        return maxId + 1;
+    })();
 
     resetConsole();
     appendConsoleMessage('Simulation ready. Use Next or Play.');
-    setTotalMemoryDisplay(memorySimulator.totalMemory(simulationState.memoryHead));
-    updateStatistics(memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats));
+    setTotalMemoryDisplay(totalMemory(simulationState.memoryHead));
+    updateStatistics(computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats));
     resetBlocksUI();
     currentStep = 0;
     highlightCurrentProcess();
+
+    const algoDescriptionEl = document.getElementById('algo-description');
+    if (algoDescriptionEl) {
+        const definition = getSelectedAlgorithmDefinition();
+        const mode = getSelectedPartitionMode() === 'dynamic' ? 'Dynamic' : 'Fixed';
+        algoDescriptionEl.textContent = `${definition.displayName} Algorithm - ${mode} Partition`;
+    }
 
     // Disable buttons during simulation
     document.getElementById('add-block-btn').disabled = true;
@@ -503,18 +652,34 @@ const runStep = () => {
 
     const size = simulationState.processes[simulationState.currentIndex];
     const processId = `Process ${simulationState.currentIndex + 1}`;
-    const isFixed = true; // TODO: hook to partition mode selection
+    const isFixed = getSelectedPartitionMode() !== 'dynamic';
 
-    const stepResult = isFixed
-        ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
-        : memorySimulator.bestFitDynamicStep(simulationState.memoryHead, size);
+    const definition = getSelectedAlgorithmDefinition();
+    const selectedSimulator = getSelectedSimulator();
+    const methodName = isFixed ? definition.fixed : definition.dynamic;
+    const stepMethod = selectedSimulator?.[methodName];
+
+    if (typeof stepMethod !== 'function') {
+        appendConsoleMessage(`The ${definition.displayName} implementation does not support this mode.`);
+        return false;
+    }
+
+    const args = [simulationState.memoryHead, size];
+    if (!isFixed) {
+        args.push(simulationState.lastBlock, simulationState.nextSplitId);
+    }
+
+    const stepResult = stepMethod.apply(selectedSimulator, args);
+    if (stepResult.newHead) simulationState.memoryHead = stepResult.newHead;
+    if (stepResult.lastBlock) simulationState.lastBlock = stepResult.lastBlock;
+    if (typeof stepResult.nextSplitId === 'number') simulationState.nextSplitId = stepResult.nextSplitId;
 
     simulationState.results[processId] = stepResult.result;
     simulationState.stats.allocatedSize += stepResult.allocatedSize;
     simulationState.stats.successfulAllocations += stepResult.successfulAllocations;
     simulationState.stats.intFragmentation += stepResult.result.fragmentation || 0;
 
-    const compiledStats = memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
+    const compiledStats = computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
     updateStatistics(compiledStats);
     setTotalMemoryDisplay(compiledStats.totalMemory);
     updateBlockVisuals(simulationState.results);
@@ -620,3 +785,9 @@ if (simulationContainer) {
     updateTotalMemory();
 }
 
+    const algoDescriptionEl = document.getElementById('algo-description');
+    if (algoDescriptionEl) {
+        const definition = getSelectedAlgorithmDefinition();
+        const mode = getSelectedPartitionMode() === 'dynamic' ? 'Dynamic' : 'Fixed';
+        algoDescriptionEl.textContent = `${definition.displayName} Algorithm - ${mode} Partition`;
+    }
