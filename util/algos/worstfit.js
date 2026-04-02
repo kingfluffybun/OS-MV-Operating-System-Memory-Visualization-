@@ -1,6 +1,6 @@
 let autoInterval;
 
-const memorySimulator = {
+const worstFitSimulator = {
 
     createLinkedMemory(blocks) {
         let head = null, tail = null;
@@ -31,7 +31,7 @@ const memorySimulator = {
         const results = {};
 
         processes.forEach((size, i) => {
-            const pId = `process ${stepIndex + 1}`;
+            const pId = `process ${i + 1}`;
 
             let worstBlock = null;
             for (let block = head; block; block = block.next) {
@@ -65,7 +65,7 @@ const memorySimulator = {
     splitId++;
 
     processes.forEach((size, i) => {
-        const pId = `process ${stepIndex + 1}`;
+        const pId = `process ${i + 1}`;
 
         // Find worst fit block
         let worstBlock = null;
@@ -103,71 +103,55 @@ const memorySimulator = {
     });
 
     return { results, stats };
-}
+},
+
+    worstFitFixedStep(memoryHead, processSize) {
+        let worstBlock = null;
+        for (let block = memoryHead; block; block = block.next) {
+            if (block.status === "Free" && processSize <= block.size) {
+                if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+            }
+        }
+
+        if (!worstBlock) {
+            return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0 };
+        }
+
+        const fragmentation = worstBlock.size - processSize;
+        worstBlock.status = "Occupied";
+        return { result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation }, allocatedSize: processSize, successfulAllocations: 1 };
+    },
+
+    worstFitDynamicStep(memoryHead, processSize) {
+        let worstBlock = null;
+        for (let block = memoryHead; block; block = block.next) {
+            if (block.status === "Free" && processSize <= block.size) {
+                if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+            }
+        }
+
+        if (!worstBlock) {
+            return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0, nextSplitId: Math.max(...this._collectIds(memoryHead)) + 1 };
+        }
+
+        const leftover = worstBlock.size - processSize;
+        let splitId = Math.max(...this._collectIds(memoryHead)) + 1;
+        worstBlock.size = processSize;
+        worstBlock.status = "Occupied";
+
+        if (leftover > 0) {
+            worstBlock.next = { id: splitId++, size: leftover, status: "Free", next: worstBlock.next };
+        }
+
+        return { result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation: leftover }, allocatedSize: processSize, successfulAllocations: 1, nextSplitId: splitId };
+    },
+
+    _collectIds(head) {
+        const ids = [];
+        for (let node = head; node; node = node.next) ids.push(node.id);
+        return ids;
+    }
 };
 
-const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
-const processes = [212, 417, 112, 426];
-let stepIndex = 0;
-let currentIntervalSpeed = null;
-
-function getSliderValue() {
-    const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
-    return slider ? Number(slider.value) : 50;
-}
-
-function getIntervalSpeed() {
-    const sliderValue = getSliderValue();
-    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
-    const baseDelay = 1000;
-    return baseDelay / multiplier;
-}
-
-function updateIntervalSpeed() {
-    const speed = getIntervalSpeed();
-    if (autoInterval && speed !== currentIntervalSpeed) {
-        clearInterval(autoInterval);
-        currentIntervalSpeed = speed;
-        autoInterval = setInterval(stepThrough, currentIntervalSpeed);
-        console.log("Adjusted interval speed to:", currentIntervalSpeed, "ms");
-    }
-}
-
-function stepThrough() {
-    if (stepIndex >= processes.length) {
-        console.log("Simulation complete");
-        clearInterval(autoInterval);
-        return;
-    }
-
-    updateIntervalSpeed();
-    console.log("Allocating process:", processes[stepIndex]);
-
-    if (Partition === "fixed") {
-        const resultFixed = memorySimulator.worstFitFixed(memory, [processes[stepIndex]]);
-        console.log("Fixed Worst Fit Partition");
-        console.log(resultFixed);
-    }
-
-    if (Partition === "dynamic") {
-        const resultDynamic = memorySimulator.worstFitDynamic(memory, [processes[stepIndex]]);
-        console.log("Dynamic Worst Fit Partition");
-        console.log(resultDynamic);
-    }
-    stepIndex++;
-}
-
-function startInterval() {
-    clearInterval(autoInterval);
-    currentIntervalSpeed = getIntervalSpeed();
-    autoInterval = setInterval(stepThrough, currentIntervalSpeed);
-    console.log("Interval started at speed:", currentIntervalSpeed, "ms");
-}
-
-let Partition = "fixed";
-startInterval();
-
-function stopInterval() {
-    clearInterval(autoInterval);
-    console.log("Interval stopped");
-}
+window.memorySimulators = window.memorySimulators || {};
+window.memorySimulators.worstFit = worstFitSimulator;

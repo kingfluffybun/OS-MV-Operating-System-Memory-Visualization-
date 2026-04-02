@@ -1,4 +1,4 @@
-const memorySimulator = {
+const firstFitSimulator = {
 
     createLinkedMemory(blocks) {
         let head = null, tail = null;
@@ -66,11 +66,16 @@ const memorySimulator = {
     firstFitFixedStep(memoryHead, processSize) {
         for (let block = memoryHead; block; block = block.next) {
             if (block.status === "Free" && processSize <= block.size) {
+                const fragmentation = block.size - processSize;
                 block.status = "Occupied";
-                return { size: processSize, block: block.id, status: "Allocated" };
+                return {
+                    result: { size: processSize, block: block.id, status: "Allocated", fragmentation },
+                    allocatedSize: processSize,
+                    successfulAllocations: 1
+                };
             }
         }
-        return { size: processSize, block: "None", status: "Unallocated" };
+        return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0 };
     },
 
     firstFitDynamic(memoryHead, processes) {
@@ -167,8 +172,14 @@ const memorySimulator = {
         }
 
         if (originalFit) {
+            const fragmentation = originalFit.size - processSize;
             originalFit.status = "Occupied";
-            return { result: { size: processSize, block: originalFit.id, status: "Allocated" }, newHead: head };
+            return {
+                result: { size: processSize, block: originalFit.id, status: "Allocated", fragmentation },
+                newHead: head,
+                allocatedSize: processSize,
+                successfulAllocations: 1
+            };
         }
 
         if (totalFree >= processSize) {
@@ -185,7 +196,12 @@ const memorySimulator = {
             if (block6 && block6.status === "Free") {
                 if (processSize === block6.size) {
                     block6.status = "Occupied";
-                    return { result: { size: processSize, block: 6, status: "Allocated" }, newHead: head };
+                    return {
+                        result: { size: processSize, block: 6, status: "Allocated", fragmentation: 0 },
+                        newHead: head,
+                        allocatedSize: processSize,
+                        successfulAllocations: 1
+                    };
                 }
 
                 const leftover = block6.size - processSize;
@@ -193,7 +209,12 @@ const memorySimulator = {
                 if (prev) prev.next = allocatedBlock;
                 else head = allocatedBlock;
                 block6.size = leftover;
-                return { result: { size: processSize, block: allocatedBlock.id, status: "Allocated" }, newHead: head };
+                return {
+                    result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation: leftover },
+                    newHead: head,
+                    allocatedSize: processSize,
+                    successfulAllocations: 1
+                };
             }
 
             // Compact all free space into block 6
@@ -215,9 +236,15 @@ const memorySimulator = {
 
             if (processSize === totalFree) {
                 mergedFree.status = "Occupied";
-                return { result: { size: processSize, block: 6, status: "Allocated" }, newHead: head };
+                return {
+                    result: { size: processSize, block: 6, status: "Allocated", fragmentation: 0 },
+                    newHead: head,
+                    allocatedSize: processSize,
+                    successfulAllocations: 1
+                };
             }
 
+            const leftover = totalFree - processSize;
             const allocatedBlock = { id: maxId + 1, size: processSize, status: "Occupied", next: mergedFree };
             if (newHead === mergedFree) {
                 head = allocatedBlock;
