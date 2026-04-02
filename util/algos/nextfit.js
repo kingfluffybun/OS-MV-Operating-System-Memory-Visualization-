@@ -122,6 +122,7 @@ const memorySimulator = {
         let block = this._nextLastBlock || memoryHead;
         const start = block;
         let allocatedBlock = null;
+        let newFreeIdFromSplit = null;
 
         const tryAllocate = current => {
             if (current.status === "Free" && processSize <= current.size) {
@@ -129,13 +130,10 @@ const memorySimulator = {
                 current.size = processSize;
                 current.status = "Occupied";
 
+                newFreeIdFromSplit = null;
                 if (leftover > 0) {
-                    current.next = {
-                        id: Math.max(...this._collectIds(memoryHead)) + 1,
-                        size: leftover,
-                        status: "Free",
-                        next: current.next
-                    };
+                    newFreeIdFromSplit = Math.max(...this._collectIds(memoryHead)) + 1;
+                    current.next = { id: newFreeIdFromSplit, size: leftover, status: "Free", next: current.next };
                 }
 
                 allocatedBlock = current;
@@ -170,7 +168,8 @@ const memorySimulator = {
         return {
             result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
             allocatedSize: processSize,
-            successfulAllocations: 1
+            successfulAllocations: 1,
+            newFreeId: newFreeIdFromSplit
         };
     },
 

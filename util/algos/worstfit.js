@@ -103,15 +103,21 @@ const memorySimulator = {
         }
 
         const leftover = worstBlock.size - processSize;
-        let splitId = Math.max(...this._collectIds(memoryHead)) + 1;
         worstBlock.size = processSize;
         worstBlock.status = "Occupied";
 
+        let newFreeId = null;
         if (leftover > 0) {
-            worstBlock.next = { id: splitId++, size: leftover, status: "Free", next: worstBlock.next };
+            newFreeId = Math.max(...this._collectIds(memoryHead)) + 1;
+            worstBlock.next = { id: newFreeId, size: leftover, status: "Free", next: worstBlock.next };
         }
 
-        return { result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation: leftover }, allocatedSize: processSize, successfulAllocations: 1 };
+        return {
+            result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation: leftover },
+            allocatedSize: processSize,
+            successfulAllocations: 1,
+            newFreeId
+        };
     },
 
     _collectIds(head) {

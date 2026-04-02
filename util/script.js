@@ -207,10 +207,6 @@ const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, f
     const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
         isSplitFree: true
     });
-    const statusEl = freeEl.querySelector('.block-status');
-    if (statusEl) {
-        statusEl.textContent = 'Free';
-    }
     allocatedEl.after(freeEl);
     resizeBlocks();
     disableMemoryBlockControls();
@@ -547,10 +543,6 @@ const resetBlocksUI = () => {
         if (text && size) {
             text.textContent = block.classList.contains('block--split-free') ? 'Fragmented' : `Block ${labelNum}`;
         }
-        const st = block.querySelector('.block-status');
-        if (block.classList.contains('block--split-free') && st) {
-            st.textContent = 'Free';
-        }
     });
 };
 
@@ -781,10 +773,14 @@ function startSimulation(event) {
 
     if (selected) {
         const algo = selected.value; // e.g., "first-fit"
-        
-        // Construct the filename
-        // Matches: simulation-first-fit.html OR simulation-first-fit-dynamic.html
-        let fileName = "simulation-" + algo;
+        const algoFileSegment = {
+            "first-fit": "First-Fit",
+            "next-fit": "Next-Fit",
+            "Best-Fit": "Best-Fit",
+            "Worst-Fit": "Worst-Fit"
+        }[algo] || algo;
+
+        let fileName = "simulation-" + algoFileSegment;
         if (isDynamic) {
             fileName += "-Dynamic";
         }
