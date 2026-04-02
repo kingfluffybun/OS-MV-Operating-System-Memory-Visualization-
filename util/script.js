@@ -347,7 +347,6 @@ const resizeBlocks = () => {
             const calculatedWidth = blockSize * pxPerKb;
             block.style.width = `${minWidth + calculatedWidth}px`;
             // block.style.width = `${Math.max(minWidth, calculatedWidth)}px`;
-            
             block.style.flex = "0 0 auto"; 
         }
     });
@@ -492,8 +491,8 @@ const updateBlockVisuals = results => {
             const hatchColor =  `${bgColor}`; 
             const hatchPattern = `repeating-linear-gradient(
                 45deg, 
-                ${hatchColor}, 
-                ${hatchColor} 5px, 
+                ${hatchColor}75, 
+                ${hatchColor}75 5px, 
                 ${borderColor} 5px, 
                 ${borderColor} 10px
             )`;
