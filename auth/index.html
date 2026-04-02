@@ -191,15 +191,19 @@
 
         <section class="overlay-container">
             <div class="overlay">
-                <div class="overlay-panel overlay-left">
+                <div class="overlay-panel overlay-left" id="overlay-signIn">
                     <h1>Create Account</h1>
                     <p>Already have an account? Click the button below.</p>
                     <button class="ghost-btn" id="signIn">Sign In</button>
                 </div>
-                <div class="overlay-panel overlay-right">
+                <div class="overlay-panel overlay-right" id="overlay-signUp">
                     <h1>WELCOME BACK!</h1>
                     <p>Don't have an account? Click the button below.</p>
                     <button class="ghost-btn" id="signUp">Sign Up</button>
+                </div>
+                <div class="overlay-panel overlay-right" id="overlay-recovery" style="display: none;">
+                    <h1>Oh no! You forgot your password</h1>
+                    <p>Recover it with your recovery key</p>
                 </div>
             </div>
         </section>

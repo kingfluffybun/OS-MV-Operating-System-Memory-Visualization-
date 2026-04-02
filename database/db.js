@@ -1,6 +1,6 @@
-// 
-// DB SETUP
-// 
+// ========
+// DB SETUP - Sariling comment ko to, hindi po AI AHHAAHAHAH
+// ========
 
 const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
 const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm';
@@ -81,9 +81,9 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 
+// ==========================
 // REGISTRATION WITH RECOVERY
-// 
+// ==========================
 
 let pendingRegistration = null;
 
@@ -271,7 +271,10 @@ async function resetPassword(username, recoveryKey, newPassword, confirmNewPassw
     }
 }
 
+// =====
 // Login
+// =====
+
 async function login(username, password) {
     await initDB();
 
