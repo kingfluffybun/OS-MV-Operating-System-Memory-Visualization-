@@ -92,8 +92,28 @@ const createProcessElement = (id, sizeKb) => {
     return process;
 };
 
-const simulationContainer = document.querySelector('.simulation .container');
+const simulationContainer =
+    document.querySelector('.simulation .simulation-scroll-track') ||
+    document.querySelector('.simulation .container');
 const totalMemoryValue = document.getElementById('total-memory-value');
+
+let preSimBlockState = null;
+
+const isDynamicPartitionMode = () => document.body.dataset.partitionMode === 'dynamic';
+
+/** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
+const disableMemoryBlockControls = () => {
+    if (!simulationContainer) return;
+    simulationContainer.querySelectorAll('.block .process-action').forEach(action => {
+        action.style.display = 'none';
+    });
+    simulationContainer.querySelectorAll('.block .edit-block-btn').forEach(btn => {
+        btn.disabled = true;
+    });
+    simulationContainer.querySelectorAll('.block .delete-block-btn').forEach(btn => {
+        btn.disabled = true;
+    });
+};
 
 const updateTotalMemory = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block h2') : [];
@@ -109,11 +129,13 @@ const updateTotalMemory = () => {
 const renumberBlocks = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
     blocks.forEach((block, index) => {
+        const newId = index + 1;
         const label = block.querySelector('p');
         if (label) {
-            label.textContent = `Block ${index + 1}`;
+            label.textContent = `Block ${newId}`;
         }
-        block.id = `block-${index + 1}`;
+        block.id = `block-${newId}`;
+        block.dataset.partitionLabel = String(newId);
     });
 };
 
@@ -137,17 +159,20 @@ const renumberProcesses = () => {
     });
 };
 
-const createBlockElement = (id, sizeKb) => {
+const createBlockElement = (id, sizeKb, options = {}) => {
+    const partitionLabel = options.partitionLabel != null ? options.partitionLabel : id;
     const block = document.createElement('div');
-    block.className = 'block';
+    block.className = options.isSplitFree ? 'block block--split-free' : 'block';
     block.id = `block-${id}`;
+    block.dataset.partitionLabel = options.isSplitFree ? 'Fragmented' : String(partitionLabel);
     block.style.width = '120px';
     block.style.position = 'relative';
+    const titleText = options.isSplitFree ? 'Fragmented' : `Block ${partitionLabel}`;
     block.innerHTML = `
-        <p>Block ${id}</p>
+        <p>${titleText}</p>
         <div class="block-content">
             <div>
-                <p id="block-status"></p>
+                <p class="block-status"></p>
             </div>
             <div class="block-size">
                 <h2>${sizeKb}</h2>
@@ -161,6 +186,34 @@ const createBlockElement = (id, sizeKb) => {
         </div>
     `;
     return block;
+};
+
+const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, freeNodeId, allocatedBlockId) => {
+    if (!allocatedEl || freeSizeKb <= 0 || freeNodeId == null) {
+        return;
+    }
+    
+    // Keep the allocated chunk labeled by partition id (e.g. Block 2), not process size in KB.
+    const nameEl = allocatedEl.querySelector('p');
+    if (nameEl) {
+        nameEl.textContent = `Block ${allocatedBlockId}`;
+    }
+    allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
+
+    const sizeNumEl = allocatedEl.querySelector('.block-size h2');
+    if (sizeNumEl) {
+        sizeNumEl.textContent = String(allocatedSizeKb);
+    }
+    const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
+        isSplitFree: true
+    });
+    const statusEl = freeEl.querySelector('.block-status');
+    if (statusEl) {
+        statusEl.textContent = 'Free';
+    }
+    allocatedEl.after(freeEl);
+    resizeBlocks();
+    disableMemoryBlockControls();
 };
 
 const removeElement = (button, selector) => {
@@ -487,12 +540,33 @@ const resetBlocksUI = () => {
         block.style.background = '';
         block.style.borderColor = '';
         const bId = block.id.replace('block-', '');
+        const labelNum = block.dataset.partitionLabel || bId;
         const text = block.querySelector('p');
         const size = block.querySelector('h2');
-        const process = block.querySelector('#block-status');
-        process.textContent = "";
-        if (text && size) text.textContent = `Block ${bId}`;
+        const process = block.querySelector('.block-status');
+        if (process) process.textContent = '';
+        if (text && size) {
+            text.textContent = block.classList.contains('block--split-free') ? 'Fragmented' : `Block ${labelNum}`;
+        }
+        const st = block.querySelector('.block-status');
+        if (block.classList.contains('block--split-free') && st) {
+            st.textContent = 'Free';
+        }
     });
+};
+
+const restorePreSimulationBlocks = () => {
+    if (!simulationContainer) return;
+    const addBtn = document.getElementById('add-block-btn');
+    simulationContainer.querySelectorAll('.block').forEach(b => b.remove());
+    if (preSimBlockState && preSimBlockState.length) {
+        preSimBlockState.forEach((sz, i) => {
+            const el = createBlockElement(i + 1, sz);
+            simulationContainer.insertBefore(el, addBtn || null);
+        });
+    }
+    updateTotalMemory();
+    resizeBlocks();
 };
 
 const prepareSimulation = () => {
@@ -507,6 +581,10 @@ const prepareSimulation = () => {
     if (!blocks.length) {
         appendConsoleMessage('No memory blocks defined.');
         return false;
+    }
+
+    if (isDynamicPartitionMode()) {
+        preSimBlockState = getBlockSizes().slice();
     }
 
     simulationState = {
@@ -532,8 +610,7 @@ const prepareSimulation = () => {
     document.getElementsByClassName('add-block').disabled = true;
     document.getElementsByClassName('input-prcs').disabled = true;
     document.querySelectorAll('.process-action').forEach(action => action.style.display = 'none');
-    document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = true);
-    document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = true);
+    disableMemoryBlockControls();
 
     return true;
 };
@@ -551,7 +628,7 @@ const runStep = () => {
 
     const size = simulationState.processes[simulationState.currentIndex];
     const processId = `Process ${simulationState.currentIndex + 1}`;
-    const isFixed = true; // TODO: hook to partition mode selection
+    const isFixed = !isDynamicPartitionMode();
 
     const stepResult = isFixed
         ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
@@ -565,17 +642,29 @@ const runStep = () => {
     const compiledStats = memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
     updateStatistics(compiledStats);
     setTotalMemoryDisplay(compiledStats.totalMemory);
-    updateBlockVisuals(simulationState.results);
-
-    appendConsoleMessage(`${processId} (${size} KB) -> ${stepResult.result.status}${stepResult.result.block !== 'None' ? ` to Block ${stepResult.result.block}` : ''}`);
 
     if (stepResult.result.status === 'Allocated') {
         const blockEl = document.getElementById(`block-${stepResult.result.block}`);
+        const leftover = stepResult.result.fragmentation || 0;
+        if (!isFixed && leftover > 0 && stepResult.newFreeId != null && blockEl) {
+            insertDynamicFreeSplitAfter(
+                blockEl,
+                size,
+                leftover,
+                stepResult.newFreeId,
+                stepResult.result.block
+            );
+        }
         if (blockEl) {
-            const label = blockEl.querySelector('#block-status');
+            blockEl.classList.remove('block--split-free');
+            const label = blockEl.querySelector('.block-status');
             if (label) label.textContent = `${processId}`;
         }
     }
+
+    updateBlockVisuals(simulationState.results);
+
+    appendConsoleMessage(`${processId} (${size} KB) -> ${stepResult.result.status}${stepResult.result.block !== 'None' ? ` to Block ${stepResult.result.block}` : ''}`);
 
     simulationState.currentIndex += 1;
 
@@ -624,13 +713,22 @@ const runReset = () => {
         playInterval = null;
     }
 
+    const shouldRestoreDynamicLayout =
+        isDynamicPartitionMode() &&
+        simulationState != null &&
+        preSimBlockState &&
+        preSimBlockState.length;
+
     simulationState = null;
     currentStep = 0;
     highlightCurrentProcess();
     resetConsole();
+    if (shouldRestoreDynamicLayout) {
+        restorePreSimulationBlocks();
+    }
     resetBlocksUI();
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
-    setTotalMemoryDisplay(0);
+    updateTotalMemory();
     appendConsoleMessage('Simulation reset.');
     document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
 
@@ -689,7 +787,7 @@ function startSimulation(event) {
         // Matches: simulation-first-fit.html OR simulation-first-fit-dynamic.html
         let fileName = "simulation-" + algo;
         if (isDynamic) {
-            fileName += "-dynamic";
+            fileName += "-Dynamic";
         }
 
         console.log("Redirecting to: " + fileName + ".html");

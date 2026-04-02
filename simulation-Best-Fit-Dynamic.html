@@ -6,10 +6,10 @@
     <link rel="stylesheet" href="css/output.css">
     <link rel="stylesheet" href="css/test.css">
     <title>Document</title>
-    <script src="./util/algos/firstfit.js" defer></script>
+    <script src="./util/algos/bestfit.js" defer></script>
     <script src="./util/script.js" defer></script>
 </head>
-<body>
+<body data-partition-mode="dynamic">
     <section class="sidebar" id="sidebar">
         <div class="logo" id="logo">
             <h1 id="h1">OS-MV</h1>
@@ -104,7 +104,7 @@
         </div>
         <div class="simulation">
             <h3>Memory Allocation Simulator</h3>
-            <p>First Fit Algorithm - Fixed Partition</p>
+            <p id="algo-description">Best Fit Algorithm - Dynamic Partition</p>
             <div class="container">
                 <div class="simulation-scroll-track">
                     <!-- Dito papasok yung mga blocks -->
