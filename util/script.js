@@ -785,6 +785,36 @@ if (simulationContainer) {
     updateTotalMemory();
 }
 
+
+function startSimulation(event) {
+    // 1. Stop the browser from refreshing/changing the URL
+    event.preventDefault(); 
+
+    const form = document.getElementById("simulation-Option");
+    
+    // 2. Get the selected algorithm
+    const selected = form.querySelector('input[name="algo"]:checked');
+    
+    // 3. Get the toggle state
+    const isDynamic = form.querySelector('.checkbox').checked;
+
+    if (selected) {
+        const algo = selected.value; // e.g., "first-fit"
+        
+        // Construct the filename
+        // Matches: simulation-first-fit.html OR simulation-first-fit-dynamic.html
+        let fileName = "simulation-" + algo;
+        if (isDynamic) {
+            fileName += "-dynamic";
+        }
+
+        console.log("Redirecting to: " + fileName + ".html");
+        window.location.href = fileName + ".html";
+    } else {
+        alert("Please select an algorithm!");
+    }
+}
+
     const algoDescriptionEl = document.getElementById('algo-description');
     if (algoDescriptionEl) {
         const definition = getSelectedAlgorithmDefinition();

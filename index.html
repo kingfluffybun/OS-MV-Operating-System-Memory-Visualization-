@@ -62,7 +62,7 @@
         </button>
         <div class="main-container">
             <h2>Select Memory Allocation Algorithm</h2> <br>
-            <form action="simulation.html" method="get">
+            <form action="simulation.html" method="post">
                 <div class="contiguous">
                     <div class="header">
                         <div style="display: flex; gap: 8px; flex-direction: column;">
@@ -104,7 +104,7 @@
                         </label>
                         <!-- Best fit -->
                         <label>
-                            <input type="radio" name="algo" class="algo-option" value="best-fit" checked>
+                            <input type="radio" name="algo[]" class="algo-option" value="best-fit">
                             <div class="algo-content">
                                 <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-puzzle-icon lucide-puzzle"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg></div>
                                 <h3>Best Fit</h3>
@@ -132,7 +132,7 @@
                     <div class="non-contiguous-option">
                         <!-- Paging -->
                         <label>
-                            <input type="radio" name="algo" class="algo-option" value="first-fit">
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
                             <div class="algo-content">
                                 <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid3x3-icon lucide-grid-3x3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div>
                                 <h3>Paging</h3>
@@ -141,7 +141,7 @@
                         </label>
                         <!-- Segmentation -->
                         <label>
-                            <input type="radio" name="algo" class="algo-option" value="first-fit">
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
                             <div class="algo-content">
                                 <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-columns3-icon lucide-columns-3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div>
                                 <h3>Segmentation</h3>
@@ -150,7 +150,7 @@
                         </label>
                         <!-- Segmentation with Paging -->
                         <label>
-                            <input type="radio" name="algo" class="algo-option" value="first-fit">
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
                             <div class="algo-content">
                                 <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers2-icon lucide-layers-2"><path d="M13 13.74a2 2 0 0 1-2 0L2.5 8.87a1 1 0 0 1 0-1.74L11 2.26a2 2 0 0 1 2 0l8.5 4.87a1 1 0 0 1 0 1.74z"/><path d="m20 14.285 1.5.845a1 1 0 0 1 0 1.74L13 21.74a2 2 0 0 1-2 0l-8.5-4.87a1 1 0 0 1 0-1.74l1.5-.845"/></svg></div>
                                 <h3>Segmentation with Paging</h3>
@@ -159,7 +159,7 @@
                         </label>
                     </div>
                 </div>
-                <input type="submit" value="Start Simulation">
+                <button type="submit">Start Simulation</button>
             </form>
             <script>
                 document.addEventListener('DOMContentLoaded', () => {

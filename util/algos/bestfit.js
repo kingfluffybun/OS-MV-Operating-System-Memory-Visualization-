@@ -1,4 +1,4 @@
-let autoInterval;
+// let autoInterval;
 
 const bestFitSimulator = {
 
