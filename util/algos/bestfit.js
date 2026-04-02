@@ -1,6 +1,6 @@
-// let autoInterval;
+let autoInterval;
 
-const bestFitSimulator = {
+const memorySimulator = {
 
     createLinkedMemory(blocks) {
         let head = null, tail = null;
@@ -200,6 +200,3 @@ const bestFitSimulator = {
         return ids;
     }
 };
-
-window.memorySimulators = window.memorySimulators || {};
-window.memorySimulators.bestFit = bestFitSimulator;
