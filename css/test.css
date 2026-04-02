@@ -1,14 +1,3 @@
-:root {
-    --primary-color: #4CAF50;
-    --error-color: #E26465;
-    --warning-color: #fae39f;
-    --success-color: #74d99f;
-}
-
-svg {
-    transition: all 200ms ease;
-}
-
 .main-grid {
     background-color: #f6f6f6;
     display: grid;
@@ -47,6 +36,16 @@ svg {
         font-size: 16px;
         cursor: pointer;
     }
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+button:disabled svg {
+    stroke: #999;
 }
 
 .simulation-controls {
@@ -106,6 +105,7 @@ svg {
                 transition: all 250ms ease;
             }
             #add-process-btn:hover {background-color: var(--primary-color); color: white;}
+            #add-process-btn:disabled {border-color: #999;}
             #randomize-value {background-color: white; color: black; transition: all 250ms ease;}
             #randomize-value:hover{
                 > svg {transform: rotate(15deg);}
@@ -152,8 +152,7 @@ svg {
                         align-items: center;
                         background: transparent;
                         border: none;
-                    }
-                    button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
+                    } button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
                 }
             }
         }
@@ -170,19 +169,22 @@ svg {
             height: 100%;
             padding: 12px;
             position: relative;
-            > p {font-weight: 200; font-size: 12px;}
+            > p {font-weight: 400; font-size: 12px;}
             > h2 {font-size: 1rem; }
-            > .block-size {
+            > .block-content {display: flex; flex-direction: column; justify-content: center;}
+            > div .block-size {
                 display: flex;
                 justify-content: center;
                 align-items: center;
             }
+            > div #block-status {text-align: center; font-weight: 500; font-size: 12px;}
         } .block {
             background-color: white;
             border-bottom: 8px solid rgba(0, 0, 0, 0.25);
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
             display: grid;
             grid-template-rows: 1fr 1fr 1fr;
+            transition: width 0.3s ease, background 0.3s ease;
         }
         .process-action {
             border: none;
@@ -235,6 +237,8 @@ svg {
                 /* border-color: white; */
                 > svg {color: white;}
             }
+        } .add-block:disabled {
+            border-color: #999;
         }
     }
 }

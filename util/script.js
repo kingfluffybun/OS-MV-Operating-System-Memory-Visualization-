@@ -24,6 +24,17 @@ const toggleSubMenu = button => {
     button.classList.toggle('rotate');
 }
 
+const processColors = [
+    { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
+    { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
+    { bg: "#FDFFB6", border: "#BEBF88" }, // Cream
+    { bg: "#CAFFBF", border: "#98BF8F" }, // Tea Green
+    { bg: "#9BF6FF", border: "#7DC6CE" },  // Electric Aqua
+    { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
+    { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
+    { bg: "#FFC6FF", border: "#BF94BF" }  // Mavue
+];
+
 const processContainer = document.querySelector('.process-container');
 let processIdCounter = processContainer ? processContainer.querySelectorAll('.process').length + 1 : 1;
 
@@ -44,6 +55,14 @@ const createProcessElement = (id, sizeKb) => {
     const process = document.createElement('div');
     process.className = 'process';
     process.id = `process-${id}`;
+
+    const colorIndex = (id - 1) % processColors.length;
+    const colorPair = processColors[colorIndex];
+    process.setAttribute('data-bg', colorPair.bg);
+    process.setAttribute('data-border', colorPair.border);
+    process.style.backgroundColor = colorPair.bg;
+    process.style.borderBottomColor =  colorPair.border;
+
     process.innerHTML = `
         <div class="process-content">
             <p>Process ${id}</p>
@@ -72,6 +91,130 @@ const updateTotalMemory = () => {
     }
 };
 
+const ALGORITHM_DEFINITIONS = {
+    'first-fit': { moduleName: 'firstFit', displayName: 'First Fit', fixed: 'firstFitFixedStep', dynamic: 'firstFitDynamicStep' },
+    'firstfit': { moduleName: 'firstFit', displayName: 'First Fit', fixed: 'firstFitFixedStep', dynamic: 'firstFitDynamicStep' },
+    'next-fit': { moduleName: 'nextFit', displayName: 'Next Fit', fixed: 'nextFitFixedStep', dynamic: 'nextFitDynamicStep' },
+    'nextfit': { moduleName: 'nextFit', displayName: 'Next Fit', fixed: 'nextFitFixedStep', dynamic: 'nextFitDynamicStep' },
+    'best-fit': { moduleName: 'bestFit', displayName: 'Best Fit', fixed: 'bestFitFixedStep', dynamic: 'bestFitDynamicStep' },
+    'bestfit': { moduleName: 'bestFit', displayName: 'Best Fit', fixed: 'bestFitFixedStep', dynamic: 'bestFitDynamicStep' },
+    'worst-fit': { moduleName: 'worstFit', displayName: 'Worst Fit', fixed: 'worstFitFixedStep', dynamic: 'worstFitDynamicStep' },
+    'worstfit': { moduleName: 'worstFit', displayName: 'Worst Fit', fixed: 'worstFitFixedStep', dynamic: 'worstFitDynamicStep' }
+};
+
+const getQueryParam = (key) => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(key);
+};
+
+const normalizeAlgorithmKey = key => (key || '').toString().trim().toLowerCase().replace(/[\s_-]+/g, '');
+const getSelectedAlgorithmKey = () => getQueryParam('algo') || getQueryParam('algo[]') || localStorage.getItem('selectedAlgorithm') || 'best-fit';
+const getSelectedPartitionMode = () => getQueryParam('mode') || localStorage.getItem('selectedPartitionMode') || 'fixed';
+const getSelectedAlgorithmDefinition = () => {
+    const selectedKey = getSelectedAlgorithmKey();
+    const normalizedKey = normalizeAlgorithmKey(selectedKey);
+    return ALGORITHM_DEFINITIONS[selectedKey] || ALGORITHM_DEFINITIONS[normalizedKey] || ALGORITHM_DEFINITIONS['best-fit'];
+};
+
+const debugMemorySimulators = () => {
+    const definition = getSelectedAlgorithmDefinition();
+    console.log('Location search:', window.location.search);
+    console.log('Selected algorithm key:', getSelectedAlgorithmKey());
+    console.log('Selected algorithm definition:', definition);
+    console.log('Selected partition mode:', getSelectedPartitionMode());
+    console.log('LocalStorage selectedAlgorithm:', localStorage.getItem('selectedAlgorithm'));
+    console.log('Available memorySimulators:', window.memorySimulators ? Object.keys(window.memorySimulators) : []);
+};
+
+window.memorySimulators = window.memorySimulators || {};
+
+const getSelectedSimulator = () => {
+    const definition = getSelectedAlgorithmDefinition();
+    const selectedKey = getSelectedAlgorithmKey();
+    const normalizedSelectedKey = normalizeAlgorithmKey(selectedKey);
+    const normalizedModuleKey = normalizeAlgorithmKey(definition.moduleName);
+    const simulators = window.memorySimulators || {};
+
+    const candidateKeys = [
+        definition.moduleName,
+        selectedKey,
+        normalizedSelectedKey,
+        normalizedModuleKey
+    ];
+
+    let simulator;
+    for (const candidate of candidateKeys) {
+        if (!candidate) continue;
+        simulator = simulators[candidate] || simulators[candidate.toLowerCase()];
+        if (simulator) {
+            console.log('Selected simulator resolved from key:', candidate);
+            break;
+        }
+    }
+
+    if (!simulator) {
+        const fallbackEntry = Object.entries(simulators).find(([key]) => {
+            const normalizedKey = normalizeAlgorithmKey(key);
+            return normalizedKey === normalizedModuleKey || normalizedKey === normalizedSelectedKey;
+        });
+        if (fallbackEntry) {
+            simulator = fallbackEntry[1];
+            console.warn('Using fallback simulator module for', definition.moduleName, 'found', fallbackEntry[0]);
+        } else {
+            console.warn('Missing simulator module for', definition.moduleName, 'with available keys:', Object.keys(simulators));
+        }
+    }
+
+    return simulator;
+};
+
+const totalMemory = head => {
+    let total = 0;
+    for (let node = head; node; node = node.next) {
+        total += node.size;
+    }
+    return total;
+};
+
+const totalFreeSize = head => {
+    let total = 0;
+    for (let node = head; node; node = node.next) {
+        if (node.status === 'Free') total += node.size;
+    }
+    return total;
+};
+
+const externalFragmentation = (head, results) => {
+    const entries = Array.isArray(results) ? results : Object.values(results);
+    const unallocatedSizes = entries.filter(r => r.status === 'Unallocated').map(r => r.size);
+    if (!unallocatedSizes.length) return 0;
+    const smallestUnallocated = Math.min(...unallocatedSizes);
+    let fragmentation = 0;
+    for (let node = head; node; node = node.next) {
+        if (node.status === 'Free' && node.size < smallestUnallocated) {
+            fragmentation += node.size;
+        }
+    }
+    return fragmentation;
+};
+
+const computeStats = (head, processes, results, stats) => {
+    const total = totalMemory(head);
+    const totalFree = totalFreeSize(head);
+    const memoryUtilization = total > 0 ? (stats.allocatedSize / total) * 100 : 0;
+    const successRate = processes.length > 0 ? (stats.successfulAllocations / processes.length) * 100 : 0;
+
+    return {
+        totalMemory: total,
+        allocatedSize: stats.allocatedSize,
+        totalFree,
+        intFragmentation: stats.intFragmentation,
+        externalFragmentation: externalFragmentation(head, results),
+        memoryUtilization,
+        successRate
+    };
+};
+
 const renumberBlocks = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
     blocks.forEach((block, index) => {
@@ -87,10 +230,19 @@ const renumberProcesses = () => {
     const processes = processContainer ? processContainer.querySelectorAll('.process') : [];
     processes.forEach((process, index) => {
         const label = process.querySelector('.process-content p:first-child');
+        const newId = index + 1;
         if (label) {
             label.textContent = `Process ${index + 1}`;
         }
-        process.id = `process-${index + 1}`;
+        process.id = `process-${newId}`;
+
+        const colorIndex = index % processColors.length;
+        const colorPair = processColors[colorIndex];
+
+        process.setAttribute('data-bg', colorPair.bg);
+        process.setAttribute('data-border', colorPair.border);
+        process.style.backgroundColor = colorPair.bg;
+        process.style.borderBottomColor = colorPair.border;
     });
 };
 
@@ -102,9 +254,14 @@ const createBlockElement = (id, sizeKb) => {
     block.style.position = 'relative';
     block.innerHTML = `
         <p>Block ${id}</p>
-        <div class="block-size">
-            <h2>${sizeKb}</h2>
-            <h2>&nbsp;KB</h2>
+        <div class="block-content">
+            <div>
+                <p id="block-status"></p>
+            </div>
+            <div class="block-size">
+                <h2>${sizeKb}</h2>
+                <h2>&nbsp;KB</h2>
+            </div>
         </div>
         <div></div>
         <div class="process-action">
@@ -331,12 +488,20 @@ const updateBlockVisuals = results => {
         const blockId = parseInt(block.id.replace('block-', ''), 10);
         const blockSizeEl = block.querySelector('h2');
         const blockSize = blockSizeEl ? parseInt(blockSizeEl.textContent, 10) : 0;
+        let bgColor = 'var(--primary-color)';
+        let borderColor = 'transparent';
         
         // Calculate total allocated size for this block
         let totalAllocated = 0;
         Object.entries(results).forEach(([processKey, result]) => {
             if (result.status === 'Allocated' && result.block === blockId) {
-                const processIndex = parseInt(processKey.replace('process ', ''), 10) - 1;
+                const processIndex = parseInt(processKey.replace('Process ', ''), 10) - 1;
+                const processElem = document.getElementById(`process-${processIndex + 1}`);
+                if (processElem) {
+                    bgColor = processElem.getAttribute('data-bg');
+                    borderColor = processElem.getAttribute('data-border');
+                }
+
                 if (simulationState && simulationState.processes[processIndex]) {
                     totalAllocated += simulationState.processes[processIndex];
                 }
@@ -345,8 +510,21 @@ const updateBlockVisuals = results => {
         
         if (totalAllocated > 0 && blockSize > 0) {
             const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
-            block.style.background = `linear-gradient(to right, #c3f7c3 0%, #c3f7c3 ${percentage}%, #f6ff8f ${percentage}%, #f6ff8f 100%)`; //ITO yung color ng block, pwede mo palitan yan
-            block.style.borderColor = '#2cb02c';
+            block.style.background = `linear-gradient(to right, ${bgColor} 0%,  ${bgColor} ${percentage}%, white ${percentage}%, white 100%)`; //ITO yung color ng block, pwede mo palitan yan
+            block.style.borderBottomColor = `${borderColor}`;
+            const hatchColor =  `${bgColor}`; 
+            const hatchPattern = `repeating-linear-gradient(
+                45deg, 
+                ${hatchColor}, 
+                ${hatchColor} 5px, 
+                transparent 5px, 
+                transparent 10px
+            )`;
+
+            block.style.background = `
+                linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%),
+                ${hatchPattern}
+            `;
         }
     });
 };
@@ -387,11 +565,14 @@ const resetBlocksUI = () => {
         const bId = block.id.replace('block-', '');
         const text = block.querySelector('p');
         const size = block.querySelector('h2');
+        const process = block.querySelector('#block-status');
+        process.textContent = "";
         if (text && size) text.textContent = `Block ${bId}`;
     });
 };
 
 const prepareSimulation = () => {
+    debugMemorySimulators();
     const processes = getProcessSizes();
     const blocks = getBlockSizes();
 
@@ -405,21 +586,56 @@ const prepareSimulation = () => {
         return false;
     }
 
+    const selectedSimulator = getSelectedSimulator();
+    if (!selectedSimulator || typeof selectedSimulator.createLinkedMemory !== 'function') {
+        appendConsoleMessage('Selected algorithm is not available.');
+        return false;
+    }
+
     simulationState = {
         processes,
-        memoryHead: memorySimulator.createLinkedMemory(blocks),
+        memoryHead: selectedSimulator.createLinkedMemory(blocks),
         currentIndex: 0,
         results: {},
-        stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 }
+        stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+        lastBlock: null,
+        nextSplitId: 0
     };
+
+    simulationState.lastBlock = simulationState.memoryHead;
+    simulationState.nextSplitId = (() => {
+        let maxId = 0;
+        for (let node = simulationState.memoryHead; node; node = node.next) {
+            maxId = Math.max(maxId, node.id);
+        }
+        return maxId + 1;
+    })();
 
     resetConsole();
     appendConsoleMessage('Simulation ready. Use Next or Play.');
-    setTotalMemoryDisplay(memorySimulator.totalMemory(simulationState.memoryHead));
-    updateStatistics(memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats));
+    setTotalMemoryDisplay(totalMemory(simulationState.memoryHead));
+    updateStatistics(computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats));
     resetBlocksUI();
     currentStep = 0;
     highlightCurrentProcess();
+
+    const algoDescriptionEl = document.getElementById('algo-description');
+    if (algoDescriptionEl) {
+        const definition = getSelectedAlgorithmDefinition();
+        const mode = getSelectedPartitionMode() === 'dynamic' ? 'Dynamic' : 'Fixed';
+        algoDescriptionEl.textContent = `${definition.displayName} Algorithm - ${mode} Partition`;
+    }
+
+    // Disable buttons during simulation
+    document.getElementById('add-block-btn').disabled = true;
+    document.getElementById('add-process-btn').disabled = true;
+    document.getElementById('randomize-value').disabled = true;
+    document.getElementsByClassName('add-block').disabled = true;
+    document.getElementsByClassName('input-prcs').disabled = true;
+    document.querySelectorAll('.process-action').forEach(action => action.style.display = 'none');
+    document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = true);
+    document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = true);
+
     return true;
 };
 
@@ -435,19 +651,35 @@ const runStep = () => {
     highlightCurrentProcess();
 
     const size = simulationState.processes[simulationState.currentIndex];
-    const processId = `process ${simulationState.currentIndex + 1}`;
-    const isFixed = true; // TODO: hook to partition mode selection
+    const processId = `Process ${simulationState.currentIndex + 1}`;
+    const isFixed = getSelectedPartitionMode() !== 'dynamic';
 
-    const stepResult = isFixed
-        ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
-        : memorySimulator.bestFitDynamicStep(simulationState.memoryHead, size);
+    const definition = getSelectedAlgorithmDefinition();
+    const selectedSimulator = getSelectedSimulator();
+    const methodName = isFixed ? definition.fixed : definition.dynamic;
+    const stepMethod = selectedSimulator?.[methodName];
+
+    if (typeof stepMethod !== 'function') {
+        appendConsoleMessage(`The ${definition.displayName} implementation does not support this mode.`);
+        return false;
+    }
+
+    const args = [simulationState.memoryHead, size];
+    if (!isFixed) {
+        args.push(simulationState.lastBlock, simulationState.nextSplitId);
+    }
+
+    const stepResult = stepMethod.apply(selectedSimulator, args);
+    if (stepResult.newHead) simulationState.memoryHead = stepResult.newHead;
+    if (stepResult.lastBlock) simulationState.lastBlock = stepResult.lastBlock;
+    if (typeof stepResult.nextSplitId === 'number') simulationState.nextSplitId = stepResult.nextSplitId;
 
     simulationState.results[processId] = stepResult.result;
     simulationState.stats.allocatedSize += stepResult.allocatedSize;
     simulationState.stats.successfulAllocations += stepResult.successfulAllocations;
     simulationState.stats.intFragmentation += stepResult.result.fragmentation || 0;
 
-    const compiledStats = memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
+    const compiledStats = computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
     updateStatistics(compiledStats);
     setTotalMemoryDisplay(compiledStats.totalMemory);
     updateBlockVisuals(simulationState.results);
@@ -457,8 +689,8 @@ const runStep = () => {
     if (stepResult.result.status === 'Allocated') {
         const blockEl = document.getElementById(`block-${stepResult.result.block}`);
         if (blockEl) {
-            const label = blockEl.querySelector('p');
-            if (label) label.textContent = `Block ${stepResult.result.block} (${size} KB)`;
+            const label = blockEl.querySelector('#block-status');
+            if (label) label.textContent = `${processId}`;
         }
     }
 
@@ -517,6 +749,14 @@ const runReset = () => {
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
     setTotalMemoryDisplay(0);
     appendConsoleMessage('Simulation reset.');
+
+    // Enable buttons after reset
+    document.getElementById('add-block-btn').disabled = false;
+    document.getElementById('add-process-btn').disabled = false;
+    document.getElementById('randomize-value').disabled = false;
+    document.querySelectorAll('.process-action').forEach(action => action.style.display = '');
+    document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = false);
+    document.querySelectorAll('.delete-block-btn').forEach(btn => btn.disabled = false);
 };
 
 const playBtn = document.getElementById('play-btn');
@@ -545,3 +785,39 @@ if (simulationContainer) {
     updateTotalMemory();
 }
 
+
+function startSimulation(event) {
+    // 1. Stop the browser from refreshing/changing the URL
+    event.preventDefault(); 
+
+    const form = document.getElementById("simulation-Option");
+    
+    // 2. Get the selected algorithm
+    const selected = form.querySelector('input[name="algo"]:checked');
+    
+    // 3. Get the toggle state
+    const isDynamic = form.querySelector('.checkbox').checked;
+
+    if (selected) {
+        const algo = selected.value; // e.g., "first-fit"
+        
+        // Construct the filename
+        // Matches: simulation-first-fit.html OR simulation-first-fit-dynamic.html
+        let fileName = "simulation-" + algo;
+        if (isDynamic) {
+            fileName += "-dynamic";
+        }
+
+        console.log("Redirecting to: " + fileName + ".html");
+        window.location.href = fileName + ".html";
+    } else {
+        alert("Please select an algorithm!");
+    }
+}
+
+    const algoDescriptionEl = document.getElementById('algo-description');
+    if (algoDescriptionEl) {
+        const definition = getSelectedAlgorithmDefinition();
+        const mode = getSelectedPartitionMode() === 'dynamic' ? 'Dynamic' : 'Fixed';
+        algoDescriptionEl.textContent = `${definition.displayName} Algorithm - ${mode} Partition`;
+    }

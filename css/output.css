@@ -17,10 +17,14 @@
 
 svg {
     flex-shrink: 0;
+    transition: all 200ms ease;
 }
 
 :root {
     --primary-color: #4CAF50;
+    --error-color: #E26465;
+    --warning-color: #fae39f;
+    --success-color: #74d99f;
 }
 
 body {
@@ -109,11 +113,12 @@ body {
 .rotate svg:last-child {
     transform: rotate(180deg);
 }
+
 #toggle-btn {
     position: absolute;
     top: 0;
     left: 0;
-    padding: .75em;
+    padding: .75em .50em;
     border: none;
     background: none;
     cursor: pointer;
@@ -174,10 +179,172 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    grid-area: main;
+    padding: 48px;
 }
 
-.input-values form {
+.main-container {
+    position: relative;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    height: 100%;
+    width: 100%;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
+    padding: 3.75rem;
+    > h2 {font-size: 32px; font-weight: 600;}
+}
+
+form {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    > h2 {font-size: 20px; font-weight: 600;}
+}
+
+.contiguous, .non-contiguous {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    flex: 1;
+    > .header {
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        align-items: center;
+        > div {
+            p {font-weight: 300;}
+        }
+    }
+}
+
+.contiguous-option, .non-contiguous-option {
+    display: grid;
+    gap: 12px;
+    flex: 1;
+    > label {
+        height: 100%;
+        width: 100%;
+        cursor: pointer;
+        > .algo-content {
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            border: #e0e0e0 2px solid;
+            border-radius: 8px;
+            height: 100%; width: 100%;
+            gap: 8px;
+            transition: all 250ms ease;
+            > .algo-icon {
+                padding: 12px;
+                background-color: #e0e0e0;
+                border-radius: 8px;
+                max-height: 48px;
+                max-width: 48px;
+                margin-bottom: 8px;
+                transition: all 250ms ease;
+            }
+            > h3 {font-size: 1rem; font-weight: 600;}
+            > p {width: 220px; font-size: 0.75rem;}
+        }
+    }
+}
+
+.contiguous-option {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.non-contiguous-option {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: 1fr;
+}
+
+input[type="radio"] {display: none;}
+input[type="radio"]:checked + .algo-content {
+    border-color: var(--primary-color);
+    background-color: #E8F5E9;
+}
+input[type="radio"]:checked + .algo-content .algo-icon {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.toggle-partition {
+    display: flex;
+    align-items: center;
+    background-color: #e0e0e0;
+    border-radius: 8px;
+    height: 85%;
+    width: 200px;
+    padding: 4px;
+}
+
+.toggle {
+	width: 100%;
+	height: 100%;
+	cursor: pointer;
+	display: block;
+    position: relative;
+	& .wrapper {
+		position: relative;
+		width: 100%;
+		height: 100%;
+        display: flex;
+        align-items: center;
+		& .text {
+            position: absolute;
+            display: flex;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            pointer-events: none;
+            span {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                color: #000;
+            }
+		}
+        & .pill {
+            display: block;
+            background-color: white;
+            width: 50%;
+            height: 100%;
+            border-radius: 8px;
+            transition: transform 400ms ease;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
+            z-index: 1;
+        }
+	}
+	& .checkbox {
+		display: none;
+		&:checked + .wrapper > .pill {
+            transform: translateX(100%);
+        }
+	}
+}
+
+input[type="submit"] {
+    cursor: pointer;
+    background-color: var(--primary-color);
+    width: 100%;
+    height: auto;
+    border: none;
+    min-height: 60px;
+    border-radius: 8px;
+    font-size: medium;
+    color: white;
+}
+
+/* .input-values form {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
@@ -230,7 +397,8 @@ body {
 .input-action button[type="submit"] {
     border: none;
     background-color: var(--primary-color);
-}
+} */
+
 #modal-form {
     transition: opacity 200ms ease-in-out;
     position: fixed;
