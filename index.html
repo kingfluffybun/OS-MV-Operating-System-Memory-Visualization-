@@ -64,9 +64,104 @@
     </section>
     <section class="main">
         <button id="toggle-btn" onclick="toggleSideBar()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
         </button>
-        <div class="input-values">
+        <div class="main-container">
+            <h2>Select Memory Allocation Algorithm</h2> <br>
+            <form action="simulation.html" method="post">
+                <div class="contiguous">
+                    <div class="header">
+                        <div style="display: flex; gap: 8px; flex-direction: column;">
+                            <h3>Contiguous</h3>
+                            <p>Stores data in one single, unbroken block.</p>
+                        </div>
+                        <!-- toggle fixed/dynamic -->
+                        <div class="toggle-partition">
+                            <label class="toggle">
+                                <input type="checkbox" class="checkbox" value="isDynamic">
+                                <div class="wrapper">
+                                    <div class="text">
+                                        <span class="fixed">Fixed</span>
+                                        <span class="dynamic">Dynamic</span>
+                                    </div>
+                                    <span class="pill"></span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="contiguous-option">
+                        <!-- First fit -->
+                        <label> 
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
+                            <div class="algo-content">
+                                <h3>First Fit</h3>
+                                <p>Allocates the first hole encountered that is large enough.</p>
+                            </div>
+                        </label>
+                        <!-- Next fit -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="next-fit">
+                            <div class="algo-content">
+                                <h3>Next Fit</h3>
+                                <p>Allocates the smallest hole that can satisfy the request.</p>
+                            </div>
+                        </label>
+                        <!-- Best fit -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="best-fit">
+                            <div class="algo-content">
+                                <h3>Best Fit</h3>
+                                <p>Allocates the largest hole available in the entire list.</p>
+                            </div>
+                        </label>
+                        <!-- Worst fit -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="worst-fit">
+                            <div class="algo-content">
+                                <h3>Worst Fit</h3>
+                                <p>Allocates the first hole found starting from the last search.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="non-contiguous">
+                    <div class="header">
+                        <div style="display: flex; gap: 8px; flex-direction: column;">
+                            <h3>Non-Contiguous</h3>
+                            <p>Breaks data into pieces and fits them into any available memory gaps.</p>
+                        </div>
+                    </div>
+                    <div class="non-contiguous-option">
+                        <!-- Paging -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
+                            <div class="algo-content">
+                                <h3>Paging</h3>
+                                <p>Divides memory into fixed-size blocks called pages.</p>
+                            </div>
+                        </label>
+                        <!-- Segmentation -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
+                            <div class="algo-content">
+                                <h3>Segmentation</h3>
+                                <p>Divides memory into variable-size blocks based on logic.</p>
+                            </div>
+                        </label>
+                        <!-- Segmentation with Paging -->
+                        <label>
+                            <input type="radio" name="algo[]" class="algo-option" value="first-fit">
+                            <div class="algo-content">
+                                <h3>Segmentation with Paging</h3>
+                                <p>Divides logical segments into fixed-size pages.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <input type="submit" value="Start Simulation">
+            </form>
+        </div>
+        <!-- <div class="input-values">
             <form action="">
                 <div class="input-block">
                     <input type="number" name="block" id="block 1" placeholder="Block 1">
@@ -89,18 +184,9 @@
                         Add New Process
                     </button>
                 </div>
-
-                <div class="input-action">
-                    <button type="button" style="display: flex; align-items: center; justify-content: center; gap: 8px">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
-                        Random Values
-                    </button>
-                    <button type="submit">
-                        <a href="test.html">Start Simulation</a>
-                    </button>
-                </div>
             </form>
-        </div>
+        </div> -->
+
     </section>
 </body>
 </html>
