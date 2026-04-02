@@ -195,8 +195,9 @@ input:not(:placeholder-shown) ~ .input-icon, input:not(:placeholder-shown) ~ .pa
     font-size: 14px;
     padding: 4px 0;
     text-decoration: none;
-    margin: 15px 0;
+    margin: 15px auto;
     transition: 0.3s;
+    width: fit-content;
     border-bottom: 1px solid transparent;
 }
 
