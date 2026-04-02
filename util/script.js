@@ -43,11 +43,26 @@ let currentStep = 0;
 let isPlaying = false;
 let speed = 1;
 
+const scrollDown = () => {
+    if (processContainer) {
+        processContainer.scrollTo({
+            top: processContainer.scrollHeight,
+            behavior: 'smooth'
+        });
+    }
+};
+
 const highlightCurrentProcess = () => {
     document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
     const processes = document.querySelectorAll('.process');
     if (currentStep < processes.length) {
-        processes[currentStep].classList.add('current');
+        const activeProcess = processes[currentStep];
+        activeProcess.classList.add('current');
+        activeProcess.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',  
+            inline: 'start'
+        });
     }
 };
 
@@ -168,6 +183,7 @@ add_process_btn.addEventListener('click', () => {
     const newProcess = createProcessElement(nextProcessId, processSize);
     processContainer.appendChild(newProcess);
     processSizeInput.value = '';
+    scrollDown();
 });
 
 const randomize_value = document.getElementById('randomize-value');
@@ -179,8 +195,17 @@ randomize_value.addEventListener('click', () => {
     const nextProcessId = processContainer.querySelectorAll('.process').length + 1;
     const newProcess = createProcessElement(nextProcessId, processSize);
     processContainer.appendChild(newProcess);
-    processSizeInput.value = '';
+    scrollDown();
 });
+
+const scrollToRight = () => {
+    if (simulationContainer) {
+        simulationContainer.scrollTo({
+            left: simulationContainer.scrollWidth,
+            behavior: 'smooth'
+        });
+    }
+};
 
 const add_block_btn = document.getElementById('add-block-btn');
 if (add_block_btn) {
@@ -188,13 +213,14 @@ if (add_block_btn) {
         if (!simulationContainer) {
             return;
         }
-
         const min = 4;
         const max = 8;
         const nextBlockId = simulationContainer.querySelectorAll('.block').length + 1;
         const newBlock = createBlockElement(nextBlockId, Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min));
         simulationContainer.insertBefore(newBlock, add_block_btn);
         updateTotalMemory();
+        resizeBlocks();
+        scrollToRight();
     });
 }
 
@@ -255,13 +281,34 @@ const editProcess = process => {
     });
 };
 
+const resizeBlocks = () => {
+    const blocks = Array.from(simulationContainer.querySelectorAll('.block'));
+    const pxPerKb = 0.5; 
+    const minWidth = 80;
+
+    blocks.forEach(block => {
+        const sizeEl = block.querySelector('h2');
+        const blockSize = sizeEl ? parseInt(sizeEl.textContent, 10) : 0;
+        
+        if (blockSize > 0) {
+            const calculatedWidth = blockSize * pxPerKb;
+            block.style.width = `${minWidth + calculatedWidth}px`;
+            // block.style.width = `${Math.max(minWidth, calculatedWidth)}px`;
+            
+            block.style.flex = "0 0 auto"; 
+        }
+    });
+};
+
 const editBlock = block => {
     const sizeEl = block.querySelector('h2');
     startInlineEdit(sizeEl, parsedSize => {
-        block.style.width = `${Math.max(100, parsedSize)}px`;
         updateTotalMemory();
+        resizeBlocks();
     });
 };
+
+
 
 if (processContainer) {
     processContainer.addEventListener('click', event => {
@@ -376,6 +423,7 @@ const updateBlockVisuals = results => {
                 if (processElem) {
                     bgColor = processElem.getAttribute('data-bg');
                     borderColor = processElem.getAttribute('data-border');
+                    
                 }
 
                 if (simulationState && simulationState.processes[processIndex]) {
@@ -393,8 +441,8 @@ const updateBlockVisuals = results => {
                 45deg, 
                 ${hatchColor}, 
                 ${hatchColor} 5px, 
-                transparent 5px, 
-                transparent 10px
+                ${borderColor} 5px, 
+                ${borderColor} 10px
             )`;
 
             block.style.background = `
@@ -584,6 +632,7 @@ const runReset = () => {
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
     setTotalMemoryDisplay(0);
     appendConsoleMessage('Simulation reset.');
+    document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
 
     // Enable buttons after reset
     document.getElementById('add-block-btn').disabled = false;
