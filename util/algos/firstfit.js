@@ -233,77 +233,77 @@ const memorySimulator = {
 };
 
 // --- Interval helpers ---
-let autoInterval = null;
-let currentIntervalSpeed = null;
-const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
-let memoryState = memorySimulator.cloneLinkedMemory(memory);
-const processes = [212, 417, 112, 426];
-let stepIndex = 0;
-let Partition = "dynamic";
+// let autoInterval = null;
+// let currentIntervalSpeed = null;
+// const memory = memorySimulator.createLinkedMemory([100, 500, 200, 300, 600]);
+// let memoryState = memorySimulator.cloneLinkedMemory(memory);
+// const processes = [212, 417, 112, 426];
+// let stepIndex = 0;
+// let Partition = "dynamic";
 
-function getSliderValue() {
-    const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
-    return slider ? Number(slider.value) : 50;
-}
+// function getSliderValue() {
+//     const slider = typeof document !== "undefined" ? document.querySelector('.slider') : null;
+//     return slider ? Number(slider.value) : 50;
+// }
 
-function getIntervalSpeed() {
-    const sliderValue = getSliderValue();
-    const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
-    const baseDelay = 1000;
-    return baseDelay / multiplier;
-}
+// function getIntervalSpeed() {
+//     const sliderValue = getSliderValue();
+//     const multiplier = 1 + ((sliderValue - 1) / 99) * 2;
+//     const baseDelay = 1000;
+//     return baseDelay / multiplier;
+// }
 
-function updateIntervalSpeed() {
-    const speed = getIntervalSpeed();
-    if (autoInterval && speed !== currentIntervalSpeed) {
-        clearInterval(autoInterval);
-        currentIntervalSpeed = speed;
-        autoInterval = setInterval(stepThrough, currentIntervalSpeed);
-        console.log("Adjusted interval speed to:", currentIntervalSpeed, "ms");
-    }
-}
+// function updateIntervalSpeed() {
+//     const speed = getIntervalSpeed();
+//     if (autoInterval && speed !== currentIntervalSpeed) {
+//         clearInterval(autoInterval);
+//         currentIntervalSpeed = speed;
+//         autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+//         console.log("Adjusted interval speed to:", currentIntervalSpeed, "ms");
+//     }
+// }
 
-function stepThrough() {
-    if (stepIndex >= processes.length) {
-        console.log("Simulation complete");
-        clearInterval(autoInterval);
-        return;
-    }
+// function stepThrough() {
+//     if (stepIndex >= processes.length) {
+//         console.log("Simulation complete");
+//         clearInterval(autoInterval);
+//         return;
+//     }
 
-    updateIntervalSpeed();
+//     updateIntervalSpeed();
 
-    const processSize = processes[stepIndex];
-    console.log("Allocating process:", processSize);
+//     const processSize = processes[stepIndex];
+//     console.log("Allocating process:", processSize);
 
-    if (Partition === "fixed") {
-        const resultFixed = memorySimulator.firstFitFixedStep(memoryState, processSize);
-        console.log("Fixed First Fit Partition");
-        console.log(resultFixed);
-    }
+//     if (Partition === "fixed") {
+//         const resultFixed = memorySimulator.firstFitFixedStep(memoryState, processSize);
+//         console.log("Fixed First Fit Partition");
+//         console.log(resultFixed);
+//     }
 
-    if (Partition === "dynamic") {
-        const stepResult = memorySimulator.firstFitDynamicStep(memoryState, processSize);
-        memoryState = stepResult.newHead;
-        console.log("Dynamic First Fit Partition");
-        console.log(stepResult.result);
-    }
+//     if (Partition === "dynamic") {
+//         const stepResult = memorySimulator.firstFitDynamicStep(memoryState, processSize);
+//         memoryState = stepResult.newHead;
+//         console.log("Dynamic First Fit Partition");
+//         console.log(stepResult.result);
+//     }
 
-    stepIndex++;
-}
+//     stepIndex++;
+// }
 
-function startInterval() {
-    clearInterval(autoInterval);
-    currentIntervalSpeed = getIntervalSpeed();
-    autoInterval = setInterval(stepThrough, currentIntervalSpeed);
-    console.log("Interval started at speed:", currentIntervalSpeed, "ms");
-}
+// function startInterval() {
+//     clearInterval(autoInterval);
+//     currentIntervalSpeed = getIntervalSpeed();
+//     autoInterval = setInterval(stepThrough, currentIntervalSpeed);
+//     console.log("Interval started at speed:", currentIntervalSpeed, "ms");
+// }
 
-function stopInterval() {
-    clearInterval(autoInterval);
-    console.log("Interval stopped");
-}
+// function stopInterval() {
+//     clearInterval(autoInterval);
+//     console.log("Interval stopped");
+// }
 
 // --- Execution ---
-console.log("First Fit Fixed:",   memorySimulator.firstFitFixed(memory, processes));
-console.log("First Fit Dynamic:", memorySimulator.firstFitDynamic(memory, processes));
-startInterval();
+// console.log("First Fit Fixed:",   memorySimulator.firstFitFixed(memory, processes));
+// console.log("First Fit Dynamic:", memorySimulator.firstFitDynamic(memory, processes));
+// startInterval();
