@@ -118,6 +118,41 @@ const memorySimulator = {
         };
     },
 
+    performCompaction(head, processSize) {
+        const totalFree = this.totalFreeSize(head);
+        if (totalFree < processSize) return null;
+
+        const allocated = [];
+        let freeTotal = 0;
+        let maxId = 0;
+        let tail = null;
+
+        // Collect allocated blocks and sum free
+        for (let node = head; node; node = node.next) {
+            maxId = Math.max(maxId, node.id);
+            if (node.status === "Occupied") {
+                allocated.push(node);
+            } else {
+                freeTotal += node.size;
+            }
+        }
+
+        // Rebuild: allocated blocks + single free at end
+        let newHead = null;
+        for (let node of allocated) {
+            if (!newHead) newHead = node;
+            if (tail) tail.next = node;
+            tail = node;
+            node.next = null;
+        }
+        if (freeTotal > 0) {
+            const freeNode = { id: maxId + 1, size: freeTotal, status: "Free", next: null };
+            if (tail) tail.next = freeNode;
+            else newHead = freeNode;
+        }
+        return newHead;
+    },
+
     nextFitDynamicStep(memoryHead, processSize) {
         let block = this._nextLastBlock || memoryHead;
         const start = block;
@@ -156,6 +191,38 @@ const memorySimulator = {
         }
 
         if (!allocatedBlock) {
+            // Trigger compaction for Next-Fit
+            const compactedHead = this.performCompaction(memoryHead, processSize);
+            if (compactedHead) {
+                // Try allocate in compacted, starting from _nextLastBlock equivalent or head
+                let compBlock = this._nextLastBlock || compactedHead;
+                const compStart = compBlock;
+                while (compBlock) {
+                    if (tryAllocate(compBlock)) break;
+                    compBlock = compBlock.next;
+                }
+                if (!allocatedBlock) {
+                    compBlock = compactedHead;
+                    while (compBlock && compBlock !== compStart) {
+                        if (tryAllocate(compBlock)) break;
+                        compBlock = compBlock.next;
+                    }
+                }
+                if (allocatedBlock) {
+                    // Update structure and _nextLastBlock
+                    let origTail = memoryHead;
+                    while (origTail.next) origTail = origTail.next;
+                    origTail.next = compactedHead;
+                    this._nextLastBlock = allocatedBlock;
+                    return {
+                        result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation: allocatedBlock.size - processSize },
+                        allocatedSize: processSize,
+                        successfulAllocations: 1,
+                        newFreeId: newFreeIdFromSplit
+                    };
+                }
+            }
+
             return {
                 result: { size: processSize, block: "None", status: "Unallocated" },
                 allocatedSize: 0,
