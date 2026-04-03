@@ -175,7 +175,7 @@ const createBlockElement = (id, sizeKb, options = {}) => {
                 <p class="block-status"></p>
             </div>
             <div class="block-size">
-                <h2>${sizeKb}</h2>
+                <h2><span class="block-size-value">${sizeKb}</span></h2>
                 <h2>&nbsp;KB</h2>
             </div>
         </div>
@@ -200,7 +200,7 @@ const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, f
     }
     allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
 
-    const sizeNumEl = allocatedEl.querySelector('.block-size h2');
+    const sizeNumEl = allocatedEl.querySelector('.block-size-value');
     if (sizeNumEl) {
         sizeNumEl.textContent = String(allocatedSizeKb);
     }
@@ -456,47 +456,71 @@ const updateBlockVisuals = results => {
     if (!simulationContainer) return;
     
     simulationContainer.querySelectorAll('.block').forEach(block => {
-        const blockId = parseInt(block.id.replace('block-', ''), 10);
-        const blockSizeEl = block.querySelector('h2');
-        const blockSize = blockSizeEl ? parseInt(blockSizeEl.textContent, 10) : 0;
-        let bgColor = 'var(--primary-color)';
-        let borderColor = 'transparent';
-        
-        // Calculate total allocated size for this block
-        let totalAllocated = 0;
-        Object.entries(results).forEach(([processKey, result]) => {
-            if (result.status === 'Allocated' && result.block === blockId) {
-                const processIndex = parseInt(processKey.replace('Process ', ''), 10) - 1;
-                const processElem = document.getElementById(`process-${processIndex + 1}`);
-                if (processElem) {
-                    bgColor = processElem.getAttribute('data-bg');
-                    borderColor = processElem.getAttribute('data-border');
-                    
-                }
-
-                if (simulationState && simulationState.processes[processIndex]) {
-                    totalAllocated += simulationState.processes[processIndex];
-                }
+        // Re-apply hatch pattern on internal frag blocks (colors stored as data attrs)
+        if (block.classList.contains('block--fixed-waste')) {
+            const hatchBg = block.dataset.hatchBg;
+            const hatchBorder = block.dataset.hatchBorder;
+            if (hatchBg && hatchBorder) {
+                const hatchPattern = `repeating-linear-gradient(
+                    45deg,
+                    ${hatchBg}75,
+                    ${hatchBg}75 5px,
+                    ${hatchBorder} 5px,
+                    ${hatchBorder} 10px
+                )`;
+                block.style.background = hatchPattern;
+                block.style.borderBottom = `4px solid ${hatchBorder}`;
             }
-        });
-        
-        if (totalAllocated > 0 && blockSize > 0) {
-            const percentage = Math.min(100, (totalAllocated / blockSize) * 100);
-            block.style.background = `linear-gradient(to right, ${bgColor} 0%,  ${bgColor} ${percentage}%, white ${percentage}%, white 100%)`; //ITO yung color ng block, pwede mo palitan yan
-            block.style.borderBottomColor = `${borderColor}`;
-            const hatchColor =  `${bgColor}`; 
-            const hatchPattern = `repeating-linear-gradient(
-                45deg, 
-                ${hatchColor}75, 
-                ${hatchColor}75 5px, 
-                ${borderColor} 5px, 
-                ${borderColor} 10px
-            )`;
+            return;
+        }
 
-            block.style.background = `
-                linear-gradient(to right, ${bgColor} ${percentage}%, transparent ${percentage}%),
-                ${hatchPattern}
-            `;
+        // Skip dynamic free-hole blocks
+        if (block.classList.contains('block--split-free')) {
+            return;
+        }
+
+        const blockId = parseInt(block.id.replace('block-', ''), 10);
+        const sizeDisplay = block.querySelector('.block-size-value');
+        
+        let bgColor = '';
+        let borderColor = '';
+        let isAllocated = false;
+        let processActualSize = null;
+
+        // Find the active allocation for this specific block ID
+        const currentAllocation = Object.entries(results).find(([_, res]) => 
+            res.status === 'Allocated' && parseInt(res.block, 10) === blockId
+        );
+
+        if (currentAllocation) {
+            const [processKey, result] = currentAllocation;
+            const pNum = processKey.match(/\d+/)[0]; 
+            const processElem = document.getElementById(`process-${pNum}`);
+            
+            if (processElem) {
+                bgColor = processElem.getAttribute('data-bg');
+                borderColor = processElem.getAttribute('data-border');
+                isAllocated = true;
+                processActualSize = result.size; // This ensures we show the process KB
+            }
+        }
+
+        if (isAllocated) {
+            block.style.background = bgColor;
+            block.style.borderBottom = `4px solid ${borderColor}`;
+            block.classList.add('allocated');
+            if (sizeDisplay && processActualSize !== null) {
+                sizeDisplay.textContent = processActualSize;
+            }
+        } else {
+            // Restore to original partition size
+            const originalSize = block.dataset.originalSize;
+            if (sizeDisplay && originalSize) {
+                sizeDisplay.textContent = originalSize;
+            }
+            block.style.background = '';
+            block.style.borderBottom = '';
+            block.classList.remove('allocated');
         }
     });
 };
@@ -531,19 +555,35 @@ const resetConsole = () => {
 };
 
 const resetBlocksUI = () => {
+    // 1. Remove all blocks created by splitting logic (waste fragments and dynamic holes)
+    simulationContainer.querySelectorAll('.block--split-free, .block--fixed-waste').forEach(extraBlock => {
+        extraBlock.remove();
+    });
+
+    // 2. Reset the original partitions back to their pre-simulation state
     simulationContainer.querySelectorAll('.block').forEach(block => {
         block.style.background = '';
         block.style.borderColor = '';
+        block.style.borderBottom = '';
+        block.classList.remove('allocated');
+
         const bId = block.id.replace('block-', '');
         const labelNum = block.dataset.partitionLabel || bId;
         const text = block.querySelector('p');
-        const size = block.querySelector('h2');
-        const process = block.querySelector('.block-status');
-        if (process) process.textContent = '';
-        if (text && size) {
-            text.textContent = block.classList.contains('block--split-free') ? 'Hole' : `Block ${labelNum}`;
+        const status = block.querySelector('.block-status');
+
+        if (text) text.textContent = `Block ${labelNum}`;
+        if (status) status.textContent = '';
+
+        // Restore the original size that was stamped at prepareSimulation time
+        const originalSize = block.dataset.originalSize;
+        const sizeDisplay = block.querySelector('.block-size-value');
+        if (originalSize && sizeDisplay) {
+            sizeDisplay.textContent = originalSize;
         }
     });
+
+    resizeBlocks();
 };
 
 const restorePreSimulationBlocks = () => {
@@ -578,6 +618,17 @@ const prepareSimulation = () => {
         preSimBlockState = getBlockSizes().slice();
     }
 
+    // Stamp the original size on every block element NOW, before any step shrinks them.
+    // resetBlocksUI reads this to restore the display on reset.
+    if (simulationContainer) {
+        simulationContainer.querySelectorAll('.block').forEach(block => {
+            const sizeEl = block.querySelector('.block-size-value') || block.querySelector('h2');
+            if (sizeEl) {
+                block.dataset.originalSize = parseInt(sizeEl.textContent, 10) || 0;
+            }
+        });
+    }
+
     simulationState = {
         processes,
         memoryHead: memorySimulator.createLinkedMemory(blocks),
@@ -606,6 +657,52 @@ const prepareSimulation = () => {
     return true;
 };
 
+const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blockId, bgColor, borderColor) => {
+    // 1. Update the original block display immediately
+    const sizeDisplay = allocatedEl.querySelector('.block-size-value');
+    if (sizeDisplay) sizeDisplay.textContent = processSizeKb;
+
+    // 2. Create the "Internal Frag" block
+    const wasteEl = document.createElement('div');
+    wasteEl.className = 'block block--fixed-waste'; 
+    wasteEl.id = `block-${blockId}-waste`;
+    // Store colors so updateBlockVisuals can re-apply them on refresh
+    if (bgColor) wasteEl.dataset.hatchBg = bgColor;
+    if (borderColor) wasteEl.dataset.hatchBorder = borderColor;
+
+    // Inherit the parent block's label (e.g. "Block 2 - Internal Frag")
+    const parentLabel = allocatedEl.querySelector('p') ? allocatedEl.querySelector('p').textContent.trim() : `Block ${blockId}`;
+
+    wasteEl.innerHTML = `
+        <p>${parentLabel}</p>
+        <div class="block-content">
+            <div class="block-status">Unusable</div>
+            <div class="block-size">
+                <h2><span class="block-size-value">${wasteSizeKb}</span></h2>
+                <h2>&nbsp;KB</h2>
+            </div>
+        </div>
+    `;
+
+    // 3. Apply hatch pattern using the process color
+    if (bgColor && borderColor) {
+        const hatchPattern = `repeating-linear-gradient(
+            45deg,
+            ${bgColor}75,
+            ${bgColor}75 5px,
+            ${borderColor} 5px,
+            ${borderColor} 10px
+        )`;
+        wasteEl.style.background = hatchPattern;
+        wasteEl.style.borderBottom = `4px solid ${borderColor}`;
+    }
+
+    // 4. Place it after the allocated block
+    allocatedEl.after(wasteEl);
+    
+    if (typeof resizeBlocks === 'function') resizeBlocks();
+};
+
 const runStep = () => {
     if (!simulationState && !prepareSimulation()) return;
 
@@ -625,10 +722,13 @@ const runStep = () => {
         ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
         : memorySimulator.bestFitDynamicStep(simulationState.memoryHead, size);
 
+    // CRITICAL: Attach the process size to the result
+    stepResult.result.size = size; 
+
     simulationState.results[processId] = stepResult.result;
     simulationState.stats.allocatedSize += stepResult.allocatedSize;
     simulationState.stats.successfulAllocations += stepResult.successfulAllocations;
-    simulationState.stats.intFragmentation += stepResult.result.fragmentation || 0;
+    simulationState.stats.statsIntFragmentation += stepResult.result.fragmentation || 0;
 
     const compiledStats = memorySimulator.computeStats(simulationState.memoryHead, simulationState.processes, simulationState.results, simulationState.stats);
     updateStatistics(compiledStats);
@@ -637,45 +737,44 @@ const runStep = () => {
     if (stepResult.result.status === 'Allocated') {
         const blockEl = document.getElementById(`block-${stepResult.result.block}`);
         const leftover = stepResult.result.fragmentation || 0;
-        if (!isFixed && leftover > 0 && stepResult.newFreeId != null && blockEl) {
-            insertDynamicFreeSplitAfter(
-                blockEl,
-                size,
-                leftover,
-                stepResult.newFreeId,
-                stepResult.result.block
-            );
+
+        if (leftover > 0 && blockEl) {
+            if (!isFixed && stepResult.newFreeId != null) {
+                insertDynamicFreeSplitAfter(blockEl, size, leftover, stepResult.newFreeId, stepResult.result.block);
+            } else if (isFixed) {
+                const colorIndex = simulationState.currentIndex % processColors.length;
+                const { bg: procBg, border: procBorder } = processColors[colorIndex];
+                insertFixedWasteSplitAfter(blockEl, size, leftover, stepResult.result.block, procBg, procBorder);
+            }
         }
+
         if (blockEl) {
             blockEl.classList.remove('block--split-free');
             const label = blockEl.querySelector('.block-status');
             if (label) label.textContent = `${processId}`;
+            
+            const sizeValueEl = blockEl.querySelector('.block-size-value');
+            if (sizeValueEl) sizeValueEl.textContent = size;
         }
     }
 
+    // Refresh all visuals
     updateBlockVisuals(simulationState.results);
 
+    // Console logging and index incrementing remains the same...
     const stepRes = stepResult.result;
-    console.log(processId, 'segmentation step result:', stepRes)
-
-    let breakdownInfo = '';
-    if (stepRes.breakdown) {
-        const b = stepRes.breakdown;
-        breakdownInfo = ` [code:${b.code} heap:${b.heap} stack:${b.stack}]`;
-    }
-
-    appendConsoleMessage(`${processId} (${size} KB) -> ${stepRes.status}${stepRes.block !== 'None' ? ` to Block ${stepRes.block}` : ''}${breakdownInfo}`);
+    appendConsoleMessage(`${processId} (${size} KB) -> ${stepRes.status}${stepRes.block !== 'None' ? ` to Block ${stepRes.block}` : ''}`);
 
     simulationState.currentIndex += 1;
-
     if (simulationState.currentIndex >= simulationState.processes.length) {
         appendConsoleMessage('Simulation complete');
-        clearInterval(playInterval);
-        playInterval = null;
-        togglePlayStop();
+        if (playInterval) {
+            clearInterval(playInterval);
+            playInterval = null;
+            togglePlayStop();
+        }
         return false;
     }
-
     return true;
 };
 
@@ -735,27 +834,36 @@ const runReset = () => {
         playInterval = null;
     }
 
-    const shouldRestoreDynamicLayout =
-        isDynamicPartitionMode() &&
-        simulationState != null &&
-        preSimBlockState &&
-        preSimBlockState.length;
-
+    // Capture the state before nullifying
+    const isDynamic = isDynamicPartitionMode();
+    
     simulationState = null;
     currentStep = 0;
-    highlightCurrentProcess();
+    
+    // UI RESET
+    resetBlocksUI(); // This now handles removing the "Waste" and "Hole" blocks
     resetConsole();
-    if (shouldRestoreDynamicLayout) {
+    
+    // If you use a pre-sim state for Dynamic (like compaction), restore it
+    if (isDynamic && preSimBlockState && preSimBlockState.length) {
         restorePreSimulationBlocks();
     }
-    resetBlocksUI();
-    updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
+
+    // Standard Updates
+    updateStatistics({ 
+        allocatedSize: 0, 
+        totalFree: 0, 
+        intFragmentation: 0, 
+        externalFragmentation: 0, 
+        memoryUtilization: 0, 
+        successRate: 0 
+    });
     updateTotalMemory();
     togglePlayStop();
     appendConsoleMessage('Simulation reset.');
-    document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
 
-    // Enable buttons after reset
+    // Resetting Inputs & Buttons
+    document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
     document.getElementById('add-block-btn').disabled = false;
     document.getElementById('add-process-btn').disabled = false;
     document.getElementById('randomize-value').disabled = false;
@@ -828,4 +936,3 @@ function startSimulation(event) {
         alert("Please select an algorithm!");
     }
 }
-
