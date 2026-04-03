@@ -152,7 +152,23 @@ function verify() {
     recoveryForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const recoveryKey = document.getElementById('recovery-key-input').value.trim();
+        const wordCount = 12;
+        let wordValues = [];
+
+        for (let i = 0; i < wordCount; i++) {
+            const input = document.getElementById(`word-${i}`);
+            if (input) {
+                wordValues.push(input.value.trim());
+            }
+        }
+
+        if (wordValues.some(word => word === "")) {
+            statusEl.textContent = 'Please enter all 12 recovery words.';
+            statusEl.style.color = '#ce1e1e';
+            return;
+        }
+
+        const recoveryKey = wordValues.join(' ');
         const statusEl = document.getElementById('recovery-status');
 
         const result = await verifyRecoveryKey(recoveryKey);
@@ -269,6 +285,18 @@ function generateRecoveryWords() {
     generatedRecoveryKeys = words.join(' ');
     sessionStorage.setItem('recoveryKeys', generatedRecoveryKeys);
 }
+
+document.getElementById('word-0').addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').trim().split(/\s+/);
+
+    pasteData.forEach((word, index) => {
+        const input = document.getElementById(`word-${index}`);
+        if (input) {
+            input.value = word;
+        }
+    });
+});
 
 // Display recovery words
 function display() {
