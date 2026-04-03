@@ -10,7 +10,8 @@ const memorySimulator = {
             else tail.next = node;
             tail = node;
         });
-        this._nextLastBlock = head;
+        // Reset next-fit pointer whenever a new memory list is created (e.g. on reset)
+        this._nextLastBlock = null;
         return head;
     },
 
@@ -76,24 +77,25 @@ const memorySimulator = {
     },
 
     nextFitFixedStep(memoryHead, processSize) {
-        let block = this._nextLastBlock || memoryHead;
-        const start = block;
+        // Start from last allocated block, or beginning if first call / after reset
+        let start = this._nextLastBlock || memoryHead;
+        let block = start;
         let allocatedBlock = null;
 
+        // Search from start to end of list
         while (block) {
             if (block.status === "Free" && processSize <= block.size) {
-                block.status = "Occupied";
                 allocatedBlock = block;
                 break;
             }
             block = block.next;
         }
 
+        // Wrap around: search from head up to (not including) start
         if (!allocatedBlock) {
             block = memoryHead;
             while (block && block !== start) {
                 if (block.status === "Free" && processSize <= block.size) {
-                    block.status = "Occupied";
                     allocatedBlock = block;
                     break;
                 }
@@ -109,8 +111,12 @@ const memorySimulator = {
             };
         }
 
-        this._nextLastBlock = allocatedBlock;
         const fragmentation = allocatedBlock.size - processSize;
+        allocatedBlock.status = "Occupied";
+
+        // Advance pointer past the now-occupied block for the next call
+        this._nextLastBlock = allocatedBlock.next || memoryHead;
+
         return {
             result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
             allocatedSize: processSize,
@@ -154,34 +160,43 @@ const memorySimulator = {
     },
 
     nextFitDynamicStep(memoryHead, processSize) {
-        let block = this._nextLastBlock || memoryHead;
-        const start = block;
+        // Start from last allocated block, or beginning if first call / after reset
+        let start = this._nextLastBlock || memoryHead;
+        let block = start;
         let allocatedBlock = null;
         let newFreeIdFromSplit = null;
+        let leftoverSize = 0;
 
-        const tryAllocate = current => {
-            if (current.status === "Free" && processSize <= current.size) {
-                const leftover = current.size - processSize;
-                current.size = processSize;
-                current.status = "Occupied";
+        const tryAllocate = (current) => {
+            if (current.status !== "Free" || processSize > current.size) return false;
 
-                newFreeIdFromSplit = null;
-                if (leftover > 0) {
-                    newFreeIdFromSplit = Math.max(...this._collectIds(memoryHead)) + 1;
-                    current.next = { id: newFreeIdFromSplit, size: leftover, status: "Free", next: current.next };
-                }
+            leftoverSize = current.size - processSize;
+            current.size = processSize;
+            current.status = "Occupied";
 
-                allocatedBlock = current;
-                return true;
+            if (leftoverSize > 0) {
+                newFreeIdFromSplit = Math.max(...this._collectIds(memoryHead)) + 1;
+                // Capture old next BEFORE rewiring, then insert split node
+                const oldNext = current.next;
+                current.next = {
+                    id: newFreeIdFromSplit,
+                    size: leftoverSize,
+                    status: "Free",
+                    next: oldNext
+                };
             }
-            return false;
+
+            allocatedBlock = current;
+            return true;
         };
 
+        // Search from start to end of list
         while (block) {
             if (tryAllocate(block)) break;
             block = block.next;
         }
 
+        // Wrap around: search from head up to (not including) start
         if (!allocatedBlock) {
             block = memoryHead;
             while (block && block !== start) {
@@ -230,10 +245,18 @@ const memorySimulator = {
             };
         }
 
-        this._nextLastBlock = allocatedBlock;
-        const fragmentation = allocatedBlock.size - processSize;
+        // After a dynamic split, allocatedBlock.next is the new free remainder node.
+        // Resume next search from there so we continue forward, not restart from head.
+        // If no split (exact fit) or we fell off the end, wrap back to head.
+        this._nextLastBlock = allocatedBlock.next || memoryHead;
+
         return {
-            result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
+            result: {
+                size: processSize,
+                block: allocatedBlock.id,
+                status: "Allocated",
+                fragmentation: leftoverSize
+            },
             allocatedSize: processSize,
             successfulAllocations: 1,
             newFreeId: newFreeIdFromSplit
