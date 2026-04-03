@@ -6,6 +6,7 @@
     <link rel="stylesheet" href="css/output.css">
     <link rel="stylesheet" href="css/test.css">
     <title>Document</title>
+    <script src="./util/algos/nextfit.js" defer></script>
     <script src="./util/script.js" defer></script>
 </head>
 <body>
@@ -29,7 +30,7 @@
                 </button>
                 <div class="sub-menu">
                     <div>
-                        <a href="#single-mode">
+                        <a href="index.html">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
                             <p>Single Mode</p>
                         </a>
@@ -62,15 +63,21 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
         </button>
         <div class="simulation-controls" style="grid-column: span 2;">
-            <button>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
-                <p>Play</p>
-            </button>
-            <button>
+            <div>
+                <button id="play-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+                    <p>Play</p>
+                </button>
+                <button id="stop-btn" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause-icon lucide-pause"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>  
+                    <p>Stop</p>
+                </button>
+            </div>
+            <button id="reset-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
                 <p>Reset</p>
             </button>
-            <button>
+            <button id="next-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
                 <p>Next</p>
             </button>
@@ -97,18 +104,20 @@
                     </button>
                 </div>
                 <div class="process-container">
-                    
+                    <!-- Dito papasok yung mga processes -->
                 </div>
             </div>
         </div>
         <div class="simulation">
             <h3>Memory Allocation Simulator</h3>
-            <p>First Fit Algorithm - Fixed Partition</p>
+            <p>Next Fit Algorithm - Fixed Partition</p>
             <div class="container">
-                
+                <div class="simulation-scroll-track">
+                    <!-- Dito papasok yung mga blocks -->
                 <button class="add-block" id="add-block-btn">
                     <div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div>
                 </button>
+                </div>
             </div>
         </div>
         <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -116,9 +125,9 @@
                 <h3>Console</h3>
                 <div class="container">
                     <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p>
-                    <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+                    <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
                     <p><span class="timestamp">[12:36:00PM]</span> Vero at, quo quibusdam odio optio aliquid iure assumenda quas perferendis laudantium deleniti pariatur sit dolor ea</p>
-                    <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p>
+                    <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p> -->
                 </div>
             </div>
             <div class="statistics">
@@ -130,27 +139,27 @@
                     </div>
                     <div style="grid-column: span 4;">
                         <p>Allocated</p>
-                        <h2>0 KB</h2>
+                        <h2 id="allocated-value">0 KB</h2>
                     </div>
                     <div style="grid-column: span 4;">
                         <p>Total Free</p>
-                        <h2>0 KB</h2>
+                        <h2 id="total-free-value">0 KB</h2>
                     </div>
                     <div style="grid-column: span 3;">
                         <p>Internal Fragmentation</p>
-                        <h2>0 KB</h2>
+                        <h2 id="internal-frag-value">0 KB</h2>
                     </div>
                     <div style="grid-column: span 3;">
                         <p>External Fragmentation</p>
-                        <h2>0 KB</h2>
+                        <h2 id="external-frag-value">0 KB</h2>
                     </div>
                     <div style="grid-column: span 3;">
                         <p>Memory Utilization</p>
-                        <h2>0%</h2>
+                        <h2 id="util-value">0%</h2>
                     </div>
                     <div style="grid-column: span 3;">
                         <p>Success Rate</p>
-                        <h2>0%</h2>
+                        <h2 id="success-rate-value">0%</h2>
                     </div>
                 </div>
             </div>
