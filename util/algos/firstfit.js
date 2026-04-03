@@ -1,4 +1,6 @@
-const firstFitSimulator = {
+let autoInterval;
+
+const memorySimulator = {
 
     createLinkedMemory(blocks) {
         let head = null, tail = null;
