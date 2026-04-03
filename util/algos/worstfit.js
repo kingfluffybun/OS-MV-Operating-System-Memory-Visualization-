@@ -1,9 +1,8 @@
-let autoInterval;
-
-const worstFitSimulator = {
+const memorySimulator = {
 
     createLinkedMemory(blocks) {
-        let head = null, tail = null;
+        let head = null;
+        let tail = null;
         blocks.forEach((size, i) => {
             const node = { id: i + 1, size, status: "Free", next: null };
             if (!tail) head = node;
@@ -14,96 +13,65 @@ const worstFitSimulator = {
     },
 
     cloneLinkedMemory(head) {
-        let newHead = null, tail = null, cur = head;
-        while (cur) {
-            const node = { id: cur.id, size: cur.size, status: cur.status, next: null };
-            if (!tail) newHead = node;
-            else tail.next = node;
-            tail = node;
-            cur = cur.next;
+        let newHead = null;
+        let tail = null;
+        for (let node = head; node; node = node.next) {
+            const copy = { id: node.id, size: node.size, status: node.status, next: null };
+            if (!tail) newHead = copy;
+            else tail.next = copy;
+            tail = copy;
         }
         return newHead;
     },
 
-    worstFitFixed(memoryHead, processes) {
-        const head = memoryHead;
-        const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-        const results = {};
-
-        processes.forEach((size, i) => {
-            const pId = `process ${i + 1}`;
-
-            let worstBlock = null;
-            for (let block = head; block; block = block.next) {
-                if (block.status === "Free" && size <= block.size) {
-                    if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
-                }
-            }
-
-            if (worstBlock) {
-                stats.intFragmentation += worstBlock.size - size;
-                stats.allocatedSize += size;
-                stats.successfulAllocations++;
-                worstBlock.status = "Occupied";
-                results[pId] = { size, block: worstBlock.id, status: "Allocated" };
-            } else {
-                results[pId] = { size, block: "None", status: "Unallocated" };
-            }
-        });
-
-        return { results, stats };
+    totalMemory(head) {
+        let total = 0;
+        for (let node = head; node; node = node.next) total += node.size;
+        return total;
     },
-    
-    worstFitDynamic(memoryHead, processes) {
-    const head = memoryHead;
-    const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-    const results = {};
 
-    // Generate unique IDs for new split blocks
-    let splitId = 0;
-    for (let n = head; n; n = n.next) splitId = Math.max(splitId, n.id);
-    splitId++;
+    totalFreeSize(head) {
+        let total = 0;
+        for (let node = head; node; node = node.next) {
+            if (node.status === "Free") total += node.size;
+        }
+        return total;
+    },
 
-    processes.forEach((size, i) => {
-        const pId = `process ${i + 1}`;
+    externalFragmentation(head, results) {
+        const entries = Array.isArray(results) ? results : Object.values(results || {});
+        const unallocated = entries.filter(r => r.status === "Unallocated").map(r => r.size);
+        if (!unallocated.length) return 0;
 
-        // Find worst fit block
-        let worstBlock = null;
-        for (let block = head; block; block = block.next) {
-            if (block.status === "Free" && size <= block.size) {
-                if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+        const smallestUnallocated = Math.min(...unallocated);
+        let fragmentation = 0;
+        for (let node = head; node; node = node.next) {
+            if (node.status === "Free" && node.size < smallestUnallocated) {
+                fragmentation += node.size;
             }
         }
+        return fragmentation;
+    },
 
-        if (worstBlock) {
-            const leftover = worstBlock.size - size;
+    computeStats(head, processes, results, stats) {
+        const totalMemory = this.totalMemory(head);
+        const totalFree = this.totalFreeSize(head);
+        const allocatedSize = stats.allocatedSize;
+        const successfulAllocations = stats.successfulAllocations;
+        const externalFragmentation = this.externalFragmentation(head, results);
+        const memoryUtilization = totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
+        const successRate = processes.length > 0 ? (successfulAllocations / processes.length) * 100 : 0;
 
-            // Allocate the block
-            worstBlock.size = size;
-            worstBlock.status = "Occupied";
-
-            stats.allocatedSize += size;
-            stats.successfulAllocations++;
-
-            // Split leftover into a new free block
-            if (leftover > 0) {
-                const newNode = {
-                    id: splitId++,
-                    size: leftover,
-                    status: "Free",
-                    next: worstBlock.next 
-                };
-                worstBlock.next = newNode;
-            }
-
-            results[pId] = { size, block: worstBlock.id, status: "Allocated" };
-        } else {
-            results[pId] = { size, block: "None", status: "Unallocated" };
-        }
-    });
-
-    return { results, stats };
-},
+        return {
+            totalMemory,
+            allocatedSize,
+            totalFree,
+            intFragmentation: stats.intFragmentation,
+            externalFragmentation,
+            memoryUtilization,
+            successRate
+        };
+    },
 
     worstFitFixedStep(memoryHead, processSize) {
         let worstBlock = null;
@@ -131,27 +99,39 @@ const worstFitSimulator = {
         }
 
         if (!worstBlock) {
-            return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0, nextSplitId: Math.max(...this._collectIds(memoryHead)) + 1 };
+            return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0 };
         }
 
         const leftover = worstBlock.size - processSize;
-        let splitId = Math.max(...this._collectIds(memoryHead)) + 1;
         worstBlock.size = processSize;
         worstBlock.status = "Occupied";
 
+        let newFreeId = null;
         if (leftover > 0) {
-            worstBlock.next = { id: splitId++, size: leftover, status: "Free", next: worstBlock.next };
+            newFreeId = Math.max(...this._collectIds(memoryHead)) + 1;
+            worstBlock.next = { id: newFreeId, size: leftover, status: "Free", next: worstBlock.next };
         }
 
-        return { result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation: leftover }, allocatedSize: processSize, successfulAllocations: 1, nextSplitId: splitId };
+        return {
+            result: { size: processSize, block: worstBlock.id, status: "Allocated", fragmentation: leftover },
+            allocatedSize: processSize,
+            successfulAllocations: 1,
+            newFreeId
+        };
     },
 
     _collectIds(head) {
         const ids = [];
         for (let node = head; node; node = node.next) ids.push(node.id);
         return ids;
+    },
+
+    // Compatibility layer for existing script.js calls.
+    bestFitFixedStep(memoryHead, processSize) {
+        return this.worstFitFixedStep(memoryHead, processSize);
+    },
+
+    bestFitDynamicStep(memoryHead, processSize) {
+        return this.worstFitDynamicStep(memoryHead, processSize);
     }
 };
-
-window.memorySimulators = window.memorySimulators || {};
-window.memorySimulators.worstFit = worstFitSimulator;

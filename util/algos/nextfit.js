@@ -1,160 +1,99 @@
-const nextFitSimulator = {
+const memorySimulator = {
+    _nextLastBlock: null,
 
     createLinkedMemory(blocks) {
-        let head = null, tail = null;
+        let head = null;
+        let tail = null;
         blocks.forEach((size, i) => {
             const node = { id: i + 1, size, status: "Free", next: null };
             if (!tail) head = node;
             else tail.next = node;
             tail = node;
         });
+        this._nextLastBlock = head;
         return head;
     },
 
     cloneLinkedMemory(head) {
-        let newHead = null, tail = null, cur = head;
-        while (cur) {
-            const node = { id: cur.id, size: cur.size, status: cur.status, next: null };
-            if (!tail) newHead = node;
-            else tail.next = node;
-            tail = node;
-            cur = cur.next;
+        let newHead = null;
+        let tail = null;
+        for (let node = head; node; node = node.next) {
+            const copy = { id: node.id, size: node.size, status: node.status, next: null };
+            if (!tail) newHead = copy;
+            else tail.next = copy;
+            tail = copy;
         }
         return newHead;
     },
 
-    nextFitFixed(memoryHead, processes) {
-        const head = this.cloneLinkedMemory(memoryHead);
-        const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-        const results = {};
-        let lastBlock = head;
-
-        processes.forEach((size, i) => {
-            const pId = `process_${i + 1}`;
-            let block = lastBlock;
-            let allocated = false;
-
-            while (block) {
-                if (block.status === "Free" && size <= block.size) {
-                    stats.intFragmentation += block.size - size;
-                    stats.allocatedSize += size;
-                    stats.successfulAllocations++;
-                    block.status = "Occupied";
-                    results[pId] = { size, block: block.id, status: "Allocated" };
-                    lastBlock = block; // update pointer for next process
-                    allocated = true;
-                    break;
-                }
-                block = block.next;
-            }
-
-            // If not found from lastBlock onward, wrap around from head
-            if (!allocated) {
-                block = head;
-                while (block !== lastBlock) {
-                    if (block.status === "Free" && size <= block.size) {
-                        stats.intFragmentation += block.size - size;
-                        stats.allocatedSize += size;
-                        stats.successfulAllocations++;
-                        block.status = "Occupied";
-                        results[pId] = { size, block: block.id, status: "Allocated" };
-                        lastBlock = block;
-                        allocated = true;
-                        break;
-                    }
-                    block = block.next;
-                }
-            }
-
-            if (!allocated) {
-                results[pId] = { size, block: "None", status: "Unallocated" };
-            }
-        });
-
-        return { results, stats };
+    totalMemory(head) {
+        let total = 0;
+        for (let node = head; node; node = node.next) total += node.size;
+        return total;
     },
 
-    // 2. NEXT FIT DYNAMIC
-    nextFitDynamic(memoryHead, processes) {
-        const head = this.cloneLinkedMemory(memoryHead);
-        const stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-        const results = {};
-
-        let splitId = 0;
-        for (let n = head; n; n = n.next) splitId = Math.max(splitId, n.id);
-        splitId++;
-
-        let lastBlock = head; // Next Fit: resume from last allocated block
-
-        processes.forEach((size, i) => {
-            const pId = `process_${i + 1}`;
-            let block = lastBlock;  // start from where we left off
-            let allocated = false;
-
-            const tryAllocate = (b) => {
-                if (b.status === "Free" && size <= b.size) {
-                    const leftover = b.size - size;
-                    b.size = size;
-                    b.status = "Occupied";
-                    stats.allocatedSize += size;
-                    stats.successfulAllocations++;
-
-                    if (leftover > 0) {
-                        b.next = { id: splitId++, size: leftover, status: "Free", next: b.next };
-                    }
-
-                    results[pId] = { size, block: b.id, status: "Allocated" };
-                    lastBlock = b;
-                    return true;
-                }
-                return false;
-            };
-
-            // Search from lastBlock to end of list
-            while (block) {
-                if (tryAllocate(block)) { allocated = true; break; }
-                block = block.next;
-            }
-
-            // If not found, wrap around from head up to lastBlock
-            if (!allocated) {
-                block = head;
-                while (block !== lastBlock) {
-                    if (tryAllocate(block)) { allocated = true; break; }
-                    block = block.next;
-                }
-            }
-
-            if (!allocated) {
-                results[pId] = { size, block: "None", status: "Unallocated" };
-            }
-        });
-
-        return { results, stats };
+    totalFreeSize(head) {
+        let total = 0;
+        for (let node = head; node; node = node.next) {
+            if (node.status === "Free") total += node.size;
+        }
+        return total;
     },
 
-    nextFitFixedStep(memoryHead, processSize, lastBlock) {
-        let block = lastBlock || memoryHead;
+    externalFragmentation(head, results) {
+        const entries = Array.isArray(results) ? results : Object.values(results || {});
+        const unallocated = entries.filter(r => r.status === "Unallocated").map(r => r.size);
+        if (!unallocated.length) return 0;
+
+        const smallestUnallocated = Math.min(...unallocated);
+        let fragmentation = 0;
+        for (let node = head; node; node = node.next) {
+            if (node.status === "Free" && node.size < smallestUnallocated) {
+                fragmentation += node.size;
+            }
+        }
+        return fragmentation;
+    },
+
+    computeStats(head, processes, results, stats) {
+        const totalMemory = this.totalMemory(head);
+        const totalFree = this.totalFreeSize(head);
+        const allocatedSize = stats.allocatedSize;
+        const successfulAllocations = stats.successfulAllocations;
+        const externalFragmentation = this.externalFragmentation(head, results);
+        const memoryUtilization = totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
+        const successRate = processes.length > 0 ? (successfulAllocations / processes.length) * 100 : 0;
+
+        return {
+            totalMemory,
+            allocatedSize,
+            totalFree,
+            intFragmentation: stats.intFragmentation,
+            externalFragmentation,
+            memoryUtilization,
+            successRate
+        };
+    },
+
+    nextFitFixedStep(memoryHead, processSize) {
+        let block = this._nextLastBlock || memoryHead;
         const start = block;
-        let allocated = false;
         let allocatedBlock = null;
 
         while (block) {
             if (block.status === "Free" && processSize <= block.size) {
                 block.status = "Occupied";
-                allocated = true;
                 allocatedBlock = block;
                 break;
             }
             block = block.next;
         }
 
-        if (!allocated) {
+        if (!allocatedBlock) {
             block = memoryHead;
             while (block && block !== start) {
                 if (block.status === "Free" && processSize <= block.size) {
                     block.status = "Occupied";
-                    allocated = true;
                     allocatedBlock = block;
                     break;
                 }
@@ -162,40 +101,42 @@ const nextFitSimulator = {
             }
         }
 
-        if (allocated) {
-            const fragmentation = allocatedBlock.size - processSize;
+        if (!allocatedBlock) {
             return {
-                result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
-                allocatedSize: processSize,
-                successfulAllocations: 1,
-                lastBlock: allocatedBlock
+                result: { size: processSize, block: "None", status: "Unallocated" },
+                allocatedSize: 0,
+                successfulAllocations: 0
             };
         }
 
-        return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0, lastBlock };
+        this._nextLastBlock = allocatedBlock;
+        const fragmentation = allocatedBlock.size - processSize;
+        return {
+            result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
+            allocatedSize: processSize,
+            successfulAllocations: 1
+        };
     },
 
-    nextFitDynamicStep(memoryHead, processSize, lastBlock, nextSplitId) {
-        let block = lastBlock || memoryHead;
+    nextFitDynamicStep(memoryHead, processSize) {
+        let block = this._nextLastBlock || memoryHead;
         const start = block;
-        let allocated = false;
         let allocatedBlock = null;
-        let splitId = typeof nextSplitId === 'number' ? nextSplitId : (() => {
-            let maxId = 0;
-            for (let n = memoryHead; n; n = n.next) maxId = Math.max(maxId, n.id);
-            return maxId + 1;
-        })();
+        let newFreeIdFromSplit = null;
 
-        const tryAllocate = (b) => {
-            if (b.status === "Free" && processSize <= b.size) {
-                const leftover = b.size - processSize;
-                b.size = processSize;
-                b.status = "Occupied";
+        const tryAllocate = current => {
+            if (current.status === "Free" && processSize <= current.size) {
+                const leftover = current.size - processSize;
+                current.size = processSize;
+                current.status = "Occupied";
+
+                newFreeIdFromSplit = null;
                 if (leftover > 0) {
-                    b.next = { id: splitId++, size: leftover, status: "Free", next: b.next };
+                    newFreeIdFromSplit = Math.max(...this._collectIds(memoryHead)) + 1;
+                    current.next = { id: newFreeIdFromSplit, size: leftover, status: "Free", next: current.next };
                 }
-                allocated = true;
-                allocatedBlock = b;
+
+                allocatedBlock = current;
                 return true;
             }
             return false;
@@ -206,7 +147,7 @@ const nextFitSimulator = {
             block = block.next;
         }
 
-        if (!allocated) {
+        if (!allocatedBlock) {
             block = memoryHead;
             while (block && block !== start) {
                 if (tryAllocate(block)) break;
@@ -214,20 +155,36 @@ const nextFitSimulator = {
             }
         }
 
-        if (allocated) {
-            const fragmentation = allocatedBlock.size - processSize;
+        if (!allocatedBlock) {
             return {
-                result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
-                allocatedSize: processSize,
-                successfulAllocations: 1,
-                lastBlock: allocatedBlock,
-                nextSplitId: splitId
+                result: { size: processSize, block: "None", status: "Unallocated" },
+                allocatedSize: 0,
+                successfulAllocations: 0
             };
         }
 
-        return { result: { size: processSize, block: "None", status: "Unallocated" }, allocatedSize: 0, successfulAllocations: 0, lastBlock, nextSplitId: splitId };
+        this._nextLastBlock = allocatedBlock;
+        const fragmentation = allocatedBlock.size - processSize;
+        return {
+            result: { size: processSize, block: allocatedBlock.id, status: "Allocated", fragmentation },
+            allocatedSize: processSize,
+            successfulAllocations: 1,
+            newFreeId: newFreeIdFromSplit
+        };
+    },
+
+    _collectIds(head) {
+        const ids = [];
+        for (let node = head; node; node = node.next) ids.push(node.id);
+        return ids;
+    },
+
+    // Compatibility layer for existing script.js calls.
+    bestFitFixedStep(memoryHead, processSize) {
+        return this.nextFitFixedStep(memoryHead, processSize);
+    },
+
+    bestFitDynamicStep(memoryHead, processSize) {
+        return this.nextFitDynamicStep(memoryHead, processSize);
     }
 };
-
-window.memorySimulators = window.memorySimulators || {};
-window.memorySimulators.nextFit = nextFitSimulator;
