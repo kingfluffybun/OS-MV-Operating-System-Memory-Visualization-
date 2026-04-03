@@ -1,0 +1,44 @@
+<html id="recovery-page">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS-MV</title>
+    <link rel="stylesheet" href="/auth/style.css">
+</head>
+<body onload="display()">
+    <section class="container" id="container">
+        <!-- Create Recovery Form -->
+        <section class="form-container create-recovery-container">
+
+            <h1>Your Recovery Keys</h1>
+            <h3>This is the only way to recover your account if you forget your password. Write it down and keep it safe.</h3>
+
+            <!-- Words -->
+            <p id="recovery-words" style="font-size: 24px; color: black; font-weight: bold; letter-spacing: 2px; margin: 20px 0; padding: 20px;">
+                
+            </p>
+
+            <!-- Register First -->
+            <div id="register-first" style="font-size: 24px; display: none; color: black; font-weight: bold; letter-spacing: 2px; margin: 20px 0; padding: 20px;">
+                No pending registration found. Please register first.
+                <button class="primary-btn" onclick="window.location.href = '/auth/'">Register</button>
+            </div>
+
+            <button onclick="copyToClipboard()" id="copy" class="primary-btn">Copy to Clipboard</button>
+            <button onclick="downloadKeys()" id="download" class="primary-btn">Download as File</button>
+
+            <p id="status"></p>
+
+            <!-- Confirm -->
+            <form id="confirm-form" style="display: none;">
+                <p>Type your recovery key below to confirm you have saved it:</p>
+                <input type="text" id="confirm-input" placeholder="Enter recovery key..." required>
+                <button type="submit" class="primary-btn" onclick="handleSubmit()">I have saved my recovery key - Continue</button>
+            </form>
+        </section>
+    </section>
+
+<script src="/database/db.js"></script>
+<script src="/auth/script.js"></script>
+</body>
+</html>

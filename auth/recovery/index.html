@@ -1,0 +1,114 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS-MV</title>
+    <link rel="stylesheet" href="/auth/style.css">
+</head>
+<body>
+    <section class="container" id="container">
+        <!-- Recovery Form -->
+        <section class="form-container recovery-container">
+            <form action="#" id="recovery-form">
+                
+                <h1>Recovery Form</h1>
+
+                <!-- Recovery Key -->
+                <div class="input-group">
+                    <input type="text" id="recovery-key-input" placeholder=" " required>
+                    <label for="recovery-key-input">Recovery key</label>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-key-round-icon lucide-key-round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                    </div>
+                </div>
+
+                <p id="recovery-status"></p>
+
+                <button type="submit" class="primary-btn" onclick="verify()">Verify</button>
+                <a href="/auth/" class="forgot-link">Back to Login</a>
+            </form>
+        </section>
+
+        <!-- Reset Password -->
+        <section class="form-container reset-container">
+            <form action="#" id="reset-form" class="reset-form">
+                
+                <h1>Reset Password</h1>
+
+                <!-- New Password -->
+                <div class="input-group">
+                    <input type="password" id="new-pass" placeholder=" " required>
+                    <label for="new-pass">New Password</label>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div class="password-toggle" onclick="togglePassword(this)">
+                        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                        <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="input-group">
+                    <input type="password" id="confirm-new-pass" placeholder=" " required>
+                    <label for="confirm-pass">Confirm Password</label>
+                    <div class="input-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-lock-icon lucide-lock"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    </div>
+                    <div class="password-toggle" onclick="togglePassword(this)">
+                        <svg class="eye-off" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+                        <svg class="eye-open" style="display:none;" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+                    </div>
+                </div>
+
+                <p id="reset-status"></p>
+
+                <!-- Message -->
+                <ul id="requirements" class="requirements-list">
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req1-no-check-res" style="display: block;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-icon lucide-circle"><circle cx="12" cy="12" r="10"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req1-check-res" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-icon lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <p id="req1-text-res" class="req-text">Password must be at least 8 characters</p>
+                    </li>
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req2-no-check-res" style="display: block;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-icon lucide-circle"><circle cx="12" cy="12" r="10"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req2-check-res" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-icon lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <p id="req2-text-res" class="req-text">Password must include a number</p>
+                    </li>
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req3-no-check-res" style="display: block;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-icon lucide-circle"><circle cx="12" cy="12" r="10"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req3-check-res" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-icon lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <p id="req3-text-res" class="req-text">Password must include an uppercase and lowercase letter</p>
+                    </li>
+                    <li>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req4-no-check-res" style="display: block;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-icon lucide-circle"><circle cx="12" cy="12" r="10"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" id="req4-check-res" style="display: none;" viewBox="0 0 24 24" fill="none" stroke="currentcolor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check-icon lucide-circle-check"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                        <p id="req4-text-res" class="req-text">Password must include a special character</p>
+                    </li>
+                </ul>
+
+                <button type="submit" class="primary-btn reset-btn" onclick="resetPass()">Reset Password</button>
+                <a href="/auth/" class="forgot-link">Back to Login</a>
+        </section>
+
+        <!-- Overlays -->
+        <section class="overlay-container">
+            <div class="overlay">
+                <!-- Recovery -->
+                <div class="overlay-panel overlay-right" id="overlay-recovery">
+                    <h1>Oh no! You forgot your password</h1>
+                    <h4>Recover it with your recovery key</h4>
+                </div>
+                <!-- Reset Password -->
+                <div class="overlay-panel overlay-left" id="overlay-reset">
+                    <h1>Reset Password here!</h1>
+                    <h4>Why did you forget your password</h4>
+                </div>
+            </div>
+        </section>
+    </section>
+
+<script src="/database/db.js"></script>
+<script src="/auth/script.js"></script>
+</body>
+</html>
