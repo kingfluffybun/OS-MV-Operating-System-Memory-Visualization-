@@ -1,7 +1,5 @@
-// ========
-// DB SETUP - Sariling comment ko to, hindi po AI AHHAAHAHAH
-// ========
 
+// ========== DB SETUP ==========
 const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
 const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm';
 
@@ -57,7 +55,7 @@ function createTables() {
             user_id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
-            recovery_key TEXT NOT NULL,
+            recovery_key TEXT,
             user_role TEXT DEFAULT 'user' CHECK(user_role IN ('user', 'admin')),
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -73,6 +71,7 @@ function saveDB() {
     localStorage.setItem(STORAGE_KEY, base64String);
 }
 
+// ========== HASHING ==========
 async function hashPassword(password) {
     const encoder = new TextEncoder();
     const data = encoder.encode(password);
@@ -81,68 +80,118 @@ async function hashPassword(password) {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-// ==========================
-// REGISTRATION WITH RECOVERY
-// ==========================
-
-let pendingRegistration = null;
-
-function storeTempRegistration(username, password) {
-    tempRegistration = {username, password};
-    sessionStorage.setItem('tempRegistration', JSON.stringify(tempRegistration));
+async function hashRecoveryKey(recoveryKey) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(recoveryKey.toLowerCase().trim());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function getTempRegistration() {
-    const data = sessionStorage.getItem('tempRegistration');
-    return data ? JSON.parse(data) : null;
-}
+// ========== RECOVERY ==========
+async function verifyRecoveryKey(recoveryKey) {
+    await initDB();
 
-function clearTempRegistration() {
-    tempRegistration = null;
-    sessionStorage.removeItem('tempRegistration');
-}
+    const hashedRecoveryKey = await hashRecoveryKey(recoveryKey);
 
-async function validateRegistration(username, password, confirmPassword) {
-    if (username.length < 3) {
+    const stmt = db.prepare(`SELECT user_id, username FROM users WHERE recovery_key = ?`);
+    stmt.bind([hashedRecoveryKey]);
+    
+    let user = null;
+    let hasResult = false;
+
+    try {
+        hasResult = stmt.step();
+        if (hasResult) {
+            user = stmt.getAsObject();
+        }
+    } catch (e) {
+        console.error('Error during recovery:', e);
+    } finally {
+        stmt.free();
+    }
+
+    if (hasResult && user) {
+        return {
+            success: true,
+            user: user
+        };
+    } else {
         return {
             success: false,
-            message: '1'
+            message: 'Invalid recovery key.'
         };
+    }
+}
+
+async function resetPassword(username, newPassword, confirmNewPassword) {
+    await initDB();
+
+    if  (newPassword.length < 8) {
+        return {success: false};
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+        return {success: false};
+    }
+    
+    if (!/[A-Z]/.test(newPassword) && !/[a-z]/.test(newPassword)) {
+        return {success: false};
+    }
+    
+    if (!/[0-9]/.test(newPassword)) {
+        return {success: false};
+    }
+    
+    if (!/[@$!%*?&#]/.test(newPassword)) {
+        return {success: false};
+    }
+
+    const hashedPassword = await hashPassword(newPassword);
+
+    try {
+        const stmt = db.prepare(`UPDATE users SET password = ?, updated_at = datetime('now') WHERE username = ?`);
+        stmt.run([hashedPassword, username]);
+        stmt.free();
+        saveDB();
+
+        return {
+            success: true,
+            message: 'Password reset successful! Redirecting...'
+        };
+    } catch (e) {
+        return {
+            success: false,
+            message: 'Password reset failed: ' + e.message
+        };
+    }
+}
+
+// ========== REGISTRATION ==========
+// Validate Registration
+async function validateRegistration(username, password, confirmPassword) {
+    if (username.length < 3) {
+        return {success: false};
     }
     
     if  (password.length < 8) {
-        return {
-            success: false,
-            message: '2'
-        };
+        return {success: false};
     }
     
     if (password !== confirmPassword) {
-        return {
-            success: false,
-            message: '3'
-        };
+        return {success: false};
     }
     
-    if (!/[A-Z]/.test(password) && /[a-z]/.test(password)) {
-        return {
-            success: false,
-            message: '4'
-        };
+    if (!/[A-Z]/.test(password) && !/[a-z]/.test(password)) {
+        return {success: false};
     }
     
     if (!/[0-9]/.test(password)) {
-        return {
-            success: false,
-            message: '5'
-        };
+        return {success: false};
     }
     
     if (!/[@$!%*?&]/.test(password)) {
-        return {
-            success: false,
-            message: '6'
-        };
+        return {success: false};
     }
     
     await initDB();
@@ -154,127 +203,57 @@ async function validateRegistration(username, password, confirmPassword) {
     if (exists) {
         return {
             success: false,
-            message: '7'
+            message: 'Username already exists'
         };
     }
 
-    return {
-        success: true,
-        message: ''
-    };
+    const hashedPassword = await hashPassword(password);
+    sessionStorage.setItem('pendingRegistration', JSON.stringify({
+        username: username,
+        password: hashedPassword
+    }));
+
+    return {success: true};
 }
 
-async function registerWithRecovery(recoveryKey) {
-    const temp = getTempRegistration();
-    if (!temp) {
-        return {
-            success: false,
-            message: 'No pending registration found'
-        };
-    }
-
-    if (!recoveryKey || recoveryKey.length < 3) {
-        return {
-            success: false,
-            message: 'Recovery key must be at least 3 characters'
-        };
-    }
-
+// Complete Registration
+async function completeRegistration(username, hashedPassword, hashedRecoveryKey) {
     await initDB();
 
-    const hashedPassword = await hashPassword(temp.password);
-    const hashedRecoveryKey = await hashPassword(recoveryKey);
+    const checkStmt = db.prepare(`SELECT user_id from users WHERE username = ?`);
+    checkStmt.bind([username]);
+    const exists = checkStmt.step();
+    checkStmt.free();
+
+    if (exists) {
+        return {
+            success: false,
+            message: 'Username already exists'
+        };
+    }
 
     try {
-        const stmt = db.prepare(`INSERT INTO users (username, password, recovery_key, created_at, updated_at) VALUES (?, ?, ?, datetime('now'), datetime('now'))`);
-        stmt.run([temp.username, hashedPassword, hashedRecoveryKey]);
+        const stmt = db.prepare(`
+            INSERT INTO users (username, password, recovery_key, created_at, updated_at)
+            VALUES (?, ?, ?, datetime('now'), datetime('now'));
+        `);
+        stmt.run([username, hashedPassword, hashedRecoveryKey]);
         stmt.free();
         saveDB();
 
-        clearTempRegistration();
-
         return {
             success: true,
-            message: 'Registration successful! Redirecting...'
+            message: ''
         };
-    } catch(e) {
-        if (e.message.includes('UNIQUE constraint failed')) {
-            return {
-                success: false,
-                message: 'Username already exists'
-            };
-        }
-
+    } catch (e) {
         return {
             success: false,
-            message: e.message
+            message: 'Registration failed: ' + e.message
         };
     }
 }
 
-async function verifyRecoveryKey(username, recoveryKey) {
-    await initDB();
-
-    if (!username || !recoveryKey) {
-        return {
-            success: false,
-            message: 'Username and recovery key are required'
-        };
-    }
-
-    const hashedRecoveryKey = await hashPassword(recoveryKey);
-    const stmt = db.prepare(`SELECT user_id FROM users WHERE username = ? AND recovery_key = ?`);
-    stmt.bind([username, hashedRecoveryKey]);
-
-    let valid = false;
-    if (stmt.step()) {
-        valid = true;
-    }
-    stmt.free();
-
-    return {
-        success: valid,
-        message: valid ? 'Recovery Key verified' : 'Invalid Recovery Key'
-    };
-}
-
-async function resetPassword(username, recoveryKey, newPassword, confirmNewPassword) {
-    if (newPassword.length < 8) {
-        return {
-            success: false,
-            message: 'Password must be at least 8 characters'
-        };
-    }
-
-    if (newPassword !== confirmNewPassword) {
-        return {
-            success: false,
-            message: 'Passwords do not match'
-        };
-    }
-
-    const verify = await verifyRecoveryKey(username, recoveryKey);
-
-    if (!verify.success) {
-        return verify;
-    }
-
-    const hashedPassword = await hashPassword(newPassword);
-    const stmt = db.prepare(`UPDATE users SET password = ?, updated_at = datetime('now') WHERE username = ?`);
-    stmt.run([hashedPassword, username]);
-    stmt.free();
-    saveDB();
-
-    return {
-        success: true,
-        message: 'Password reset successful! Redirecting...'
-    }
-}
-
-// =====
-// Login
-// =====
-
+// ========== Login ==========
 async function login(username, password) {
     await initDB();
 
