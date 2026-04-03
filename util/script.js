@@ -164,10 +164,10 @@ const createBlockElement = (id, sizeKb, options = {}) => {
     const block = document.createElement('div');
     block.className = options.isSplitFree ? 'block block--split-free' : 'block';
     block.id = `block-${id}`;
-    block.dataset.partitionLabel = options.isSplitFree ? 'Fragmented' : String(partitionLabel);
+    block.dataset.partitionLabel = options.isSplitFree ? 'Hole' : String(partitionLabel);
     block.style.width = '120px';
     block.style.position = 'relative';
-    const titleText = options.isSplitFree ? 'Fragmented' : `Block ${partitionLabel}`;
+    const titleText = options.isSplitFree ? 'Hole' : `Block ${partitionLabel}`;
     block.innerHTML = `
         <p>${titleText}</p>
         <div class="block-content">
@@ -541,7 +541,7 @@ const resetBlocksUI = () => {
         const process = block.querySelector('.block-status');
         if (process) process.textContent = '';
         if (text && size) {
-            text.textContent = block.classList.contains('block--split-free') ? 'Fragmented' : `Block ${labelNum}`;
+            text.textContent = block.classList.contains('block--split-free') ? 'Hole' : `Block ${labelNum}`;
         }
     });
 };
@@ -663,6 +663,7 @@ const runStep = () => {
         appendConsoleMessage('Simulation complete');
         clearInterval(playInterval);
         playInterval = null;
+        togglePlayStop();
         return false;
     }
 
@@ -741,6 +742,7 @@ const runReset = () => {
     resetBlocksUI();
     updateStatistics({ allocatedSize: 0, totalFree: 0, intFragmentation: 0, externalFragmentation: 0, memoryUtilization: 0, successRate: 0 });
     updateTotalMemory();
+    togglePlayStop();
     appendConsoleMessage('Simulation reset.');
     document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
 
