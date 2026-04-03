@@ -66,7 +66,7 @@ function signIn() {
             messageEl.style.color = '#4CAF50';
 
             setTimeout(() => {
-                location.href = '/';
+                location.href = 'index.html';
             }, 1500);
         } else {
             messageEl.textContent = result.message;
@@ -133,7 +133,7 @@ function signUp() {
             messageEl.textContent = 'Proceeding to recovery...';
             messageEl.style.color = '#4CAF50';
             setTimeout(() => {
-                location.href = '/auth/create-recovery/';
+                location.href = 'create-recovery/index.html';
                 clearField();
                 generateRecoveryWords();
             }, 1500);
@@ -232,7 +232,7 @@ function resetPass() {
             statusEl.textContent = 'Password reset successful! Redirecting...';
             statusEl.style.color = '#4CAF50';
             setTimeout(() => {
-                location.href = '/auth/';
+                location.href = '../index.html';
                 sessionStorage.removeItem('passwordResetUser');
             }, 1500);
         } else {
@@ -352,7 +352,7 @@ function handleSubmit() {
             sessionStorage.removeItem('pendingRegistration');
             sessionStorage.removeItem('recoveryKeys');
             setTimeout(() => {
-                location.href = '/auth/';
+                location.href = '../index.html';
             }, 1500);
         } else {
             statusEl.textContent = result.message;
