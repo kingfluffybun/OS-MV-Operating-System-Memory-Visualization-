@@ -94,6 +94,41 @@ const memorySimulator = {
         };
     },
 
+    performCompaction(head, processSize) {
+        const totalFree = this.totalFreeSize(head);
+        if (totalFree < processSize) return null;
+
+        const allocated = [];
+        let freeTotal = 0;
+        let maxId = 0;
+        let tail = null;
+
+        // Collect allocated blocks and sum free
+        for (let node = head; node; node = node.next) {
+            maxId = Math.max(maxId, node.id);
+            if (node.status === "Occupied") {
+                allocated.push(node);
+            } else {
+                freeTotal += node.size;
+            }
+        }
+
+        // Rebuild: allocated blocks + single free at end
+        let newHead = null;
+        for (let node of allocated) {
+            if (!newHead) newHead = node;
+            if (tail) tail.next = node;
+            tail = node;
+            node.next = null;
+        }
+        if (freeTotal > 0) {
+            const freeNode = { id: maxId + 1, size: freeTotal, status: "Free", next: null };
+            if (tail) tail.next = freeNode;
+            else newHead = freeNode;
+        }
+        return newHead;
+    },
+
     firstFitDynamicStep(memoryHead, processSize) {
         for (let block = memoryHead; block; block = block.next) {
             if (block.status === "Free" && processSize <= block.size) {
@@ -115,6 +150,38 @@ const memorySimulator = {
                 };
             }
         }
+
+        // Trigger compaction
+        const compactedHead = this.performCompaction(memoryHead, processSize);
+        if (compactedHead) {
+            // Find fit in compacted (should be the last free block)
+            for (let block = compactedHead; block; block = block.next) {
+                if (block.status === "Free" && processSize <= block.size) {
+                    const leftover = block.size - processSize;
+                    block.size = processSize;
+                    block.status = "Occupied";
+
+                    let newFreeId = null;
+                    if (leftover > 0) {
+                        newFreeId = block.id + 1; // Sequential after compaction
+                        block.next = { id: newFreeId, size: leftover, status: "Free", next: null };
+                    }
+
+                    // Replace original head with compacted structure (mutate original tail to match)
+                    let origTail = memoryHead;
+                    while (origTail.next) origTail = origTail.next;
+                    origTail.next = compactedHead;
+
+                    return {
+                        result: { size: processSize, block: block.id, status: "Allocated", fragmentation: leftover },
+                        allocatedSize: processSize,
+                        successfulAllocations: 1,
+                        newFreeId
+                    };
+                }
+            }
+        }
+
         return {
             result: { size: processSize, block: "None", status: "Unallocated" },
             allocatedSize: 0,
