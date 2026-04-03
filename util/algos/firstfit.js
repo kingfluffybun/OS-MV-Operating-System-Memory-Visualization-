@@ -1,11 +1,7 @@
-<<<<<<< HEAD
 let autoInterval;
 
 const memorySimulator = {
 
-=======
-const memorySimulator = {
->>>>>>> 10a04166a72c93dc062c53e7ee5a2a5e691ae07d
     createLinkedMemory(blocks) {
         let head = null;
         let tail = null;
