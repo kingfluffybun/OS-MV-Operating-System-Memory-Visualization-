@@ -87,6 +87,7 @@ button:disabled svg {
         display: flex;
         flex-direction: column;
         overflow-y: hidden;
+        padding: 12px;
         > .input-prcs {
             display: flex;
             gap: 8px; width: 100%;
@@ -128,7 +129,7 @@ button:disabled svg {
                 display: flex;
                 align-items: center;
                 gap: 16px;
-                padding: 20px;
+                padding: 12px;
                 background-color: white;
                 border-radius: 12px;
                 border-bottom: 4px solid rgba(0, 0, 0, 0.25);
@@ -151,7 +152,7 @@ button:disabled svg {
                 }
                 > .process-action {
                     display: flex;
-                    gap: 8px;
+                    gap: 6px;
                     .edit-process-btn:hover svg {stroke: #F2911B;}
                     .delete-process-btn:hover svg {stroke: var(--error-color);}
                     > button {
