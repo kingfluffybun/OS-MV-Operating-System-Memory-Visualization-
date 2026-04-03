@@ -1,4 +1,7 @@
+let autoInterval;
+
 const memorySimulator = {
+
     createLinkedMemory(blocks) {
         let head = null;
         let tail = null;

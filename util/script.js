@@ -655,7 +655,16 @@ const runStep = () => {
 
     updateBlockVisuals(simulationState.results);
 
-    appendConsoleMessage(`${processId} (${size} KB) -> ${stepResult.result.status}${stepResult.result.block !== 'None' ? ` to Block ${stepResult.result.block}` : ''}`);
+    const stepRes = stepResult.result;
+    console.log(processId, 'segmentation step result:', stepRes)
+
+    let breakdownInfo = '';
+    if (stepRes.breakdown) {
+        const b = stepRes.breakdown;
+        breakdownInfo = ` [code:${b.code} heap:${b.heap} stack:${b.stack}]`;
+    }
+
+    appendConsoleMessage(`${processId} (${size} KB) -> ${stepRes.status}${stepRes.block !== 'None' ? ` to Block ${stepRes.block}` : ''}${breakdownInfo}`);
 
     simulationState.currentIndex += 1;
 

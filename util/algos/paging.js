@@ -1,4 +1,4 @@
-const pagingSimulator = {
+const memorySimulator = {
 
     createFrames(frameCount, frameSize = 100) {
         const frames = {};
