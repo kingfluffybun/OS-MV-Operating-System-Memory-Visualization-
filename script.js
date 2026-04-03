@@ -4,23 +4,6 @@ let isSubmitting = false;
 let generatedRecoveryKeys = '';
 let pendingUsername = '';
 let pendingPassword = '';
-const wordList = [
-    'tree', 'traffic', 'kidney', 'piece', 'sing', 'market', 'fatal', 'absorb', 'chimney', 'course',
-    'retire', 'flag', 'shallow', 'ceiling', 'rebel', 'hello', 'provide', 'fly', 'carpet', 'world',
-    'where', 'clean', 'virus', 'account', 'apple', 'brave', 'crane', 'dwarf', 'eagle', 'flame',
-    'grape', 'horse', 'ice', 'jade', 'kite', 'lemon', 'mango', 'noble', 'ocean', 'pearl',
-    'quartz', 'river', 'snake', 'tiger', 'uncle', 'violet', 'whale', 'xray', 'yacht', 'zebra',
-    'amber', 'beach', 'cloud', 'dance', 'earth', 'frost', 'ghost', 'honey', 'island', 'jewel',
-    'knife', 'laser', 'magic', 'night', 'orbit', 'piano', 'queen', 'robot', 'sword', 'torch',
-    'unity', 'wolf', 'yard', 'zone', 'arch', 'bread', 'chain', 'drum', 'echo', 'fog',
-    'gate', 'hill', 'iron', 'joke', 'king', 'lamp', 'moon', 'nest', 'owl', 'pipe',
-    'quiz', 'rain', 'star', 'urn', 'vase', 'wind', 'box', 'year', 'zip', 'ace',
-    'bolt', 'cave', 'dive', 'edge', 'fire', 'gold', 'hat', 'ink', 'jet', 'key',
-    'lion', 'maze', 'ninja', 'open', 'pink', 'quest', 'rose', 'sun', 'tap', 'unit',
-    'vast', 'web', 'yes', 'zoom', 'alert', 'bake', 'cage', 'dose', 'eggs', 'fire',
-    'giant', 'hate', 'idea', 'joke', 'king', 'lake', 'mice', 'note', 'oath', 'pale',
-    'queen', 'rain', 'sail', 'tale', 'ugly', 'vase', 'wage', 'xray', 'yarn', 'zoo'
-];
 
 // Show Sign Up
 function showSignUp() {
