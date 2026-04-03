@@ -8,35 +8,126 @@
 <body onload="display()">
     <section class="container" id="container">
         <!-- Create Recovery Form -->
-        <section class="form-container create-recovery-container">
+        <section class="form-container recovery-container">
+            <form>
 
-            <h1>Your Recovery Keys</h1>
-            <h3>This is the only way to recover your account if you forget your password. Write it down and keep it safe.</h3>
+            
+                <h1>Your Recovery Phrase</h1>
+                <p>This is the only way to recover your account if you forget your password. Write it down and keep it safe.</p>
+                <br>
+                <!-- Words -->
+                <div class="recovery-words-container">
+                    <div><p>1</p><p id="display-word-0"></p></div>
+                    <div><p>2</p><p id="display-word-1"></p></div>
+                    <div><p>3</p><p id="display-word-2"></p></div>
+                    <div><p>4</p><p id="display-word-3"></p></div>
+                    <div><p>5</p><p id="display-word-4"></p></div>
+                    <div><p>6</p><p id="display-word-5"></p></div>
+                    <div><p>7</p><p id="display-word-6"></p></div>
+                    <div><p>8</p><p id="display-word-7"></p></div>
+                    <div><p>9</p><p id="display-word-8"></p></div>
+                    <div><p>10</p><p id="display-word-9"></p></div>
+                    <div><p>11</p><p id="display-word-10"></p></div>
+                    <div><p>12</p><p id="display-word-11"></p></div>
+                </div>
 
-            <!-- Words -->
-            <p id="recovery-words" style="font-size: 24px; color: black; font-weight: bold; letter-spacing: 2px; margin: 20px 0; padding: 20px;">
+                <!-- Register First -->
+                <div id="register-first" style="font-size: 24px; display: none; color: black; font-weight: bold; letter-spacing: 2px; margin: 20px 0; padding: 20px;">
+                    No pending registration found. Please register first.
+                    <button class="primary-btn" onclick="window.location.href = '/auth/'">Register</button>
+                </div>
+
+                <br>
+                <p id="status"></p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <button type="button" onclick="copyToClipboard()" id="copy" class="secondary-btn" style="display: flex; gap: 8px; align-items: center; justify-content: center;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard-copy-icon lucide-clipboard-copy"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/><path d="M16 4h2a2 2 0 0 1 2 2v4"/><path d="M21 14H11"/><path d="m15 10-4 4 4 4"/></svg>
+                        Copy Phrase
+                    </button>
+                    <button type="button" onclick="downloadKeys()" id="download" class="secondary-btn">Download as File</button>
+                </div>
                 
-            </p>
-
-            <!-- Register First -->
-            <div id="register-first" style="font-size: 24px; display: none; color: black; font-weight: bold; letter-spacing: 2px; margin: 20px 0; padding: 20px;">
-                No pending registration found. Please register first.
-                <button class="primary-btn" onclick="window.location.href = '/auth/'">Register</button>
-            </div>
-
-            <button onclick="copyToClipboard()" id="copy" class="primary-btn">Copy to Clipboard</button>
-            <button onclick="downloadKeys()" id="download" class="primary-btn">Download as File</button>
-
-            <p id="status"></p>
-
-            <!-- Confirm -->
-            <form id="confirm-form" style="display: none;">
-                <p>Type your recovery key below to confirm you have saved it:</p>
-                <input type="text" id="confirm-input" placeholder="Enter recovery key..." required>
-                <button type="submit" class="primary-btn" onclick="handleSubmit()">I have saved my recovery key - Continue</button>
+                <button type="button" class="primary-btn" onclick="showSignUp()">Ok, I saved my Recovery Phrase</button>
             </form>
         </section>
+
+        <section class="form-container reset-container">
+            <!-- Confirm -->
+            <form id="confirm-form">
+                <a onclick="showSignIn()" style="cursor: pointer; position: absolute; top: 32px; left: 32px; background-color: #4CAF50; display: flex; align-items: center; justify-content: center; padding: 8px; border-radius: 50%; color: white;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left-icon lucide-arrow-left"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                </a>
+                <h1>Enter Recovery Phrase</h1>
+                <p>Type your recovery key below to confirm you have saved it</p>
+                <br> <br>
+                <div class="input-group-grid">
+                    <div class="input-group">
+                        <input type="text" id="word-0" placeholder=" " required>
+                        <label for="recovery-key-input">1</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-1" placeholder=" " required>
+                        <label for="recovery-key-input">2</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-2" placeholder=" " required>
+                        <label for="recovery-key-input">3</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-3" placeholder=" " required>
+                        <label for="recovery-key-input">4</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-4" placeholder=" " required>
+                        <label for="recovery-key-input">5</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-5" placeholder=" " required>
+                        <label for="recovery-key-input">6</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-6" placeholder=" " required>
+                        <label for="recovery-key-input">7</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-7" placeholder=" " required>
+                        <label for="recovery-key-input">8</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-8" placeholder=" " required>
+                        <label for="recovery-key-input">9</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-9" placeholder=" " required>
+                        <label for="recovery-key-input">10</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-10" placeholder=" " required>
+                        <label for="recovery-key-input">11</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-11" placeholder=" " required>
+                        <label for="recovery-key-input">12</label>
+                    </div>
+                </div>
+                <br>
+                <!-- <input type="text" id="confirm-input" placeholder="Enter recovery key..." required> -->
+                <button type="submit" class="primary-btn" onclick="handleSubmit()">Confirm Recovery Phrase</button>
+            </form>
+        </section>
+
+        <!-- Overlays -->
+        <section class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-right" id="overlay-recovery">
+                </div>
+                <div class="overlay-panel overlay-left" id="overlay-reset">
+                </div>
+            </div>
+        </section>
     </section>
+
+    
 
 <script src="../database/db.js"></script>
 <script src="../script.js"></script>

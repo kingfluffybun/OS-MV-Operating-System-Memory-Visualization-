@@ -11,17 +11,63 @@
         <section class="form-container recovery-container">
             <form action="#" id="recovery-form">
                 
-                <h1>Recovery Form</h1>
+                <h1>Recovery Phrase</h1>
+                <p>Enter your full 12 word recovery phrase</p>
+                <br>
 
                 <!-- Recovery Key -->
-                <div class="input-group">
-                    <input type="text" id="recovery-key-input" placeholder=" " required>
-                    <label for="recovery-key-input">Recovery key</label>
-                    <div class="input-icon">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-key-round-icon lucide-key-round"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg>
+                <div class="input-group-grid">
+                    <div class="input-group">
+                        <input type="text" id="word-0" placeholder=" " required>
+                        <label for="recovery-key-input">1</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-1" placeholder=" " required>
+                        <label for="recovery-key-input">2</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-2" placeholder=" " required>
+                        <label for="recovery-key-input">3</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-3" placeholder=" " required>
+                        <label for="recovery-key-input">4</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-4" placeholder=" " required>
+                        <label for="recovery-key-input">5</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-5" placeholder=" " required>
+                        <label for="recovery-key-input">6</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-6" placeholder=" " required>
+                        <label for="recovery-key-input">7</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-7" placeholder=" " required>
+                        <label for="recovery-key-input">8</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-8" placeholder=" " required>
+                        <label for="recovery-key-input">9</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-9" placeholder=" " required>
+                        <label for="recovery-key-input">10</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-10" placeholder=" " required>
+                        <label for="recovery-key-input">11</label>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="word-11" placeholder=" " required>
+                        <label for="recovery-key-input">12</label>
                     </div>
                 </div>
 
+                <br>
                 <p id="recovery-status"></p>
                 <button type="submit" class="primary-btn" onclick="verify()">Verify</button>
                 <a href="../index.html" class="forgot-link">Back to Login</a>

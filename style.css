@@ -59,12 +59,26 @@ h1 {
     z-index: 1; 
 }
 
-.create-recovery-container {
-    left: 0;
-    width: 100%;
+.recovery-words-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 12px;
+    transition: transform 0.3s ease;
+    > div {
+        display: flex;
+        gap: 8px;
+        background-color: #f1f5f9;
+        padding: 16px;
+        border-radius: 12px;
+        > p:first-child {
+            user-select: none;
+            color: #94a3b8;
+        }
+    }
 }
 
-.create-recovery-container h1 {
+/* .create-recovery-container h1 {
     display: flex;
     justify-content: center;
     padding-top: 2%;
@@ -72,7 +86,7 @@ h1 {
     margin-bottom: 1%;
     background: linear-gradient(145deg, #4CAF50 0%, #1b5e20 100%);
     color: #FFFFFF;
-}
+} */
 
 form {
     background-color: #FFFFFF;
@@ -93,6 +107,28 @@ form {
     align-items: center;
     transition: transform 0.3s ease;
 }
+
+.input-group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 12px;
+    transition: transform 0.3s ease;
+    > .input-group {
+        margin: 0;
+        > input:focus + label, input:not(:placeholder-shown) + label {
+            transform: translateY(100%);
+            transform: translateX(-8px);
+        }
+    }
+    > .input-group input {
+        padding: 18px;
+    }
+    > .input-group label {
+        left: 18px;
+    }
+}
+
 
 .input-group:focus-within {
     transform: translateY(-3px);
@@ -190,7 +226,7 @@ input:not(:placeholder-shown) ~ .input-icon, input:not(:placeholder-shown) ~ .pa
 .requirements-list li {
     font-size: 13px;
     color: #64748b;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     gap: 8px;
     position: relative;
     transition: 0.3s;
@@ -247,6 +283,18 @@ button:active {
 
 .primary-btn { 
     background-color: #4CAF50; 
+}
+
+.secondary-btn {
+    border: #4CAF50 2px solid;
+    background-color: white;
+    box-shadow: none;
+    color: #4CAF50;
+    padding: 16px 12px;
+}
+
+.secondary-btn:hover {
+    box-shadow: none;
 }
 
 .ghost-btn { 
@@ -326,10 +374,8 @@ button:active {
     transform: translateX(100%); 
     opacity: 1; 
     z-index: 5; 
-    animation: show 0.6s;
+    animation: show 0.7s;
 }
-
-
 
 @keyframes show {
     0%, 49.99% { opacity: 0; z-index: 1; }
