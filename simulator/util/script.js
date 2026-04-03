@@ -823,7 +823,7 @@ function startSimulation(event) {
         }
 
         console.log("Redirecting to: " + fileName + ".html");
-        window.location.href = fileName + ".html";
+        window.location.href = "algorithms/" + fileName + ".html";
     } else {
         alert("Please select an algorithm!");
     }

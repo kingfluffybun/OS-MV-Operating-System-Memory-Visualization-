@@ -64,9 +64,8 @@ function signIn() {
         if (result.success) {
             messageEl.textContent = 'Login successful! Redirecting...';
             messageEl.style.color = '#4CAF50';
-
             setTimeout(() => {
-                location.href = 'index.html';
+                location.href = 'simulator/index.html';
             }, 1500);
         } else {
             messageEl.textContent = result.message;
