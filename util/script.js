@@ -678,10 +678,21 @@ const getStepDelay = () => {
     return maxDelay - normalized * (maxDelay - minDelay);
 };
 
+const togglePlayStop = () => {
+    if (playInterval) {
+        stopBtn.style.display = `flex`;
+        playBtn.style.display = `none`;
+    } else {
+        playBtn.style.display = `flex`;
+        stopBtn.style.display = `none`;
+    }
+}
+
 const runPlay = () => {
+
     if (!simulationState) {
         if (!prepareSimulation()) return;
-    }
+    } 
 
     if (playInterval) {
         clearInterval(playInterval);
@@ -696,7 +707,17 @@ const runPlay = () => {
             playInterval = null;
         }
     }, delay);
+
+    togglePlayStop();
 };
+
+const runStop = () => {
+    clearInterval(playInterval);
+    playInterval = null;
+    togglePlayStop();
+    appendConsoleMessage('Simulation stopped.');
+}
+
 
 const runReset = () => {
     if (playInterval) {
@@ -735,6 +756,11 @@ const runReset = () => {
 const playBtn = document.getElementById('play-btn');
 if (playBtn) {
     playBtn.addEventListener('click', runPlay);
+}
+
+const stopBtn = document.getElementById('stop-btn');
+if (stopBtn) {
+    stopBtn.addEventListener('click', runStop);
 }
 
 const nextBtn = document.getElementById('next-btn');
