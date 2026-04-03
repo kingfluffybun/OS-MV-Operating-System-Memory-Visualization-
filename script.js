@@ -286,18 +286,6 @@ function generateRecoveryWords() {
     sessionStorage.setItem('recoveryKeys', generatedRecoveryKeys);
 }
 
-document.getElementById('word-0').addEventListener('paste', (e) => {
-    e.preventDefault();
-    const pasteData = e.clipboardData.getData('text').trim().split(/\s+/);
-
-    pasteData.forEach((word, index) => {
-        const input = document.getElementById(`word-${index}`);
-        if (input) {
-            input.value = word;
-        }
-    });
-});
-
 // Display recovery words
 function display() {
     const pending = getPendingRegistration();
@@ -315,8 +303,14 @@ function display() {
 
     generateRecoveryWords();
 
-    document.getElementById('recovery-words').textContent = generatedRecoveryKeys;
-    document.getElementById('confirm-form').style.display = 'block';
+    const wordsArray = generatedRecoveryKeys.split(' ');
+
+    wordsArray.forEach((word, index) => {
+        const wordElement = document.getElementById(`display-word-${index}`);
+        if (wordElement) {
+            wordElement.textContent = word;
+        }
+    });
 };
 
 // Copy to Clipboard
@@ -360,8 +354,22 @@ function handleSubmit() {
         if (isSubmitting) return;
         isSubmitting = true;
 
-        const confirmInput = document.getElementById('confirm-input').value.trim().toLowerCase();
         const statusEl = document.getElementById('status');
+
+        let wordValues = [];
+        for (let i = 0; i < 12; i++) {
+            const input = document.getElementById(`word-${i}`);
+            wordValues.push(input ? input.value.trim().toLowerCase() : "");
+        }
+
+        const confirmInput = wordValues.join(' ');
+
+        if (wordValues.includes("")) {
+            statusEl.textContent = 'Please fill in all 12 words.';
+            statusEl.style.color = '#ce1e1e';
+            isSubmitting = false;
+            return;
+        }
 
         if (confirmInput !== generatedRecoveryKeys.toLowerCase()) {
             statusEl.textContent = 'Incorrect recovery words. Please try again.';
@@ -388,6 +396,18 @@ function handleSubmit() {
         }
     });
 }
+
+document.getElementById('word-0').addEventListener('paste', (e) => {
+    e.preventDefault();
+    const pasteData = e.clipboardData.getData('text').trim().split(/\s+/);
+
+    pasteData.forEach((word, index) => {
+        const input = document.getElementById(`word-${index}`);
+        if (input) {
+            input.value = word;
+        }
+    });
+});
 
 // ========== OTHER FUNCTIONS ==========
 // Clear Field
