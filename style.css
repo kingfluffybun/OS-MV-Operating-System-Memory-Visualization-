@@ -4,6 +4,19 @@
     padding: 0;
 }
 
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-group(*) {
+    animation-duration: 0.5s;
+}
+
+/* For Tauri */
+h1, h2, h3, p, a {
+    user-select: none;
+} input::-ms-reveal {display: none;}
+
 body {
 background-color: white;
     display: flex;

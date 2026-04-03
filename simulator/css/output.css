@@ -8,12 +8,25 @@
     src: url(../font/TerminusTTFWindows-4.49.3.ttf);
 }
 
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-group(*) {
+    animation-duration: 0.5s;
+}
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
     font-family: Inter;
 }
+
+/* For Tauri */
+h1, h2, h3, p, a {
+    user-select: none;
+} input::-ms-reveal {display: none;}
 
 svg {
     flex-shrink: 0;
