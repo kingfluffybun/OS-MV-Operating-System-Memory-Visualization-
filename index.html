@@ -6,6 +6,19 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Intro -->
+    <div id="loader-wrapper">
+        <div class="loader-content">
+            <div class="logo-shimmer-container">
+                <img src="LOGO/LOGO_4.jpg" class="loader-logo" alt="Logo">
+                <div class="logo-glow"></div>
+            </div>
+            <h1 class="loader-text">OS-MV</h1>
+        </div>
+        <div class="loader-panel left"></div>
+        <div class="loader-panel right"></div>
+    </div>
+
     <section class="container" id="container">
         <!-- Sign Up -->
         <section class="form-container sign-up-container">
@@ -142,5 +155,20 @@
 <script src="database/db.js"></script>
 <script src="script.js"></script>
 <script src="bip-39.js"></script>
+
+<script>
+    window.addEventListener("load", function() {
+    const loaderWrapper = document.getElementById("loader-wrapper");
+    
+    setTimeout(() => {
+        loaderWrapper.classList.add("loaded");
+        
+        setTimeout(() => {
+            loaderWrapper.style.display = "none";
+        }, 600);
+    }, 1500); 
+});
+</script>
+
 </body>
 </html>

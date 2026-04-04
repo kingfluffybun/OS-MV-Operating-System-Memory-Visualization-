@@ -402,6 +402,99 @@ button:active {
     padding: 20px;
 }
 
+
+#loader-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    background-color: transparent;
+}
+
+.loader-content {
+    position: relative;
+    z-index: 10001;
+    text-align: center;
+    transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.logo-shimmer-container {
+    position: relative;
+    display: inline-block;
+}
+
+.loader-logo {
+    width: 400px;
+    border-radius: 50%;
+    position: relative;
+    z-index: 2;
+    filter: drop-shadow(0 0 20px rgba(76, 175, 80, 0.3));
+    animation: logoEntrance 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.loader-text {
+    margin-top: 20px;
+    font-size: 2.5rem;
+    color: #1b5e20;
+    letter-spacing: 8px;
+    font-weight: 900;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: textAppear 0.4s 0.3s forwards ease-out;
+}
+
+.loader-panel {
+    position: absolute;
+    top: 0;
+    width: 50%;
+    height: 100%;
+    background-color: white;
+    z-index: 10000;
+    transition: transform 1s cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+.loader-panel.left { 
+    left: 0; 
+}
+
+.loader-panel.right { 
+    right: 0; 
+}
+
+@keyframes logoEntrance {
+    0% { transform: scale(0.3); opacity: 0; filter: brightness(0) blur(10px); }
+    100% { transform: scale(1); opacity: 1; filter: brightness(1) blur(0); }
+}
+
+@keyframes pulseGlow {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.4; }
+    50% { transform: translate(-50%, -50%) scale(1.3); opacity: 0.8; }
+}
+
+@keyframes textAppear {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.loaded .loader-panel.left { 
+    transform: translateX(-100%); 
+}
+
+.loaded .loader-panel.right { 
+    transform: translateX(100%); 
+}
+
+.loaded .loader-content { 
+    opacity: 0; 
+    transform: scale(1.2); 
+    filter: blur(10px);
+    visibility: hidden; 
+}
+
 @keyframes show {
     0%, 49.99% { opacity: 0; z-index: 1; }
     50%, 100% { opacity: 1; z-index: 5; }
