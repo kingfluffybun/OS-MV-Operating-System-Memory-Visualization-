@@ -24,6 +24,18 @@ const toggleSubMenu = button => {
     button.classList.toggle('rotate');
 }
 
+function loadCurrentUser() {
+    const stored= JSON.parse(sessionStorage.getItem('currentUser'));
+
+    if (stored && stored.username) {
+        document.getElementById('username').textContent = stored.username;
+    } else {
+        document.getElementById('username').textContent = 'Guest';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadCurrentUser);
+
 const processColors = [
     { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
     { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
@@ -957,3 +969,4 @@ function startSimulation(event) {
         alert("Please select an algorithm!");
     }
 }
+
