@@ -2,6 +2,8 @@ const toggleButton = document.getElementById("toggle-btn");
 const sidebar = document.getElementById("sidebar");
 const logo = document.getElementById("logo");
 const logoH1 = document.getElementById("h1");
+// let submenuButtons = document.querySelectorAll(".dropdown-btn");
+// submenuButtons.classList.add("");
 
 const toggleSideBar = () => {
   sidebar.classList.toggle("close");
@@ -9,10 +11,19 @@ const toggleSideBar = () => {
   logo.classList.toggle("hidden");
   logoH1.classList.toggle("hidden");
 
-  Array.from(sidebar.getElementsByClassName("show")).forEach((element) => {
-    element.classList.remove("show");
-    element.previousElementSibling.classList.remove("rotate");
-  });
+  if (!sidebar.classList.contains("close")) {
+    const subMenu = sidebar.querySelector(".sub-menu");
+    const dropdownBtn = sidebar.querySelector(".dropdown-btn");
+    if (subMenu && !subMenu.classList.contains("show")) {
+      subMenu.classList.add("show");
+      dropdownBtn.classList.add("rotate");
+    }
+  } else {
+    Array.from(sidebar.getElementsByClassName("show")).forEach((element) => {
+      element.classList.remove("show");
+      element.previousElementSibling.classList.remove("rotate");
+    });
+  }
 };
 
 const toggleSubMenu = (button) => {
@@ -1432,3 +1443,31 @@ function startSimulation(event) {
     alert("Please select an algorithm!");
   }
 }
+
+const applyActiveStyles = () => {
+  const activeElements = document.querySelectorAll('.active');
+  activeElements.forEach(el => {
+    const link = el.tagName === 'A' ? el : el.querySelector('a');
+    if (link) {
+      link.style.color = 'white';
+      link.style.backgroundColor = 'var(--primary-color)';
+      link.style.borderRadius = '8px';
+      const svg = link.querySelector('svg');
+      if (svg) {
+        svg.style.stroke = 'white';
+      }
+    }
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyActiveStyles();
+  const observer = new MutationObserver(() => {
+    applyActiveStyles();
+  });
+  observer.observe(document.body, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['class']
+  });
+});
