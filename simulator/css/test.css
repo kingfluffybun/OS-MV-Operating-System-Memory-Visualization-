@@ -225,6 +225,24 @@ button:disabled svg {
             display: grid;
             grid-template-rows: 1.5fr 1fr 1.5fr;
             transition: width 0.3s ease, background 0.3s ease;
+            border-radius: 12px;
+        }
+        /* Remove gaps between consecutive blocks in same partition group */
+        .block-group-first {
+            border-radius: 12px 0 0 12px;
+            margin-right: -10px;
+            z-index: 2;
+        }
+        .block-group-middle {
+            border-radius: 0;
+            margin-right: -10px;
+            margin-left: -10px;
+            z-index: 1;
+        }
+        .block-group-last {
+            border-radius: 0 12px 12px 0;
+            margin-left: -10px;
+            z-index: 1;
         }
         .process-action {
             border: none;
