@@ -729,6 +729,10 @@ const runStep = () => {
         return false;
     }
 
+    if (simulationState && simulationState.currentIndex === 0) {
+        toggleSideBar();
+    }
+
     currentStep = simulationState.currentIndex;
     highlightCurrentProcess();
 
@@ -817,7 +821,6 @@ const togglePlayStop = () => {
 }
 
 const runPlay = () => {
-
     if (!simulationState) {
         if (!prepareSimulation()) return;
     } 
