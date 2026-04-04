@@ -500,6 +500,7 @@ const appendConsoleMessage = (message) => {
   consoleContainer.appendChild(p);
   consoleContainer.scrollTop = consoleContainer.scrollHeight;
 };
+appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
 
 const getProcessSizes = () => {
   if (!processContainer) return [];
