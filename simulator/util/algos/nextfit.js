@@ -89,7 +89,7 @@ const memorySimulator = {
     };
   },
 
-  nextFitFixedStep(memoryHead, processSize) {
+  _nextFitFixedStep(memoryHead, processSize) {
     // Start from last allocated block, or beginning if first call / after reset
     let start = this._nextLastBlock || memoryHead;
     let block = start;
@@ -183,7 +183,7 @@ const memorySimulator = {
     return { head: newHead, idMapping };
   },
 
-  nextFitDynamicStep(memoryHead, processSize) {
+  _nextFitDynamicStep(memoryHead, processSize) {
     const tryAllocateOn = (searchHead) => {
       let current = searchHead;
       while (current) {
@@ -261,11 +261,19 @@ const memorySimulator = {
   },
 
   // Compatibility layer for existing script.js calls.
-  bestFitFixedStep(memoryHead, processSize) {
-    return this.nextFitFixedStep(memoryHead, processSize);
+  nextFitFixedStep(memoryHead, processSize) {
+    return this._nextFitFixedStep(memoryHead, processSize);
   },
 
-  bestFitDynamicStep(memoryHead, processSize) {
-    return this.nextFitDynamicStep(memoryHead, processSize);
+  nextFitDynamicStep(memoryHead, processSize) {
+    return this._nextFitDynamicStep(memoryHead, processSize);
+  },
+
+  allocateFixedStep(memoryHead, processSize) {
+    return this._nextFitFixedStep(memoryHead, processSize);
+  },
+
+  allocateDynamicStep(memoryHead, processSize) {
+    return this._nextFitDynamicStep(memoryHead, processSize);
   },
 };

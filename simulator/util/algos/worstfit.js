@@ -85,11 +85,16 @@ const memorySimulator = {
     };
   },
 
-  worstFitFixedStep(memoryHead, processSize) {
+  _worstFitFixedStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+        if (
+          !worstBlock ||
+          block.size > worstBlock.size ||
+          block.size === worstBlock.size
+        )
+          worstBlock = block;
       }
     }
 
@@ -156,11 +161,16 @@ const memorySimulator = {
     return { head: newHead, idMapping };
   },
 
-  worstFitDynamicStep(memoryHead, processSize) {
+  _worstFitDynamicStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+        if (
+          !worstBlock ||
+          block.size > worstBlock.size ||
+          block.size === worstBlock.size
+        )
+          worstBlock = block;
       }
     }
 
@@ -173,7 +183,12 @@ const memorySimulator = {
         idMapping = compacted.idMapping;
         for (let block = compactedHead; block; block = block.next) {
           if (block.status === "Free" && processSize <= block.size) {
-            if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+            if (
+              !worstBlock ||
+              block.size > worstBlock.size ||
+              block.size === worstBlock.size
+            )
+              worstBlock = block;
           }
         }
       }
@@ -226,11 +241,19 @@ const memorySimulator = {
   },
 
   // Compatibility layer for existing script.js calls.
-  bestFitFixedStep(memoryHead, processSize) {
-    return this.worstFitFixedStep(memoryHead, processSize);
+  worstFitFixedStep(memoryHead, processSize) {
+    return this._worstFitFixedStep(memoryHead, processSize);
   },
 
-  bestFitDynamicStep(memoryHead, processSize) {
-    return this.worstFitDynamicStep(memoryHead, processSize);
+  worstFitDynamicStep(memoryHead, processSize) {
+    return this._worstFitDynamicStep(memoryHead, processSize);
+  },
+
+  allocateFixedStep(memoryHead, processSize) {
+    return this._worstFitFixedStep(memoryHead, processSize);
+  },
+
+  allocateDynamicStep(memoryHead, processSize) {
+    return this._worstFitDynamicStep(memoryHead, processSize);
   },
 };
