@@ -110,13 +110,161 @@ const createProcessElement = (id, sizeKb) => {
 
 const simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
-  document.querySelector(".simulation .container");
+  document.querySelector(".simulation .container") ||
+  document.querySelector(".simulation-paging .container");
 const totalMemoryValue = document.getElementById("total-memory-value");
 
 let preSimBlockState = null;
 
 const isDynamicPartitionMode = () =>
   document.body.dataset.partitionMode === "dynamic";
+
+const isPagingMode = () =>
+  !!document.querySelector(".main-grid.paging") ||
+  window.location.pathname.endsWith("simulation-Paging.html");
+
+const getPagingInputs = () => {
+  const pageSizeInput = document.getElementById("page-frame-size");
+  const memorySizeInput = document.getElementById("memory-size");
+  const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+  const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
+  return { pageSize, memorySize };
+};
+
+const getPagingFrameCount = () => {
+  const { pageSize, memorySize } = getPagingInputs();
+  if (Number.isNaN(pageSize) || pageSize <= 0) return 0;
+  if (Number.isNaN(memorySize) || memorySize <= 0) return 0;
+  return Math.floor(memorySize / pageSize);
+};
+
+const resetPagingUI = () => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+  if (pagesContainer) pagesContainer.innerHTML = "";
+  if (framesContainer) framesContainer.innerHTML = "";
+};
+
+const initializePagingUI = (memoryFrames) => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+
+if (framesContainer) {
+    framesContainer.innerHTML = "";
+    Object.values(memoryFrames.frames).forEach((frame) => {
+        const frameEl = document.createElement("div");
+        frameEl.className = "frame";
+        
+        // STAGE 1: Aggressive cleanup of the status label
+        // This removes 'process_', any existing 'Process' word, and extra spaces
+        let cleanId = frame.status === "Occupied" 
+            ? String(frame.process).replace(/process_|Process/gi, "").trim() 
+            : "";
+
+        const statusLabel = frame.status === "Occupied" 
+            ? `Process ${cleanId}` 
+            : "Free";
+            
+        // STAGE 2: Absolute separation of numbers
+        // Using an HTML entity (&nbsp;) and a slash to force the browser to separate them
+        const usageInfo = frame.status === "Occupied"
+            ? `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`
+            : `<p>${frame.size} KB</p>`;
+
+        frameEl.innerHTML = `
+            <p>F${frame.id}</p>
+            <div class="frame-content">
+                <p>${statusLabel}</p>
+                ${usageInfo}
+            </div>
+        `;
+        framesContainer.appendChild(frameEl);
+    });
+}
+
+  if (pagesContainer) {
+    pagesContainer.innerHTML = "";
+    const placeholder = document.createElement("div");
+    placeholder.className = "page page--placeholder";
+    placeholder.innerHTML = `
+            <p>Waiting for allocation</p>
+            <div class="frame-content">
+                <p>No pages allocated yet</p>
+            </div>
+        `;
+    pagesContainer.appendChild(placeholder);
+  }
+};
+
+const updatePagingUI = (memoryFrames) => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+  if (!memoryFrames) return;
+
+  // 1. Update Physical Frames (Right Side)
+  if (framesContainer) {
+    framesContainer.innerHTML = "";
+    Object.values(memoryFrames.frames).forEach((frame) => {
+      const frameEl = document.createElement("div");
+      frameEl.className = "frame";
+      
+      // FIX 1: Aggressive cleanup to prevent "Process Process"
+      let cleanId = frame.status === "Occupied" 
+          ? String(frame.process).replace(/process_|Process/gi, "").trim() 
+          : "";
+
+      const statusLabel = frame.status === "Occupied" 
+          ? `Process ${cleanId}` 
+          : "Free";
+          
+      // FIX 2: Force separation using non-breaking spaces and strong tags
+    const usageInfo = frame.status === "Occupied" 
+    ? `&nbsp;<span>(${frame.used} / ${frame.size} KB)</span>`
+    : `&nbsp;<span>${frame.size} KB</span>`;
+
+      frameEl.innerHTML = `
+            <p>F${frame.id}</p>
+            <div class="frame-content">
+                <p>${statusLabel}</p>
+                ${usageInfo}
+            </div>
+        `;
+      framesContainer.appendChild(frameEl);
+    });
+  }
+
+  // 2. Update Logical Pages (Left Side)
+  if (pagesContainer) {
+    pagesContainer.innerHTML = "";
+    const allocatedFrames = Object.values(memoryFrames.frames).filter(
+      (frame) => frame.status === "Occupied",
+    );
+
+    if (allocatedFrames.length === 0) {
+      pagesContainer.innerHTML = `
+            <div class="page page--placeholder">
+                <p>Waiting for allocation</p>
+            </div>`;
+      return;
+    }
+
+    allocatedFrames.forEach((frame) => {
+      const pageEl = document.createElement("div");
+      pageEl.className = "page";
+      
+      // Keep consistency with the right side cleanup
+      let cleanId = String(frame.process).replace(/process_|Process/gi, "").trim();
+      
+      pageEl.innerHTML = `
+      <p>P${cleanId}</p>
+        <div class="frame-content">
+            <p>Frame ${frame.id} (${frame.used} / ${frame.size} KB used)</p>
+        </div>
+    `;
+      pagesContainer.appendChild(pageEl);
+    });
+  }
+};
 
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
 const disableMemoryBlockControls = () => {
@@ -283,6 +431,17 @@ add_process_btn.addEventListener("click", () => {
   const processSizeInput = document.getElementById("process-size");
   const processSize = parseInt(processSizeInput.value, 10);
 
+  // --- NEW VALIDATION CHECK START ---
+  // This prevents the user from adding a process that is larger than the total memory.
+  if (isPagingMode()) {
+    const { memorySize } = getPagingInputs();
+    if (processSize > memorySize) {
+      alert(`Process size (${processSize} KB) cannot exceed total memory (${memorySize} KB)!`);
+      return; // Stops the function here so the massive process isn't added
+    }
+  }
+  // --- NEW VALIDATION CHECK END ---
+
   if (!processContainer || Number.isNaN(processSize) || processSize <= 0) {
     return;
   }
@@ -297,8 +456,8 @@ add_process_btn.addEventListener("click", () => {
 
 const randomize_value = document.getElementById("randomize-value");
 randomize_value.addEventListener("click", () => {
-  const min = 3;
-  const max = 7;
+  const min = 1;
+  const max = 4;
   const processSize = Math.pow(
     2,
     Math.floor(Math.random() * (max - min + 1)) + min,
@@ -695,19 +854,62 @@ const restorePreSimulationBlocks = () => {
 const prepareSimulation = () => {
   const processes = getProcessSizes();
   const blocks = getBlockSizes();
+  const isPaging = isPagingMode();
 
   if (!processes.length) {
     appendConsoleMessage("No processes in queue to allocate.");
     return false;
   }
 
-  if (!blocks.length) {
+  if (!isPaging && !blocks.length) {
     appendConsoleMessage("No memory blocks defined.");
     return false;
   }
 
-  if (isDynamicPartitionMode()) {
-    preSimBlockState = getBlockSizes().slice();
+  if (isPaging) {
+    const { pageSize, memorySize } = getPagingInputs();
+    const frameCount = getPagingFrameCount();
+
+    if (Number.isNaN(pageSize) || pageSize <= 0) {
+      appendConsoleMessage("Enter a valid page/frame size.");
+      return false;
+    }
+
+    if (Number.isNaN(memorySize) || memorySize <= 0) {
+      appendConsoleMessage("Enter a valid total memory size.");
+      return false;
+    }
+
+    if (!frameCount) {
+      appendConsoleMessage(
+        "Total memory must be at least one page/frame in size.",
+      );
+      return false;
+    }
+
+    simulationState = {
+      processes,
+      memoryFrames: memorySimulator.createFrames(frameCount, pageSize),
+      currentIndex: 0,
+      results: {},
+      stats: {
+        allocatedSize: 0,
+        successfulAllocations: 0,
+        intFragmentation: 0,
+      },
+    };
+  } else {
+    if (isDynamicPartitionMode()) {
+      preSimBlockState = getBlockSizes().slice();
+    }
+
+    simulationState = {
+      processes,
+      memoryHead: memorySimulator.createLinkedMemory(blocks),
+      currentIndex: 0,
+      results: {},
+      stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+    };
   }
 
   if (!sidebar.classList.contains("close")) {
@@ -726,28 +928,38 @@ const prepareSimulation = () => {
     });
   }
 
-  simulationState = {
-    processes,
-    memoryHead: memorySimulator.createLinkedMemory(blocks),
-    currentIndex: 0,
-    results: {},
-    stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
-  };
-
   resetConsole();
   appendConsoleMessage("Simulation ready. Use Next or Play.");
-  setTotalMemoryDisplay(
-    memorySimulator.totalMemory(simulationState.memoryHead),
-  );
-  updateStatistics(
-    memorySimulator.computeStats(
-      simulationState.memoryHead,
-      simulationState.processes,
-      simulationState.results,
-      simulationState.stats,
-    ),
-  );
-  resetBlocksUI();
+
+  if (isPaging) {
+    const totalMemory =
+      simulationState.memoryFrames.count *
+      simulationState.memoryFrames.frameSize;
+    updateStatistics({
+      allocatedSize: 0,
+      totalFree: memorySimulator.totalFreeMemory(simulationState.memoryFrames),
+      intFragmentation: 0,
+      externalFragmentation: 0,
+      memoryUtilization: 0,
+      successRate: 0,
+    });
+    setTotalMemoryDisplay(totalMemory);
+    initializePagingUI(simulationState.memoryFrames);
+  } else {
+    setTotalMemoryDisplay(
+      memorySimulator.totalMemory(simulationState.memoryHead),
+    );
+    updateStatistics(
+      memorySimulator.computeStats(
+        simulationState.memoryHead,
+        simulationState.processes,
+        simulationState.results,
+        simulationState.stats,
+      ),
+    );
+    resetBlocksUI();
+  }
+
   currentStep = 0;
   highlightCurrentProcess();
 
@@ -864,6 +1076,87 @@ const runStep = () => {
 
   const size = simulationState.processes[simulationState.currentIndex];
   const processId = `Process ${simulationState.currentIndex + 1}`;
+  const isPaging = isPagingMode();
+
+  if (isPaging) {
+    const { pageSize } = getPagingInputs();
+    if (Number.isNaN(pageSize) || pageSize <= 0) {
+      appendConsoleMessage("Enter a valid page/frame size.");
+      return false;
+    }
+
+    const stepResult = memorySimulator.pagingStep(
+      simulationState.memoryFrames,
+      size,
+      pageSize,
+      processId,
+    );
+
+    if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
+    simulationState.results[processId] = stepResult.result;
+
+    if (stepResult.result.status === "Allocated") {
+      simulationState.stats.allocatedSize += size;
+      simulationState.stats.successfulAllocations += 1;
+      simulationState.stats.intFragmentation +=
+        stepResult.result.internalFragmentation || 0;
+    } else {
+      const pagesNeeded = stepResult.result.pagesNeeded || 0;
+      const freeFrames = memorySimulator.totalFreeFrames(
+        simulationState.memoryFrames,
+      );
+      appendConsoleMessage(
+        `${processId} (${size} KB) could not allocate: needed ${pagesNeeded} frame(s), free ${freeFrames}`,
+      );
+    }
+
+    const totalMemory =
+      simulationState.memoryFrames.count *
+      simulationState.memoryFrames.frameSize;
+    const totalFree = memorySimulator.totalFreeMemory(
+      simulationState.memoryFrames,
+    );
+    const memoryUtilization = totalMemory
+      ? ((totalMemory - totalFree) / totalMemory) * 100
+      : 0;
+    const successRate =
+      simulationState.processes.length > 0
+        ? (simulationState.stats.successfulAllocations /
+            simulationState.processes.length) *
+          100
+        : 0;
+
+    const pagingStats = {
+      allocatedSize: simulationState.stats.allocatedSize,
+      totalFree,
+      intFragmentation: simulationState.stats.intFragmentation,
+      externalFragmentation: 0,
+      memoryUtilization,
+      successRate,
+    };
+
+    updateStatistics(pagingStats);
+    setTotalMemoryDisplay(totalMemory);
+    updatePagingUI(simulationState.memoryFrames);
+
+    appendConsoleMessage(
+      `${processId} (${size} KB) -> ${stepResult.result.status}`,
+    );
+
+    simulationState.currentIndex += 1;
+    if (simulationState.currentIndex >= simulationState.processes.length) {
+      appendConsoleMessage("Simulation complete");
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        togglePlayStop();
+      }
+      return false;
+    }
+
+    return true;
+  }
+
   const isFixed = !isDynamicPartitionMode();
 
   const allocationFn = isFixed
@@ -1036,6 +1329,10 @@ const runReset = () => {
   // If you use a pre-sim state for Dynamic (like compaction), restore it
   if (isDynamic && preSimBlockState && preSimBlockState.length) {
     restorePreSimulationBlocks();
+  }
+
+  if (isPagingMode()) {
+    resetPagingUI();
   }
 
   // Standard Updates
