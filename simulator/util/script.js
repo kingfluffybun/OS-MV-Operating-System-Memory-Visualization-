@@ -467,8 +467,8 @@ add_process_btn.addEventListener("click", () => {
 
 const randomize_value = document.getElementById("randomize-value");
 randomize_value.addEventListener("click", () => {
-  const min = 1;
-  const max = 4;
+  const min = 4;
+  const max = 7;
   const processSize = Math.pow(
     2,
     Math.floor(Math.random() * (max - min + 1)) + min,
