@@ -272,4 +272,12 @@ const memorySimulator = {
   bestFitDynamicStep(memoryHead, processSize) {
     return this.firstFitDynamicStep(memoryHead, processSize);
   },
+
+  allocateFixedStep(memoryHead, processSize) {
+    return this.firstFitFixedStep(memoryHead, processSize);
+  },
+
+  allocateDynamicStep(memoryHead, processSize) {
+    return this.firstFitDynamicStep(memoryHead, processSize);
+  },
 };

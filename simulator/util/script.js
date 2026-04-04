@@ -1122,9 +1122,18 @@ const runStep = () => {
   const processId = `Process ${simulationState.currentIndex + 1}`;
   const isFixed = !isDynamicPartitionMode();
 
-  const stepResult = isFixed
-    ? memorySimulator.bestFitFixedStep(simulationState.memoryHead, size)
-    : memorySimulator.bestFitDynamicStep(simulationState.memoryHead, size);
+  const allocationFn = isFixed
+    ? memorySimulator.allocateFixedStep
+    : memorySimulator.allocateDynamicStep;
+
+  const stepResult =
+    typeof allocationFn === "function"
+      ? allocationFn.call(memorySimulator, simulationState.memoryHead, size)
+      : {
+          result: { size, block: "None", status: "Unallocated" },
+          allocatedSize: 0,
+          successfulAllocations: 0,
+        };
 
   // CRITICAL: Attach the process size to the result
   stepResult.result.size = size;

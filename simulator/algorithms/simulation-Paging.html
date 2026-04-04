@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="../css/output.css">
     <link rel="stylesheet" href="../css/test.css">
     <title>OS-MV</title>
-    <script src="../util/algos/bestfit.js" defer></script>
+    <script src="../util/algos/firstfit.js" defer></script>
     <script src="../util/script.js" defer></script>
 </head>
 <body>
@@ -57,7 +57,7 @@
             </div>
         </div>
     </section>
-    <section class="main-grid">
+    <section class="main-grid paging">
         <button id="toggle-btn" onclick="toggleSideBar()">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
         </button>
@@ -107,60 +107,96 @@
                 </div>
             </div>
         </div>
-        <div class="simulation">
-            <h3>Memory Allocation Simulator</h3>
-            <p>Best Fit Algorithm - Fixed Partition</p>
+        <div class="simulation-paging" style="grid-row: span 3;">
+            <div class="header">
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <h3>Memory Allocation Simulator</h3>
+                    <p id="algo-description">Paging Algorithm</p>
+                </div>
+                <div class="input-size">
+                    <input type="number" id="page-frame-size" placeholder="Page / Frame Size (KB)">
+                    <input type="number" id="memory-size" placeholder="Total Memory Size (KB)">
+                </div>
+            </div>
             <div class="container">
-                <div class="simulation-scroll-track">
-                    <!-- Dito papasok yung mga blocks -->
-                <button class="add-block" id="add-block-btn">
-                    <div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div>
-                </button>
+                <div><h3>Pages</h3></div>
+                <div></div>
+                <div><h3>Frames</h3></div>
+                <div class="pages-container">
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 1</p></div></div>
+                    <div class="page"><p id="page-number">P2</p><div class="frame-content"><p>Process 1</p></div></div>
+                    <div class="page"><p id="page-number">P3</p><div class="frame-content"><p>Process 1</p></div></div>
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 2</p></div></div>
+                    <div class="page"><p id="page-number">P2</p><div class="frame-content"><p>Process 2</p></div></div>
+                    <div class="page"><p id="page-number">P3</p><div class="frame-content"><p>Process 2</p></div></div>
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 3</p></div></div>
+                    <div class="page"><p id="page-number">P2</p><div class="frame-content"><p>Process 3</p></div></div>
+                    <div class="page"><p id="page-number">P3</p><div class="frame-content"><p>Process 3</p></div></div>
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 4</p></div></div>
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 5</p></div></div>
+                    <div class="page"><p id="page-number">P2</p><div class="frame-content"><p>Process 5</p></div></div>
+                    <div class="page"><p id="page-number">P3</p><div class="frame-content"><p>Process 5</p></div></div>
+                    <div class="page"><p id="page-number">P1</p><div class="frame-content"><p>Process 6</p></div></div>
+                </div>
+                <div></div>
+                <div class="frames-container">
+                    <div class="frame"><p id="frame-number">F1</p><div class="frame-content"><p>Frame 1</p></div></div>
+                    <div class="frame"><p id="frame-number">F2</p><div class="frame-content"><p>Frame 2</p></div></div>
+                    <div class="frame"><p id="frame-number">F3</p><div class="frame-content"><p>Frame 3</p></div></div>
+                    <div class="frame"><p id="frame-number">F4</p><div class="frame-content"><p>Frame 4</p></div></div>
+                    <div class="frame"><p id="frame-number">F5</p><div class="frame-content"><p>Frame 5</p></div></div>
+                    <div class="frame"><p id="frame-number">F6</p><div class="frame-content"><p>Frame 6</p></div></div>
+                    <div class="frame"><p id="frame-number">F7</p><div class="frame-content"><p>Frame 7</p></div></div>
+                    <div class="frame"><p id="frame-number">F8</p><div class="frame-content"><p>Frame 8</p></div></div>
+                    <div class="frame"><p id="frame-number">F9</p><div class="frame-content"><p>Frame 9</p></div></div>
+                    <div class="frame"><p id="frame-number">F10</p><div class="frame-content"><p>Frame 10</p></div></div>
+                    <div class="frame"><p id="frame-number">F11</p><div class="frame-content"><p>Frame 7</p></div></div>
+                    <div class="frame"><p id="frame-number">F12</p><div class="frame-content"><p>Frame 8</p></div></div>
+                    <div class="frame"><p id="frame-number">F13</p><div class="frame-content"><p>Frame 9</p></div></div>
+                    <div class="frame"><p id="frame-number">F14</p><div class="frame-content"><p>Frame 10</p></div></div>
                 </div>
             </div>
         </div>
-        <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-            <div class="console">
-                <h3>Console</h3>
-                <div class="container">
-                    <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p>
-                    <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
-                    <p><span class="timestamp">[12:36:00PM]</span> Vero at, quo quibusdam odio optio aliquid iure assumenda quas perferendis laudantium deleniti pariatur sit dolor ea</p>
-                    <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p> -->
+        <div class="statistics">
+            <h3>Statistics</h3>
+            <div class="container-paging">
+                <div>
+                    <p>Total Memory</p>
+                    <h2 id="total-memory-value">0 KB</h2>
+                </div>
+                <div>
+                    <p>Allocated</p>
+                    <h2 id="allocated-value">0 KB</h2>
+                </div>
+                <div>
+                    <p>Total Free</p>
+                    <h2 id="total-free-value">0 KB</h2>
+                </div>
+                <div>
+                    <p>Internal Fragmentation</p>
+                    <h2 id="internal-frag-value">0 KB</h2>
+                </div>
+                <div>
+                    <p>External Fragmentation</p>
+                    <h2 id="external-frag-value">0 KB</h2>
+                </div>
+                <div>
+                    <p>Memory Utilization</p>
+                    <h2 id="util-value">0%</h2>
+                </div>
+                <div>
+                    <p>Success Rate</p>
+                    <h2 id="success-rate-value">0%</h2>
                 </div>
             </div>
-            <div class="statistics">
-                <h3>Statistics</h3>
-                <div class="container">
-                    <div style="grid-column: span 4;">
-                        <p>Total Memory</p>
-                        <h2 id="total-memory-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 4;">
-                        <p>Allocated</p>
-                        <h2 id="allocated-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 4;">
-                        <p>Total Free</p>
-                        <h2 id="total-free-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Internal Fragmentation</p>
-                        <h2 id="internal-frag-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>External Fragmentation</p>
-                        <h2 id="external-frag-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Memory Utilization</p>
-                        <h2 id="util-value">0%</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Success Rate</p>
-                        <h2 id="success-rate-value">0%</h2>
-                    </div>
-                </div>
+        </div>
+        <div class="console">
+            <h3>Console</h3>
+            <div class="container">
+                <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p>
+                <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+                <p><span class="timestamp">[12:36:00PM]</span> Vero at, quo quibusdam odio optio aliquid iure assumenda quas perferendis laudantium deleniti pariatur sit dolor ea</p>
+                <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p> -->
             </div>
         </div>
     </section>

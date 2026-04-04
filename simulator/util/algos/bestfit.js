@@ -102,12 +102,7 @@ const memorySimulator = {
       let bestBlock = null;
       for (let block = head; block; block = block.next) {
         if (block.status === "Free" && size <= block.size) {
-          if (
-            !bestBlock ||
-            block.size < bestBlock.size ||
-            block.size === bestBlock.size
-          )
-            bestBlock = block;
+          if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
         }
       }
 
@@ -150,12 +145,7 @@ const memorySimulator = {
       let bestBlock = null;
       for (let block = head; block; block = block.next) {
         if (block.status === "Free" && size <= block.size) {
-          if (
-            !bestBlock ||
-            block.size < bestBlock.size ||
-            block.size === bestBlock.size
-          )
-            bestBlock = block;
+          if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
         }
       }
 
@@ -197,12 +187,7 @@ const memorySimulator = {
     let bestBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (
-          !bestBlock ||
-          block.size < bestBlock.size ||
-          block.size === bestBlock.size
-        )
-          bestBlock = block;
+        if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
       }
     }
 
@@ -292,12 +277,7 @@ const memorySimulator = {
     let bestBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (
-          !bestBlock ||
-          block.size < bestBlock.size ||
-          block.size === bestBlock.size
-        )
-          bestBlock = block;
+        if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
       }
     }
 
@@ -310,12 +290,7 @@ const memorySimulator = {
         idMapping = compacted.idMapping;
         for (let block = compactedHead; block; block = block.next) {
           if (block.status === "Free" && processSize <= block.size) {
-            if (
-              !bestBlock ||
-              block.size < bestBlock.size ||
-              block.size === bestBlock.size
-            )
-              bestBlock = block;
+            if (!bestBlock || block.size < bestBlock.size) bestBlock = block;
           }
         }
       }
@@ -367,5 +342,13 @@ const memorySimulator = {
     const ids = [];
     for (let node = head; node; node = node.next) ids.push(node.id);
     return ids;
+  },
+
+  allocateFixedStep(memoryHead, processSize) {
+    return this.bestFitFixedStep(memoryHead, processSize);
+  },
+
+  allocateDynamicStep(memoryHead, processSize) {
+    return this.bestFitDynamicStep(memoryHead, processSize);
   },
 };
