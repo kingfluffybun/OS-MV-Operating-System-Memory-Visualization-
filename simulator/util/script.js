@@ -140,14 +140,21 @@ const updateTotalMemory = () => {
 
 const renumberBlocks = () => {
     const blocks = simulationContainer ? simulationContainer.querySelectorAll('.block') : [];
-    blocks.forEach((block, index) => {
-        const newId = index + 1;
+    let blockNumber = 1;
+    blocks.forEach((block) => {
+        const isSplitFree = block.classList.contains('block--split-free');
+        if (isSplitFree) {
+            const label = block.querySelector('p');
+            if (label) label.textContent = '';
+            return;
+        }
         const label = block.querySelector('p');
         if (label) {
-            label.textContent = `Block ${newId}`;
+            label.textContent = `Block ${blockNumber}`;
         }
-        block.id = `block-${newId}`;
-        block.dataset.partitionLabel = String(newId);
+        block.id = `block-${blockNumber}`;
+        block.dataset.partitionLabel = String(blockNumber);
+        blockNumber++;
     });
 };
 
@@ -176,10 +183,10 @@ const createBlockElement = (id, sizeKb, options = {}) => {
     const block = document.createElement('div');
     block.className = options.isSplitFree ? 'block block--split-free' : 'block';
     block.id = `block-${id}`;
-    block.dataset.partitionLabel = options.isSplitFree ? 'Hole' : String(partitionLabel);
+    block.dataset.partitionLabel = options.isSplitFree ? '' : String(partitionLabel);
     block.style.width = '120px';
     block.style.position = 'relative';
-    const titleText = options.isSplitFree ? 'Hole' : `Block ${partitionLabel}`;
+    const titleText = options.isSplitFree ? '' : `Block ${partitionLabel}`;
     block.innerHTML = `
         <p>${titleText}</p>
         <div class="block-content">
@@ -207,9 +214,9 @@ const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, f
 
     const nameEl = allocatedEl.querySelector('p');
     if (nameEl) {
-        nameEl.textContent = `Block ${allocatedBlockId}`;
+        const lbl = allocatedEl.dataset.partitionLabel;
+        nameEl.textContent = lbl ? `Block ${lbl}` : '';
     }
-    allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
     
     // For visual
     const wasStandaloneHole = window.getComputedStyle(allocatedEl).borderTopLeftRadius !== "0px";
@@ -599,7 +606,7 @@ const resetBlocksUI = () => {
         const text = block.querySelector('p');
         const status = block.querySelector('.block-status');
 
-        if (text) text.textContent = `Block ${labelNum}`;
+        if (text) text.textContent = labelNum ? `Block ${labelNum}` : '';
         if (status) status.textContent = 'Free';
 
         // Restore the original size that was stamped at prepareSimulation time
@@ -783,7 +790,12 @@ const runStep = () => {
         }
 
         if (blockEl) {
+            const wasSplitFree = blockEl.classList.contains('block--split-free');
             blockEl.classList.remove('block--split-free');
+            if (wasSplitFree) {
+                const titleEl = blockEl.querySelector('p:first-child');
+                if (titleEl) titleEl.textContent = '';
+            }
             const label = blockEl.querySelector('.block-status');
             if (label) label.textContent = `${processId}`;
             
@@ -969,4 +981,3 @@ function startSimulation(event) {
         alert("Please select an algorithm!");
     }
 }
-
