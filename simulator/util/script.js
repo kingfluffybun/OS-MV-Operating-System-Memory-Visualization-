@@ -160,8 +160,8 @@ const renumberBlocks = () => {
     const isSplitFree = block.classList.contains("block--split-free");
     const label = block.querySelector("p");
     if (isSplitFree) {
-      if (label) label.textContent = "Hole";
-      block.dataset.partitionLabel = "Hole";
+      if (label) label.textContent = "";
+      block.dataset.partitionLabel = "";
       return;
     }
     if (label) {
@@ -202,11 +202,11 @@ const createBlockElement = (id, sizeKb, options = {}) => {
   block.className = options.isSplitFree ? "block block--split-free" : "block";
   block.id = `block-${id}`;
   block.dataset.partitionLabel = options.isSplitFree
-    ? "Hole"
+    ? ""
     : String(partitionLabel);
   block.style.width = "120px";
   block.style.position = "relative";
-  const titleText = options.isSplitFree ? "Hole" : `Block ${partitionLabel}`;
+  const titleText = options.isSplitFree ? "" : `Block ${partitionLabel}`;
   block.innerHTML = `
         <p>${titleText}</p>
         <div class="block-content">
@@ -240,7 +240,8 @@ const insertDynamicFreeSplitAfter = (
 
   const nameEl = allocatedEl.querySelector("p");
   if (nameEl) {
-    nameEl.textContent = `Block ${allocatedBlockId}`;
+    const lbl = allocatedEl.dataset.partitionLabel;
+    nameEl.textContent = lbl ? `Block ${lbl}` : "";
   }
   allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
 
