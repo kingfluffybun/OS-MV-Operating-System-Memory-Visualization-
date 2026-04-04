@@ -172,7 +172,7 @@ const createBlockElement = (id, sizeKb, options = {}) => {
         <p>${titleText}</p>
         <div class="block-content">
             <div>
-                <p class="block-status"></p>
+                <p class="block-status">Free</p>
             </div>
             <div class="block-size">
                 <h2><span class="block-size-value">${sizeKb}</span></h2>
@@ -192,13 +192,20 @@ const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, f
     if (!allocatedEl || freeSizeKb <= 0 || freeNodeId == null) {
         return;
     }
-    
-    // Keep the allocated chunk labeled by partition id (e.g. Block 2), not process size in KB.
+
     const nameEl = allocatedEl.querySelector('p');
     if (nameEl) {
         nameEl.textContent = `Block ${allocatedBlockId}`;
     }
     allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
+    
+    // For visual
+    const wasStandaloneHole = window.getComputedStyle(allocatedEl).borderTopLeftRadius !== "0px";
+    if (wasStandaloneHole) {
+        allocatedEl.style.borderRadius = "12px 0px 0px 12px";
+    } else {
+        allocatedEl.style.borderRadius = "0px 0px 0px 0px";
+    }
 
     const sizeNumEl = allocatedEl.querySelector('.block-size-value');
     if (sizeNumEl) {
@@ -207,6 +214,11 @@ const insertDynamicFreeSplitAfter = (allocatedEl, allocatedSizeKb, freeSizeKb, f
     const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
         isSplitFree: true
     });
+
+    // For visual
+    freeEl.style.borderRadius = "0px 12px 12px 0px";
+    freeEl.style.marginLeft = "-10px"
+    
     allocatedEl.after(freeEl);
     resizeBlocks();
     disableMemoryBlockControls();
@@ -308,7 +320,7 @@ const startInlineEdit = (element, onCommit) => {
         }
         if (event.key === 'Escape') {
             event.preventDefault();
-            element.textContent = `${oldValue} KB`;
+            element.textContent = `${oldValue}`;
             cleanup(null);
         }
     };
@@ -349,7 +361,9 @@ const resizeBlocks = () => {
 };
 
 const editBlock = block => {
-    const sizeEl = block.querySelector('h2');
+    const sizeEl = block.querySelector('.block-size-value'); // ← FIXED: target the span
+    if (!sizeEl) return;
+
     startInlineEdit(sizeEl, parsedSize => {
         updateTotalMemory();
         resizeBlocks();
@@ -469,7 +483,7 @@ const updateBlockVisuals = results => {
                     ${hatchBorder} 10px
                 )`;
                 block.style.background = hatchPattern;
-                block.style.borderBottom = `4px solid ${hatchBorder}`;
+                block.style.borderBottom = `8px solid ${hatchBorder}`;
             }
             return;
         }
@@ -507,7 +521,7 @@ const updateBlockVisuals = results => {
 
         if (isAllocated) {
             block.style.background = bgColor;
-            block.style.borderBottom = `4px solid ${borderColor}`;
+            block.style.borderBottom = `8px solid ${borderColor}`;
             block.classList.add('allocated');
             if (sizeDisplay && processActualSize !== null) {
                 sizeDisplay.textContent = processActualSize;
@@ -573,7 +587,7 @@ const resetBlocksUI = () => {
         const status = block.querySelector('.block-status');
 
         if (text) text.textContent = `Block ${labelNum}`;
-        if (status) status.textContent = '';
+        if (status) status.textContent = 'Free';
 
         // Restore the original size that was stamped at prepareSimulation time
         const originalSize = block.dataset.originalSize;
@@ -646,7 +660,7 @@ const prepareSimulation = () => {
     highlightCurrentProcess();
 
     // Disable buttons during simulation
-    document.getElementById('add-block-btn').disabled = true;
+    document.getElementById('add-block-btn').style.display = none;
     document.getElementById('add-process-btn').disabled = true;
     document.getElementById('randomize-value').disabled = true;
     document.getElementsByClassName('add-block').disabled = true;
@@ -666,6 +680,8 @@ const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blo
     const wasteEl = document.createElement('div');
     wasteEl.className = 'block block--fixed-waste'; 
     wasteEl.id = `block-${blockId}-waste`;
+    wasteEl.style.marginLeft = `-10px`
+    wasteEl.style.borderRadius = `0px 12px 12px 0px`
     // Store colors so updateBlockVisuals can re-apply them on refresh
     if (bgColor) wasteEl.dataset.hatchBg = bgColor;
     if (borderColor) wasteEl.dataset.hatchBorder = borderColor;
@@ -694,7 +710,7 @@ const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blo
             ${borderColor} 10px
         )`;
         wasteEl.style.background = hatchPattern;
-        wasteEl.style.borderBottom = `4px solid ${borderColor}`;
+        wasteEl.style.borderBottom = `8px solid ${borderColor}`;
     }
 
     // 4. Place it after the allocated block
@@ -744,6 +760,7 @@ const runStep = () => {
             } else if (isFixed) {
                 const colorIndex = simulationState.currentIndex % processColors.length;
                 const { bg: procBg, border: procBorder } = processColors[colorIndex];
+                blockEl.style.borderRadius = "12px 0px 0px 12px";
                 insertFixedWasteSplitAfter(blockEl, size, leftover, stepResult.result.block, procBg, procBorder);
             }
         }
