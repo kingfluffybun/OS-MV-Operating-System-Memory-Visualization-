@@ -74,6 +74,7 @@ body {
 }
 #sidebar svg {
     flex-shrink: 0 ;
+    min-width: 26px;
 }
 #sidebar .sidebar-options .active a {
     color: white;
