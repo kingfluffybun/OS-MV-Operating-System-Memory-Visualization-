@@ -321,11 +321,12 @@ button:active {
 }
 
 .overlay-container {
+    border-radius: 50px;
     position: absolute;
-    top: 0; 
+    top: 2.5%;
     left: 50%; 
-    width: 50%; 
-    height: 100%;
+    width: 48.5%; 
+    height: 95%;
     overflow: hidden;
     transition: transform 0.6s ease-in-out;
     z-index: 100;
@@ -372,7 +373,7 @@ button:active {
 
 .overlay-right { 
     right: 0; 
-    transform: translateX(0); 
+    transform: translateX(0);
 }
 
 .container.right-panel-active .overlay-right { 
