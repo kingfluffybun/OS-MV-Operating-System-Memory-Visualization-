@@ -579,6 +579,7 @@ const resetBlocksUI = () => {
         block.style.background = '';
         block.style.borderColor = '';
         block.style.borderBottom = '';
+        block.style.borderRadius = '12px';
         block.classList.remove('allocated');
 
         const bId = block.id.replace('block-', '');
@@ -660,8 +661,8 @@ const prepareSimulation = () => {
     highlightCurrentProcess();
 
     // Disable buttons during simulation
-    document.getElementById('add-block-btn').style.display = none;
-    document.getElementById('add-process-btn').disabled = true;
+    const addBtn = document.getElementById('add-block-btn');
+    addBtn.style.display = 'none';
     document.getElementById('randomize-value').disabled = true;
     document.getElementsByClassName('add-block').disabled = true;
     document.getElementsByClassName('input-prcs').disabled = true;
@@ -682,6 +683,7 @@ const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blo
     wasteEl.id = `block-${blockId}-waste`;
     wasteEl.style.marginLeft = `-10px`
     wasteEl.style.borderRadius = `0px 12px 12px 0px`
+    // wasteEl.style.color = `$`
     // Store colors so updateBlockVisuals can re-apply them on refresh
     if (bgColor) wasteEl.dataset.hatchBg = bgColor;
     if (borderColor) wasteEl.dataset.hatchBorder = borderColor;
@@ -690,7 +692,7 @@ const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blo
     const parentLabel = allocatedEl.querySelector('p') ? allocatedEl.querySelector('p').textContent.trim() : `Block ${blockId}`;
 
     wasteEl.innerHTML = `
-        <p>${parentLabel}</p>
+        <p></p>
         <div class="block-content">
             <div class="block-status">Unusable</div>
             <div class="block-size">
@@ -706,8 +708,8 @@ const insertFixedWasteSplitAfter = (allocatedEl, processSizeKb, wasteSizeKb, blo
             45deg,
             ${bgColor}75,
             ${bgColor}75 5px,
-            ${borderColor} 5px,
-            ${borderColor} 10px
+            #2c2c2c 5px,
+            #2c2c2c 10px
         )`;
         wasteEl.style.background = hatchPattern;
         wasteEl.style.borderBottom = `8px solid ${borderColor}`;
@@ -881,8 +883,8 @@ const runReset = () => {
 
     // Resetting Inputs & Buttons
     document.querySelectorAll('.process').forEach(p => p.classList.remove('current'));
-    document.getElementById('add-block-btn').disabled = false;
-    document.getElementById('add-process-btn').disabled = false;
+    const addBtn = document.getElementById('add-block-btn');
+    addBtn.style.display = 'flex';
     document.getElementById('randomize-value').disabled = false;
     document.querySelectorAll('.process-action').forEach(action => action.style.display = '');
     document.querySelectorAll('.edit-block-btn').forEach(btn => btn.disabled = false);
