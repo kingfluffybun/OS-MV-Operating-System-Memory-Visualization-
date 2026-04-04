@@ -16,21 +16,21 @@
             <p>Operating System <br> Management Visualizer</p>
         </div>
         <div class="sidebar-options">
-            <div class="active">
+            <div>
                 <a href="#dashboard">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                     <p>Dashboard</p>
                 </a>
             </div>
             <div>
-                <button onclick="toggleSubMenu(this)" class="dropdown-btn">
+                <button onclick="toggleSubMenu(this)" class="dropdown-btn rotate">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-bar-big-icon lucide-chart-bar-big"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><rect x="7" y="13" width="9" height="4" rx="1"/><rect x="7" y="5" width="12" height="4" rx="1"/></svg>
                     <p>Simulation</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevron-down-icon lucide-chevron-down"><path d="M6 9l6 6 6-6"/></svg>
                 </button>
-                <div class="sub-menu">
+                <div class="sub-menu show">
                     <div>
-                        <a href="../index.html">
+                        <a href="../index.html" class="active">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
                             <p>Single Mode</p>
                         </a>
@@ -123,6 +123,7 @@
             <div class="console">
                 <h3>Console</h3>
                 <div class="container">
+                    <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p>
                     <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
                     <p><span class="timestamp">[12:36:00PM]</span> Vero at, quo quibusdam odio optio aliquid iure assumenda quas perferendis laudantium deleniti pariatur sit dolor ea</p>
                     <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p> -->
