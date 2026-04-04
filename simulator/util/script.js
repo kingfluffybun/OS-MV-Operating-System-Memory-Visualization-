@@ -24,6 +24,18 @@ const toggleSubMenu = (button) => {
   button.classList.toggle("rotate");
 };
 
+function loadCurrentUser() {
+  const stored = JSON.parse(sessionStorage.getItem("currentUser"));
+
+  if (stored && stored.username) {
+    document.getElementById("username").textContent = stored.username;
+  } else {
+    document.getElementById("username").textContent = "Guest";
+  }
+}
+
+document.addEventListener("DOMContentLoaded", loadCurrentUser);
+
 const processColors = [
   { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
   { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
@@ -143,14 +155,21 @@ const renumberBlocks = () => {
   const blocks = simulationContainer
     ? simulationContainer.querySelectorAll(".block")
     : [];
-  blocks.forEach((block, index) => {
-    const newId = index + 1;
+  let blockNumber = 1;
+  blocks.forEach((block) => {
+    const isSplitFree = block.classList.contains("block--split-free");
     const label = block.querySelector("p");
-    if (label) {
-      label.textContent = `Block ${newId}`;
+    if (isSplitFree) {
+      if (label) label.textContent = "Hole";
+      block.dataset.partitionLabel = "Hole";
+      return;
     }
-    block.id = `block-${newId}`;
-    block.dataset.partitionLabel = String(newId);
+    if (label) {
+      label.textContent = `Block ${blockNumber}`;
+    }
+    block.id = `block-${blockNumber}`;
+    block.dataset.partitionLabel = String(blockNumber);
+    blockNumber++;
   });
 };
 
@@ -636,8 +655,15 @@ const resetBlocksUI = () => {
     const labelNum = block.dataset.partitionLabel || bId;
     const text = block.querySelector("p");
     const status = block.querySelector(".block-status");
+    const isSplitFree = block.classList.contains("block--split-free");
 
-    if (text) text.textContent = `Block ${labelNum}`;
+    if (text) {
+      if (isSplitFree) {
+        text.textContent = "Hole";
+      } else {
+        text.textContent = labelNum ? `Block ${labelNum}` : "";
+      }
+    }
     if (status) status.textContent = "Free";
 
     // Restore the original size that was stamped at prepareSimulation time
@@ -871,7 +897,9 @@ const runStep = () => {
 
   if (stepResult.ifCompacted) {
     recreateBlocksFromMemory();
-  } else if (stepResult.result.status === "Allocated") {
+  }
+
+  if (!stepResult.ifCompacted && stepResult.result.status === "Allocated") {
     const blockEl = document.getElementById(`block-${stepResult.result.block}`);
     const leftover = stepResult.result.fragmentation || 0;
 

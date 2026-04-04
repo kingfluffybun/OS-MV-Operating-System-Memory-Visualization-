@@ -315,12 +315,19 @@ function downloadKeys() {
     link.href = url;
     link.download = 'ovms-recovery-key.txt';
     document.body.appendChild(link);
+
+    const status = document.getElementById('status');
+    status.textContent = 'Downloading...';
+    status.style.color = 'green';
+
     link.click();
+
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    document.getElementById('status').textContent = 'Downloaded!';
-    document.getElementById('status').style.color = 'green';
+    setTimeout(() => {
+        status.textContent = 'Downloaded';
+    }, 1000);
 }
 
 // Handle submit
@@ -337,7 +344,7 @@ function handleSubmit() {
         if (isSubmitting) return;
         isSubmitting = true;
 
-        const statusEl = document.getElementById('status');
+        const statusEl = document.getElementById('status-2');
 
         let wordValues = [];
         for (let i = 0; i < 12; i++) {
