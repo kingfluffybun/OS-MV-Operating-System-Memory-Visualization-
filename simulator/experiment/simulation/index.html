@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/output.css">
-    <link rel="stylesheet" href="../css/test.css">
+    <link rel="stylesheet" href="/simulator/css/output.css">
+    <link rel="stylesheet" href="/simulator/css/test.css">
     <title>OS-MV</title>
-    <script src="../util/algos/bestfit.js" defer></script>
-    <script src="../util/script.js" defer></script>
+    <script src="../../experiment/js/script.js" defer></script>
 </head>
-<body>
+<body onload="simulatorLoad(), loadAlgorithmScript()">
     <section class="sidebar" id="sidebar">
         <div class="logo" id="logo">
             <h1 id="h1">OS-MV</h1>
@@ -109,7 +108,7 @@
         </div>
         <div class="simulation">
             <h3>Memory Allocation Simulator</h3>
-            <p id="algo-description">Best Fit Algorithm - Fixed Partition</p>
+            <p id="algo-description"></p>
             <div class="container">
                 <div class="simulation-scroll-track">
                     <!-- Dito papasok yung mga blocks -->
