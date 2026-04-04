@@ -394,6 +394,7 @@ button:active {
     width: 300px; 
     height: auto;
     margin-bottom: 20px;
+    -webkit-user-drag: none;
 }
 
 @keyframes show {
