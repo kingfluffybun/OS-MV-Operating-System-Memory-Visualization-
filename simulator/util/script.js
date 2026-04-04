@@ -633,6 +633,10 @@ const prepareSimulation = () => {
         preSimBlockState = getBlockSizes().slice();
     }
 
+    if (!sidebar.classList.contains('close')) {
+        toggleSideBar();
+    }
+
     // Stamp the original size on every block element NOW, before any step shrinks them.
     // resetBlocksUI reads this to restore the display on reset.
     if (simulationContainer) {
@@ -728,11 +732,6 @@ const runStep = () => {
         appendConsoleMessage('All processes have already been run.');
         return false;
     }
-
-    if (simulationState && simulationState.currentIndex === 0) {
-        toggleSideBar();
-    }
-
     currentStep = simulationState.currentIndex;
     highlightCurrentProcess();
 
