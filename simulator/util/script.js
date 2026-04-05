@@ -798,6 +798,7 @@ const prepareSimulation = () => {
       processes,
       memoryFrames: memorySimulator.createFrames(frameCount, pageSize),
       currentIndex: 0,
+      pageAllocationIndex: 0,
       results: {},
       stats: {
         allocatedSize: 0,
@@ -851,7 +852,7 @@ const prepareSimulation = () => {
       successRate: 0,
     });
     setTotalMemoryDisplay(totalMemory);
-    initializePagingUI(simulationState.memoryFrames);
+    initializePagingUI(simulationState.memoryFrames, processes);
   } else {
     setTotalMemoryDisplay(
       memorySimulator.totalMemory(simulationState.memoryHead),
@@ -1218,29 +1219,67 @@ const runStep = () => {
       return false;
     }
 
-    const stepResult = memorySimulator.pagingStep(
+    // Initialize page allocation tracking for this process
+    if (!simulationState.pageAllocationIndex) {
+      simulationState.pageAllocationIndex = 0;
+    }
+
+    // Calculate pages needed for this process
+    const pagesNeeded = Math.ceil(size / pageSize);
+    
+    // Check if we've already allocated all pages for this process
+    if (simulationState.pageAllocationIndex >= pagesNeeded) {
+      // Move to next process
+      simulationState.pageAllocationIndex = 0;
+      simulationState.currentIndex += 1;
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        return false;
+      }
+      // Continue with next process in next runStep call
+      return true;
+    }
+
+    // Allocate one page at a time
+    const stepResult = memorySimulator.pagingStepSingle(
       simulationState.memoryFrames,
       size,
       pageSize,
       processId,
+      simulationState.pageAllocationIndex,
     );
 
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
-    simulationState.results[processId] = stepResult.result;
+    
+    // Store result with process ID
+    if (!simulationState.results[processId]) {
+      simulationState.results[processId] = {
+        size,
+        pagesNeeded,
+        frameIds: {},
+        status: "Allocated",
+        pagesAllocated: 0,
+        internalFragmentation: stepResult.result.internalFragmentation || 0,
+      };
+    }
 
-    if (stepResult.result.status === "Allocated") {
+    // Merge frame allocations
+    simulationState.results[processId].frameIds = {
+      ...simulationState.results[processId].frameIds,
+      ...stepResult.result.frameIds,
+    };
+    simulationState.results[processId].pagesAllocated = simulationState.pageAllocationIndex + 1;
+
+    // Update stats on first allocation
+    if (simulationState.pageAllocationIndex === 0) {
       simulationState.stats.allocatedSize += size;
       simulationState.stats.successfulAllocations += 1;
-      simulationState.stats.intFragmentation +=
-        stepResult.result.internalFragmentation || 0;
-    } else {
-      const pagesNeeded = stepResult.result.pagesNeeded || 0;
-      const freeFrames = memorySimulator.totalFreeFrames(
-        simulationState.memoryFrames,
-      );
-      appendConsoleMessage(
-        `${processId} (${size} KB) could not allocate: needed ${pagesNeeded} frame(s), free ${freeFrames}`,
-      );
+      simulationState.stats.intFragmentation += stepResult.result.internalFragmentation || 0;
     }
 
     const totalMemory =
@@ -1273,18 +1312,27 @@ const runStep = () => {
     updatePagingUI(simulationState.memoryFrames);
 
     appendConsoleMessage(
-      `${processId} (${size} KB) -> ${stepResult.result.status}`,
+      `${processId} Page ${simulationState.pageAllocationIndex} allocated`,
     );
 
-    simulationState.currentIndex += 1;
-    if (simulationState.currentIndex >= simulationState.processes.length) {
-      appendConsoleMessage("Simulation complete");
-      if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = null;
-        togglePlayStop();
+    // Increment page allocation index
+    simulationState.pageAllocationIndex += 1;
+
+    // Check if all pages allocated for this process
+    if (simulationState.pageAllocationIndex >= pagesNeeded) {
+      appendConsoleMessage(`${processId} fully allocated`);
+      simulationState.pageAllocationIndex = 0;
+      simulationState.currentIndex += 1;
+      
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        return false;
       }
-      return false;
     }
 
     return true;
