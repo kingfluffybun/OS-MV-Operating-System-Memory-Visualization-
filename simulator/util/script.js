@@ -183,28 +183,15 @@ if (framesContainer) {
             : `<p>${frame.size} KB</p>`;
 
         frameEl.innerHTML = `
-            <p>F${frame.id}</p>
+            <p id="frame-number">F${frame.id}</p>
             <div class="frame-content">
                 <p>${statusLabel}</p>
-                ${usageInfo}
+                <p>${usageInfo}</p>
             </div>
         `;
         framesContainer.appendChild(frameEl);
     });
 }
-
-  if (pagesContainer) {
-    pagesContainer.innerHTML = "";
-    const placeholder = document.createElement("div");
-    placeholder.className = "page page--placeholder";
-    placeholder.innerHTML = `
-            <p>Waiting for allocation</p>
-            <div class="frame-content">
-                <p>No pages allocated yet</p>
-            </div>
-        `;
-    pagesContainer.appendChild(placeholder);
-  }
 };
 
 const updatePagingUI = (memoryFrames) => {
@@ -487,16 +474,30 @@ add_process_btn.addEventListener("click", () => {
 });
 
 const randomize_value = document.getElementById("randomize-value");
+
 randomize_value.addEventListener("click", () => {
-  const min = 4;
-  const max = 7;
+  const pagingBtn = document.querySelector(".paging-btn"); 
+  const isCurrentlyPaging = pagingBtn && pagingBtn.classList.contains("active");
+
+  let min, max;
+
+  if (isPagingMode()) {
+    // Range: 2^3 (8 KB) to 2^6 (64 KB)
+    min = 3;
+    max = 6;
+  } else {
+    // Default for other algorithms (e.g., First Fit, Best Fit)
+    // Range: 2^4 (16 KB) to 2^8 (256 KB)
+    min = 4;
+    max = 8;
+  }
+
   const processSize = Math.pow(
     2,
     Math.floor(Math.random() * (max - min + 1)) + min,
   );
 
-  const nextProcessId =
-    processContainer.querySelectorAll(".process").length + 1;
+  const nextProcessId = processContainer.querySelectorAll(".process").length + 1;
   const newProcess = createProcessElement(nextProcessId, processSize);
   processContainer.appendChild(newProcess);
   scrollDown();
