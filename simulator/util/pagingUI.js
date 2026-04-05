@@ -24,8 +24,10 @@ const getPagingFrameCount = () => {
 const resetPagingUI = () => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
+  const pageTableBody = document.querySelector("#page-table-body");
   if (pagesContainer) pagesContainer.innerHTML = "";
   if (framesContainer) framesContainer.innerHTML = "";
+  if (pageTableBody) pageTableBody.innerHTML = "";
   
   // Reset paging state
   pagingState = {
