@@ -354,14 +354,14 @@ button:disabled svg {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                flex: 1;
                 min-height: 40px;
                 gap: 16px;
-                > #frame-number, #page-number {min-width: 24px;}
+                > #frame-number, #page-number {max-width: 20px;}
                 > .frame-content, .page-content {
                     display: flex;
                     justify-content: center;
                     align-items: center;
+                    gap: 2px;
                     border-radius: 8px;
                     padding: 12px;
                     height: 100%;
@@ -371,9 +371,6 @@ button:disabled svg {
                     background-color: white;
                     border-bottom: 4px solid rgba(0, 0, 0, 0.25);
                     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
-                }
-                > .page-content {
-                
                 }
             }
             
@@ -441,7 +438,7 @@ button:disabled svg {
 }
 
 .page-table {
-    grid: ;
+    > .container {border-radius: 0;}
 }
 
 .process-queue .container .process-container .process {
