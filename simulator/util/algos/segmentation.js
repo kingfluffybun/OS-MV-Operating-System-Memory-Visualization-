@@ -89,15 +89,12 @@ class SegmentationMemory {
     }
 
     static breakdownSize(size) {
-        if (size <= 0) return { code: 0, heap: 0, stack: 0 }
-        if (size < 3) {
-            return { code: size, heap: 0, stack: 0 }
-        }
-
-        const code = Math.floor(Math.random() * (size - 2)) + 1
-        const heap = Math.floor(Math.random() * (size - code - 1)) + 1
-        const stack = size - code - heap
-        return { code, heap, stack }
+        if (size <= 0) return { code: 0, data: 0, stack: 0, heap: 0 };
+            const code = Math.floor(size * 0.40);
+            const data = Math.floor(size * 0.30);
+            const stack = Math.floor(size * 0.20);
+            const heap = size - code - data - stack;
+        return { code, data, stack, heap };
     }
 }
 
@@ -157,7 +154,7 @@ const memorySimulator = {
 
     segmentationStep(memory, processId, processSize) {
         const seg = memory.allocate(processId, processSize)
-        const breakdown = seg ? seg.breakdown : { code: 0, heap: 0, stack: 0 }
+        const breakdown = seg ? seg.breakdown : { code: 0, heap: 0, stack: 0, data: 0 }
         return {
             result: {
                 id: processId,

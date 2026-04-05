@@ -798,6 +798,7 @@ const prepareSimulation = () => {
       processes,
       memoryFrames: memorySimulator.createFrames(frameCount, pageSize),
       currentIndex: 0,
+      pageAllocationIndex: 0,
       results: {},
       stats: {
         allocatedSize: 0,
@@ -851,7 +852,7 @@ const prepareSimulation = () => {
       successRate: 0,
     });
     setTotalMemoryDisplay(totalMemory);
-    initializePagingUI(simulationState.memoryFrames);
+    initializePagingUI(simulationState.memoryFrames, processes);
   } else {
     setTotalMemoryDisplay(
       memorySimulator.totalMemory(simulationState.memoryHead),
@@ -872,10 +873,27 @@ const prepareSimulation = () => {
 
   // Disable buttons during simulation
   const addBtn = document.getElementById("add-block-btn");
-  addBtn.style.display = "none";
-  document.getElementById("randomize-value").disabled = true;
-  document.getElementsByClassName("add-block").disabled = true;
-  document.getElementsByClassName("input-prcs").disabled = true;
+  if (addBtn) {
+    addBtn.style.display = "none";
+  }
+
+  const randomizeBtn = document.getElementById("randomize-value");
+  if (randomizeBtn) {
+    randomizeBtn.disabled = true;
+  }
+
+  Array.from(document.getElementsByClassName("add-block")).forEach((el) => {
+    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+      el.disabled = true;
+    }
+  });
+
+  Array.from(document.getElementsByClassName("input-prcs")).forEach((el) => {
+    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+      el.disabled = true;
+    }
+  });
+
   document
     .querySelectorAll(".process-action")
     .forEach((action) => (action.style.display = "none"));
@@ -1198,7 +1216,9 @@ const getVisibleBlockNumber = (blockId) => {
 };
 
 const runStep = () => {
-  if (!simulationState && !prepareSimulation()) return;
+  if (!simulationState) {
+    if (!prepareSimulation()) return;
+  }
 
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("All processes have already been run.");
@@ -1218,29 +1238,67 @@ const runStep = () => {
       return false;
     }
 
-    const stepResult = memorySimulator.pagingStep(
+    // Initialize page allocation tracking for this process
+    if (!simulationState.pageAllocationIndex) {
+      simulationState.pageAllocationIndex = 0;
+    }
+
+    // Calculate pages needed for this process
+    const pagesNeeded = Math.ceil(size / pageSize);
+    
+    // Check if we've already allocated all pages for this process
+    if (simulationState.pageAllocationIndex >= pagesNeeded) {
+      // Move to next process
+      simulationState.pageAllocationIndex = 0;
+      simulationState.currentIndex += 1;
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        return false;
+      }
+      // Continue with next process in next runStep call
+      return true;
+    }
+
+    // Allocate one page at a time
+    const stepResult = memorySimulator.pagingStepSingle(
       simulationState.memoryFrames,
       size,
       pageSize,
       processId,
+      simulationState.pageAllocationIndex,
     );
 
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
-    simulationState.results[processId] = stepResult.result;
+    
+    // Store result with process ID
+    if (!simulationState.results[processId]) {
+      simulationState.results[processId] = {
+        size,
+        pagesNeeded,
+        frameIds: {},
+        status: "Allocated",
+        pagesAllocated: 0,
+        internalFragmentation: stepResult.result.internalFragmentation || 0,
+      };
+    }
 
-    if (stepResult.result.status === "Allocated") {
+    // Merge frame allocations
+    simulationState.results[processId].frameIds = {
+      ...simulationState.results[processId].frameIds,
+      ...stepResult.result.frameIds,
+    };
+    simulationState.results[processId].pagesAllocated = simulationState.pageAllocationIndex + 1;
+
+    // Update stats on first allocation
+    if (simulationState.pageAllocationIndex === 0) {
       simulationState.stats.allocatedSize += size;
       simulationState.stats.successfulAllocations += 1;
-      simulationState.stats.intFragmentation +=
-        stepResult.result.internalFragmentation || 0;
-    } else {
-      const pagesNeeded = stepResult.result.pagesNeeded || 0;
-      const freeFrames = memorySimulator.totalFreeFrames(
-        simulationState.memoryFrames,
-      );
-      appendConsoleMessage(
-        `${processId} (${size} KB) could not allocate: needed ${pagesNeeded} frame(s), free ${freeFrames}`,
-      );
+      simulationState.stats.intFragmentation += stepResult.result.internalFragmentation || 0;
     }
 
     const totalMemory =
@@ -1272,19 +1330,31 @@ const runStep = () => {
     setTotalMemoryDisplay(totalMemory);
     updatePagingUI(simulationState.memoryFrames);
 
+    const allocatedFrameId = Object.keys(stepResult.result.frameIds)[0];
+    followAllocatedFrame(allocatedFrameId);
+
     appendConsoleMessage(
-      `${processId} (${size} KB) -> ${stepResult.result.status}`,
+      `${processId} Page ${simulationState.pageAllocationIndex} allocated`,
     );
 
-    simulationState.currentIndex += 1;
-    if (simulationState.currentIndex >= simulationState.processes.length) {
-      appendConsoleMessage("Simulation complete");
-      if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = null;
-        togglePlayStop();
+    // Increment page allocation index
+    simulationState.pageAllocationIndex += 1;
+
+    // Check if all pages allocated for this process
+    if (simulationState.pageAllocationIndex >= pagesNeeded) {
+      appendConsoleMessage(`${processId} fully allocated`);
+      simulationState.pageAllocationIndex = 0;
+      simulationState.currentIndex += 1;
+      
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        return false;
       }
-      return false;
     }
 
     return true;
@@ -1457,30 +1527,57 @@ const togglePlayStop = () => {
 };
 
 const runPlay = () => {
-  if (!simulationState) {
-    if (!prepareSimulation()) return;
-  }
+  try {
+    const isFirstPlay = !simulationState;
+    if (isFirstPlay) {
+      if (!prepareSimulation()) return;
+    }
 
-  if (playInterval) {
-    clearInterval(playInterval);
-  }
-
-  runStep();
-
-  const delay = getStepDelay();
-  playInterval = setInterval(() => {
-    if (!runStep()) {
+    if (playInterval) {
+      clearTimeout(playInterval);
       clearInterval(playInterval);
       playInterval = null;
     }
-  }, delay);
 
-  togglePlayStop();
+    const startAllocation = () => {
+      const delay = getStepDelay();
+      const didRun = runStep();
+      if (!didRun) {
+        togglePlayStop();
+        return;
+      }
+
+      playInterval = setInterval(() => {
+        if (!runStep()) {
+          clearTimeout(playInterval);
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+      }, delay);
+    };
+
+    if (isFirstPlay && isPagingMode()) {
+      const delay = getStepDelay();
+      playInterval = setTimeout(() => {
+        startAllocation();
+      }, delay);
+      togglePlayStop();
+    } else {
+      startAllocation();
+    }
+  } catch (error) {
+    console.error("runPlay error:", error);
+    appendConsoleMessage(`Simulation error: ${error.message}`);
+  }
 };
 
 const runStop = () => {
-  clearInterval(playInterval);
-  playInterval = null;
+  if (playInterval) {
+    clearTimeout(playInterval);
+    clearInterval(playInterval);
+    playInterval = null;
+  }
   togglePlayStop();
   appendConsoleMessage("Simulation stopped.");
 };
@@ -1528,8 +1625,13 @@ const runReset = () => {
     .querySelectorAll(".process")
     .forEach((p) => p.classList.remove("current"));
   const addBtn = document.getElementById("add-block-btn");
-  addBtn.style.display = "flex";
-  document.getElementById("randomize-value").disabled = false;
+  if (addBtn) {
+    addBtn.style.display = "flex";
+  }
+  const randomizeBtn = document.getElementById("randomize-value");
+  if (randomizeBtn) {
+    randomizeBtn.disabled = false;
+  }
   document
     .querySelectorAll(".process-action")
     .forEach((action) => (action.style.display = ""));
@@ -1576,34 +1678,94 @@ function startSimulation(event) {
   // 1. Stop the browser from refreshing/changing the URL
   event.preventDefault();
 
-  const form = document.getElementById("simulation-Option");
-
-  // 2. Get the selected algorithm
-  const selected = form.querySelector('input[name="algo"]:checked');
-
-  // 3. Get the toggle state
-  const isDynamic = form.querySelector(".checkbox").checked;
-
-  if (selected) {
-    const algo = selected.value; // e.g., "first-fit"
-    const algoFileSegment =
-      {
-        "first-fit": "First-Fit",
-        "next-fit": "Next-Fit",
-        "Best-Fit": "Best-Fit",
-        "Worst-Fit": "Worst-Fit",
-      }[algo] || algo;
-
-    let fileName = "simulation-" + algoFileSegment;
-    if (isDynamic) {
-      fileName += "-Dynamic";
-    }
-
-    console.log("Redirecting to: " + fileName + ".html");
-    window.location.href = "algorithms/" + fileName + ".html";
-  } else {
-    alert("Please select an algorithm!");
+  const algo = document.querySelector('input[name="algo"]:checked');
+  if (!algo) {
+    alert("Please select an algorithm.");
+    return;
   }
+
+  let algoWhat = algo.value;
+
+  sessionStorage.setItem('selectedAlgo', algo.value);
+
+  // Check if dynamic selected
+  const isDynamic = document.querySelector('.toggle-partition input').checked;
+  sessionStorage.setItem('selectedPartition', isDynamic ? 'dynamic': 'fixed');
+  
+  const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
+  const whatAlgo = toggle.checked;
+  const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
+
+  window.location.href = `/simulator/algorithm/?algorithm=${algoParam}`;
+}
+
+function hub() {
+  sessionStorage.removeItem('selectedAlgo');
+  sessionStorage.removeItem('selectedPartition');
+}
+
+function simulatorLoad() {
+  const selectedAlgo = sessionStorage.getItem('selectedAlgo');
+  const selectedPartition = sessionStorage.getItem('selectedPartition');
+  const algoDescription = document.getElementById('algo-description');
+  let scriptSrc = "";
+
+  if (selectedPartition === "dynamic") {
+    document.body.setAttribute('data-partition-mode', 'dynamic');
+  } else {
+    document.body.removeAttribute('data-partition-mode');
+  }
+
+  switch (selectedAlgo.toLowerCase()) {
+    case "first-fit":
+      algoDescription.textContent = "First Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "First Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/firstfit.js"; 
+      break;
+    case "next-fit":
+      algoDescription.textContent = "Next Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Next Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/nextfit.js";
+      break;
+    case "best-fit":
+      algoDescription.textContent = "Best Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Best Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/bestfit.js";
+      break;
+    case "worst-fit":
+      algoDescription.textContent = "Worst Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Worst Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/worstfit.js";
+      break;
+    case "paging":
+      algoDescription.textContent = "Paging Algorithm";
+      scriptSrc = "../util/algos/paging.js";
+      break;
+    case "segmentation":
+      algoDescription.textContent = "Segmentation Algorithm";
+      scriptSrc = "../util/algos/paging-segment.js";
+      break;
+    case "seg-paging":
+      algoDescription.textContent = "Segmentation with Paging Algorithm";
+      scriptSrc = "../util/algos/paging-segmentation.js";
+      break;
+    default:
+      algoDescription.textContent = "";
+      scriptSrc = "";
+  }
+
+  const script = document.createElement('script');
+  script.src = scriptSrc;
+  script.defer = true;
+  document.head.appendChild(script);
 }
 
 const applyActiveStyles = () => {

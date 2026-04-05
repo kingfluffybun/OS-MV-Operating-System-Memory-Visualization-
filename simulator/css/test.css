@@ -495,3 +495,14 @@ button:disabled svg {
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
 }
 
+.frames-container .frame .frame-content,
+.pages-container .page .frame-content {
+    transition: outline 150ms ease, box-shadow 150ms ease;
+}
+
+.frames-container .frame .frame-content.current,
+.pages-container .page .frame-content.current {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+}
+

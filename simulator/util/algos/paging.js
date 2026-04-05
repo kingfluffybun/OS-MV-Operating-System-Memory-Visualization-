@@ -169,6 +169,58 @@ pagingStep(memoryFrames, processSize, pageSize, processId) {
     };
 },
 
+pagingStepSingle(memoryFrames, processSize, pageSize, processId, pageIndexToAllocate) {
+    const frames = this.cloneFrames(memoryFrames);
+    const pSize = Number(pageSize);
+    const pSizeActual = Number(processSize);
+    const pagesNeeded = Math.ceil(pSizeActual / pSize);
+    
+    // Find all free frames and randomly select one
+    const freeFrameKeys = Object.keys(frames.frames).filter(key => frames.frames[key].status === "Free");
+    
+    if (freeFrameKeys.length === 0) {
+        return {
+            result: { size: pSizeActual, pagesNeeded, frameIds: {}, status: "Unallocated" },
+            frames
+        };
+    }
+
+    // Randomly select a free frame
+    const randomIndex = Math.floor(Math.random() * freeFrameKeys.length);
+    const freeFrameKey = freeFrameKeys[randomIndex];
+
+    // Calculate how much to allocate for this page
+    let allocatedSize = 0;
+    for (let i = 0; i < pageIndexToAllocate; i++) {
+        allocatedSize += Math.min(pSize, pSizeActual - (i * pSize));
+    }
+    const remaining = pSizeActual - allocatedSize;
+    const used = Math.min(pSize, remaining);
+
+    // Allocate single page
+    const frame = frames.frames[freeFrameKey];
+    frame.status = "Occupied";
+    frame.process = processId;
+    frame.page = pageIndexToAllocate + 1;
+    frame.used = Number(used);
+
+    const allocatedFrames = {};
+    allocatedFrames[freeFrameKey] = true;
+
+    const internal = (pagesNeeded * pSize) - pSizeActual;
+    return {
+        result: { 
+            size: pSizeActual, 
+            pagesNeeded, 
+            frameIds: allocatedFrames, 
+            internalFragmentation: internal, 
+            status: "Allocated",
+            pageIndex: pageIndexToAllocate
+        },
+        frames
+    };
+},
+
     createPageTable(memoryFrames) {
         const table = {};
         for (const key in memoryFrames.frames) {
