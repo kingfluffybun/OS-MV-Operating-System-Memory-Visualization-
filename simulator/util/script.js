@@ -183,28 +183,15 @@ if (framesContainer) {
             : `<p>${frame.size} KB</p>`;
 
         frameEl.innerHTML = `
-            <p>F${frame.id}</p>
+            <p id="frame-number">F${frame.id}</p>
             <div class="frame-content">
                 <p>${statusLabel}</p>
-                ${usageInfo}
+                <p>${usageInfo}</p>
             </div>
         `;
         framesContainer.appendChild(frameEl);
     });
 }
-
-  if (pagesContainer) {
-    pagesContainer.innerHTML = "";
-    const placeholder = document.createElement("div");
-    placeholder.className = "page page--placeholder";
-    placeholder.innerHTML = `
-            <p>Waiting for allocation</p>
-            <div class="frame-content">
-                <p>No pages allocated yet</p>
-            </div>
-        `;
-    pagesContainer.appendChild(placeholder);
-  }
 };
 
 const updatePagingUI = (memoryFrames) => {
@@ -234,7 +221,7 @@ const updatePagingUI = (memoryFrames) => {
     : `&nbsp;<span>${frame.size} KB</span>`;
 
       frameEl.innerHTML = `
-            <p>F${frame.id}</p>
+            <p id="frame-number">F${frame.id}</p>
             <div class="frame-content">
                 <p>${statusLabel}</p>
                 ${usageInfo}
@@ -267,7 +254,7 @@ const updatePagingUI = (memoryFrames) => {
       let cleanId = String(frame.process).replace(/process_|Process/gi, "").trim();
       
       pageEl.innerHTML = `
-      <p>P${cleanId}</p>
+      <p id="page-number">P${cleanId}</p>
         <div class="frame-content">
             <p>Frame ${frame.id} (${frame.used} / ${frame.size} KB used)</p>
         </div>
@@ -467,8 +454,9 @@ add_process_btn.addEventListener("click", () => {
 
 const randomize_value = document.getElementById("randomize-value");
 randomize_value.addEventListener("click", () => {
-  const min = 4;
-  const max = 7;
+    const min = (isPagingMode) ? 1 : 4;
+    const max = (isPagingMode) ? 3 : 7;
+  
   const processSize = Math.pow(
     2,
     Math.floor(Math.random() * (max - min + 1)) + min,
