@@ -34,7 +34,7 @@ function loadCurrentUser() {
   }
 }
 
-// document.addEventListener("DOMContentLoaded", loadCurrentUser);
+document.addEventListener("DOMContentLoaded", loadCurrentUser);
 
 const processColors = [
   { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
@@ -1124,47 +1124,60 @@ function hub() {
 function simulatorLoad() {
   const selectedAlgo = sessionStorage.getItem('selectedAlgo');
   const algoDescription = document.getElementById("algo-description");
+  let scriptSrc = "";
+
+  const partition = sessionStorage.getItem('selectedPartition');
+
+  if (partition === "dynamic") {
+    document.body.setAttribute("data-partition-mode", "dynamic");
+  } else {
+    document.body.removeAttribute("data-partition-mode");
+  }
 
   switch (selectedAlgo.toLowerCase()) {
     case "first-fit":
-      algoDescription.textContent = "This is First Fit Allocates the first hole encountered that is large enough.";
+      algoDescription.textContent = "First Fit Algorithm - Fixed Partition";
+      if (partition === "dynamic") {
+        algoDescription.textContent = "First Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../../util/algos/firstfit.js";
       break;
     case "next-fit":
-      algoDescription.textContent = "This is Next Fit Allocates the first hole found starting from the last search.";
+      algoDescription.textContent = "Next Fit Algorithm - Fixed Partition";
+      if (partition === "dynamic") {
+        algoDescription.textContent = "Next Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../../util/algos/nextfit.js";
       break;
     case "best-fit":
-      algoDescription.textContent = "This is Best Fit Allocates the smallest hole that can satisfy the request.";
+      algoDescription.textContent = "Best Fit Algorithm - Fixed Partition";
+      if (partition === "dynamic") {
+        algoDescription.textContent = "Best Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../../util/algos/bestfit.js";
       break;
     case "worst-fit":
-      algoDescription.textContent = "This is Worst Fit Allocates the largest hole available in the entire list.";
+      algoDescription.textContent = "Worst Fit Algorithm - Fixed Partition";
+      if (partition === "dynamic") {
+        algoDescription.textContent = "Worst Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../../util/algos/worstfit.js";
       break;
     case "paging":
-      algoDescription.textContent = "Divides memory into fixed-size blocks called pages.";
+      algoDescription.textContent = "Paging";
+      scriptSrc = "../../util/algos/paging.js";
       break;
     case "segmentation":
-      algoDescription.textContent = "Divides memory into variable-size blocks based on logic.";
+      algoDescription.textContent = "Segmentation";
+      scriptSrc = "../../util/algos/segmentation.js";
       break;
     case "seg-paging":
-      algoDescription.textContent = "Divides logical segments into fixed-size pages.";
+      algoDescription.textContent = "Segmentation with Paging";
+      scriptSrc = "../../util/algos/paging-segmentation.js";
       break;
     default:
       algoDescription.textContent = "Memory Allocation Simulator";
-  }
-}
-
-function loadAlgorithmScript() {
-  const selectedAlgo = sessionStorage.getItem('selectedAlgo');
-  let scriptSrc = "";
-
-  switch (selectedAlgo.toLowerCase()) {
-    case "first-fit": scriptSrc = "../../util/algos/firstfit.js"; break;
-    case "next-fit": scriptSrc = "../../util/algos/nextfit.js"; break;
-    case "best-fit": scriptSrc = "../../util/algos/bestfit.js"; break;
-    case "worst-fit": scriptSrc = "../../util/algos/worstfit.js"; break;
-    case "paging": scriptSrc = "../../util/algos/paging.js"; break;
-    case "segmentation": scriptSrc = "../../util/algos/segmentation.js"; break;
-    case "seg-paging": scriptSrc = "../../util/algos/paging-segmentation.js"; break;
-    default: scriptSrc = "";
+      scriptSrc = "";
   }
 
   const script = document.createElement('script');
