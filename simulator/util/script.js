@@ -873,10 +873,27 @@ const prepareSimulation = () => {
 
   // Disable buttons during simulation
   const addBtn = document.getElementById("add-block-btn");
-  addBtn.style.display = "none";
-  document.getElementById("randomize-value").disabled = true;
-  document.getElementsByClassName("add-block").disabled = true;
-  document.getElementsByClassName("input-prcs").disabled = true;
+  if (addBtn) {
+    addBtn.style.display = "none";
+  }
+
+  const randomizeBtn = document.getElementById("randomize-value");
+  if (randomizeBtn) {
+    randomizeBtn.disabled = true;
+  }
+
+  Array.from(document.getElementsByClassName("add-block")).forEach((el) => {
+    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+      el.disabled = true;
+    }
+  });
+
+  Array.from(document.getElementsByClassName("input-prcs")).forEach((el) => {
+    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+      el.disabled = true;
+    }
+  });
+
   document
     .querySelectorAll(".process-action")
     .forEach((action) => (action.style.display = "none"));
@@ -1199,7 +1216,9 @@ const getVisibleBlockNumber = (blockId) => {
 };
 
 const runStep = () => {
-  if (!simulationState && !prepareSimulation()) return;
+  if (!simulationState) {
+    if (!prepareSimulation()) return;
+  }
 
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("All processes have already been run.");
@@ -1310,6 +1329,9 @@ const runStep = () => {
     updateStatistics(pagingStats);
     setTotalMemoryDisplay(totalMemory);
     updatePagingUI(simulationState.memoryFrames);
+
+    const allocatedFrameId = Object.keys(stepResult.result.frameIds)[0];
+    followAllocatedFrame(allocatedFrameId);
 
     appendConsoleMessage(
       `${processId} Page ${simulationState.pageAllocationIndex} allocated`,
@@ -1505,30 +1527,57 @@ const togglePlayStop = () => {
 };
 
 const runPlay = () => {
-  if (!simulationState) {
-    if (!prepareSimulation()) return;
-  }
+  try {
+    const isFirstPlay = !simulationState;
+    if (isFirstPlay) {
+      if (!prepareSimulation()) return;
+    }
 
-  if (playInterval) {
-    clearInterval(playInterval);
-  }
-
-  runStep();
-
-  const delay = getStepDelay();
-  playInterval = setInterval(() => {
-    if (!runStep()) {
+    if (playInterval) {
+      clearTimeout(playInterval);
       clearInterval(playInterval);
       playInterval = null;
     }
-  }, delay);
 
-  togglePlayStop();
+    const startAllocation = () => {
+      const delay = getStepDelay();
+      const didRun = runStep();
+      if (!didRun) {
+        togglePlayStop();
+        return;
+      }
+
+      playInterval = setInterval(() => {
+        if (!runStep()) {
+          clearTimeout(playInterval);
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+      }, delay);
+    };
+
+    if (isFirstPlay && isPagingMode()) {
+      const delay = getStepDelay();
+      playInterval = setTimeout(() => {
+        startAllocation();
+      }, delay);
+      togglePlayStop();
+    } else {
+      startAllocation();
+    }
+  } catch (error) {
+    console.error("runPlay error:", error);
+    appendConsoleMessage(`Simulation error: ${error.message}`);
+  }
 };
 
 const runStop = () => {
-  clearInterval(playInterval);
-  playInterval = null;
+  if (playInterval) {
+    clearTimeout(playInterval);
+    clearInterval(playInterval);
+    playInterval = null;
+  }
   togglePlayStop();
   appendConsoleMessage("Simulation stopped.");
 };
@@ -1576,8 +1625,13 @@ const runReset = () => {
     .querySelectorAll(".process")
     .forEach((p) => p.classList.remove("current"));
   const addBtn = document.getElementById("add-block-btn");
-  addBtn.style.display = "flex";
-  document.getElementById("randomize-value").disabled = false;
+  if (addBtn) {
+    addBtn.style.display = "flex";
+  }
+  const randomizeBtn = document.getElementById("randomize-value");
+  if (randomizeBtn) {
+    randomizeBtn.disabled = false;
+  }
   document
     .querySelectorAll(".process-action")
     .forEach((action) => (action.style.display = ""));
