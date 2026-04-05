@@ -242,3 +242,51 @@ const updatePagingUI = (memoryFrames) => {
       });
   }
 };
+
+
+const followAllocatedFrame = (frameId) => {
+  if (!frameId) return;
+  const frameEl = document.getElementById(`frame-${frameId}`);
+  if (!frameEl) return;
+
+  document
+    .querySelectorAll(".frames-container .frame .frame-content.current, .pages-container .page .frame-content.current")
+    .forEach((content) => content.classList.remove("current"));
+
+  const contentEl = frameEl.querySelector(".frame-content");
+  if (contentEl) {
+    contentEl.classList.add("current");
+    contentEl.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }
+
+  const pageMatch = contentEl
+    ? contentEl.querySelector("p")?.textContent?.trim().match(/^(.+?)\s*-\s*Page\s*(\d+)$/)
+    : null;
+
+  if (pageMatch) {
+    const procName = pageMatch[1];
+    const pageNum = Number(pageMatch[2]);
+    const pageEl = document.getElementById(`page-${procName}-${pageNum}`);
+    if (pageEl) {
+      const pageContent = pageEl.querySelector(".frame-content");
+      if (pageContent) {
+        pageContent.classList.add("current");
+        pageEl.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+      }
+    }
+  } else if (frameEl.scrollIntoView) {
+    frameEl.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }
+};
