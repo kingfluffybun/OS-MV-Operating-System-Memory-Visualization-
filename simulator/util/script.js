@@ -194,6 +194,16 @@ if (framesContainer) {
 }
 };
 
+/** * Helper to get the color object based on process name.
+ * Extracts the number from strings like "Process 1" or "process_1".
+ */
+const getProcessColor = (procName) => {
+  if (!procName) return { bg: "transparent", border: "transparent" };
+  const id = parseInt(String(procName).replace(/\D/g, "")) || 0;
+  const colorIndex = (id - 1) % processColors.length;
+  return processColors[colorIndex];
+};
+
 const updatePagingUI = (memoryFrames) => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
@@ -234,6 +244,8 @@ const updatePagingUI = (memoryFrames) => {
       if (frame.status === "Occupied") {
         const pageNum = frameToPageMap[frame.id];
         statusLabel = `${frame.process} - Page ${pageNum}`;
+        const colors = getProcessColor(frame.process);
+        const contentDiv = frameEl.querySelector(".frame-content"); // We'll set this after innerHTML
       }
 
       const usageInfo = frame.status === "Occupied" 
@@ -241,12 +253,18 @@ const updatePagingUI = (memoryFrames) => {
         : `&nbsp;<span>${frame.size} KB</span>`;
 
       frameEl.innerHTML = `
-            <p>F${frame.id}</p>
+            <p id="frame-number">F${frame.id}</p>
             <div class="frame-content">
                 <p>${statusLabel}</p>
                 ${usageInfo}
             </div>
         `;
+        const contentDiv = frameEl.querySelector(".frame-content");
+        if (frame.status === "Occupied" && contentDiv) {
+            const colors = getProcessColor(frame.process);
+            contentDiv.style.backgroundColor = colors.bg;
+            contentDiv.style.borderbottm = `4px solid ${colors.border}`;
+        }
       framesContainer.appendChild(frameEl);
     });
   }
@@ -268,13 +286,20 @@ const updatePagingUI = (memoryFrames) => {
 
         const pageEl = document.createElement("div");
         pageEl.className = "page";
+        // Apply colors
+        const colors = getProcessColor(frame.process);
         pageEl.innerHTML = `
-          <p>P${localCounter}</p>
+          <p id="page-number">P${localCounter}</p>
           <div class="frame-content">
               <p>${frame.process}</p>
               <p>&nbsp;(${frame.used} / ${frame.size} KB used)</p>
           </div>
         `;
+        const contentDiv = pageEl.querySelector(".frame-content");
+        if (contentDiv) {
+            contentDiv.style.backgroundColor = colors.bg;
+            contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+        }
         pagesContainer.appendChild(pageEl);
         localCounter++;
       });
