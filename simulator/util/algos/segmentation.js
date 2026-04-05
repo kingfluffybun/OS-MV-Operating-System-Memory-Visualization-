@@ -89,16 +89,12 @@ class SegmentationMemory {
     }
 
     static breakdownSize(size) {
-        if (size <= 0) return { code: 0, heap: 0, stack: 0, data: 0 }
-        if (size < 4) {
-            return { code: size, heap: 0, stack: 0, data: 0 }
-        }
-
-        const code = Math.floor(Math.random() * (size - 3)) + 1
-        const heap = Math.floor(Math.random() * (size - code - 1)) + 1
-        const stack = Math.floor(Math.random() * (size - code - heap - 1)) + 1
-        const data = size - code - heap - stack
-        return { code, heap, stack, data }
+        if (size <= 0) return { code: 0, data: 0, stack: 0, heap: 0 };
+            const code = Math.floor(size * 0.40);
+            const data = Math.floor(size * 0.30);
+            const stack = Math.floor(size * 0.20);
+            const heap = size - code - data - stack;
+        return { code, data, stack, heap };
     }
 }
 
