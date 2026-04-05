@@ -354,10 +354,10 @@ button:disabled svg {
                 display: flex;
                 justify-content: center;
                 align-items: center;
-                min-height: 40px;
                 gap: 16px;
-                > #frame-number, #page-number {max-width: 20px;}
+                > #frame-number, #page-number {max-width: 16px;}
                 > .frame-content, .page-content {
+                    min-height: 40px;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -438,7 +438,16 @@ button:disabled svg {
 }
 
 .page-table {
-    > .container {border-radius: 0;}
+    > .container {
+        padding: 16px;
+        align-items: flex-start;
+        border-radius: 0;
+    }
+}
+
+.page-table-info {
+    border-spacing: 12px;
+    td {text-align: center;}
 }
 
 .process-queue .container .process-container .process {
