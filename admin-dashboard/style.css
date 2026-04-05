@@ -29,6 +29,7 @@ body {
     background-color: white;
     border-right: 1px solid var(--border-color);
     height: 100vh;
+    user-select: none;
 }
 
 .logo {
@@ -104,6 +105,7 @@ body {
     box-shadow: 0 4px 24px rgba(0,0,0,0.04);
     border: 1px solid var(--border-color);
     min-height: 80vh;
+    user-select: none;
 }
 
 .admin-header h2 {
