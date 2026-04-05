@@ -632,3 +632,22 @@ function ResetRequirementsCheck() {
         }
     }
 }
+
+// ========== Admin Panel ==========
+function checkAdminAccess() {
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+
+    if (!currentUser) {
+        alert("You must login first.");
+        window.location.href = "index.html";
+        return;
+    }
+
+    if (currentUser.usr_role !== "admin") {
+        alert("Access denied. Admins only.");
+        window.location.href = "simulator/index.html";
+        return;
+    }
+
+    console.log("Admin access granted.");
+}

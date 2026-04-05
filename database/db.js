@@ -317,7 +317,28 @@ function logout() {
     sessionStorage.removeItem('currentUser');
 }
 
-function getCurrentUser() {
-    const userData = sessionStorage.getItem('currentUser');
-    return userData ? JSON.parse(userData) : null;
+// ========== Admin Panel ==========
+function loadUsers() {
+    const tableBody = document.getElementById('user-table-body');
+    const db = JSON.parse(localStorage.getItem("OVMS_db_data"));
+
+    if (!db || !db.users) {
+        tableBody.innerHTML = `<tr><td colspan="5">No users found</td></tr>`;
+    }
+
+    tableBody.innerHTML = "";
+
+    db.users.forEach(user => {
+        const row = document.createElement('tr');
+        const isOnline = user.lastSession === "Active Now";
+
+        row.innerHTML = `
+            <td class="username-cell>${user.username}</td>
+            <td>${formatDate(user.created_at)}</td>
+            <td>
+                < class="badge ${isOnline ? "Online" : "Offline"}">
+                    ${user.lastSession || "Offline"}
+                </
+        `;
+    })
 }

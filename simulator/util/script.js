@@ -1,11 +1,87 @@
-const toggleButton = document.getElementById("toggle-btn");
-const sidebar = document.getElementById("sidebar");
-const logo = document.getElementById("logo");
-const logoH1 = document.getElementById("h1");
+// const toggleButton = document.getElementById("toggle-btn");
+// const sidebar = document.getElementById("sidebar");
+// const logo = document.getElementById("logo");
+// const logoH1 = document.getElementById("h1");
 // let submenuButtons = document.querySelectorAll(".dropdown-btn");
 // submenuButtons.classList.add("");
 
+// ========== SIDEBAR ==========
+document.addEventListener("DOMContentLoaded", () => {
+  // Load sidebar
+  loadSidebar().then(() => {
+    initSidebarFunctions();
+  });
+});
+
+async function loadSidebar() {
+  const container = document.getElementById("sidebar-container");
+
+  if (!container) {
+    console.error("Sidebar container not found");
+    return;
+  }
+
+  const currentPath = window.location.pathname;
+  let sidebarUrl = "";
+
+  if (currentPath.includes("/admin-dashboard/")) {
+    sidebarUrl = "../../sidebar/admin-sidebar.html";
+  } else if (currentPath.includes("/simulator/algorithm/")) {
+    sidebarUrl = "../../sidebar/simulator-sidebar.html";
+  } else {
+    sidebarUrl = "../../sidebar/default-sidebar.html";
+  }
+
+  try {
+    const response = await fetch(sidebarUrl);
+    const data = await response.text();
+    container.innerHTML = data;
+    console.log(`Loaded ${sidebarUrl}`);
+  } catch (error) {
+    console.error("Error loading sidebar:", error);
+  }
+}
+
+// Initialize sidebar functions
+function initSidebarFunctions() {
+  const toggleButton = document.getElementById("toggle-btn");
+  const sidebar = document.getElementById("sidebar");
+  const logo = document.getElementById("logo");
+  const logoH1 = document.getElementById("h1");
+
+  if (!sidebar) {
+    console.error("Sidebar not found");
+    return;
+  }
+
+  // Store elements in the global scope
+  window.sidebar = sidebar;
+  window.toggleButton = toggleButton;
+  window.logo = logo;
+  window.logoH1 = logoH1;
+
+  console.log("Sidebar elements found: ", {
+    toggleButton: !!toggleButton,
+    sidebar: !!sidebar,
+    logo: !!logo,
+    logoH1: !!logoH1
+  });
+
+  if (toggleButton) {
+    toggleButton.addEventListener("click", toggleSideBar);
+  }
+
+  loadCurrentUser();
+  setActiveSidebaritem();
+  applyActiveStyles();
+}
+
 const toggleSideBar = () => {
+  const sidebar = window.sidebar || document.getElementById("sidebar");
+  const toggleButton = window.toggleButton || document.getElementById("toggle-btn");
+  const logo = window.logo || document.getElementById("logo");
+  const logoH1 = window.logoH1 || document.getElementById("h1");
+
   sidebar.classList.toggle("close");
   toggleButton.classList.toggle("rotate");
   logo.classList.toggle("hidden");
@@ -27,6 +103,8 @@ const toggleSideBar = () => {
 };
 
 const toggleSubMenu = (button) => {
+  const sidebar = window.sidebar || document.getElementById("sidebar");
+
   if (sidebar.classList.contains("close")) {
     toggleSideBar();
   }
@@ -45,7 +123,78 @@ function loadCurrentUser() {
   }
 }
 
-document.addEventListener("DOMContentLoaded", loadCurrentUser);
+const applyActiveStyles = () => {
+  const activeElements = document.querySelectorAll('.active');
+  activeElements.forEach(el => {
+    const link = el.tagName === 'A' ? el : el.querySelector('a');
+    if (link) {
+      link.style.color = 'white';
+      link.style.backgroundColor = 'var(--primary-color)';
+      link.style.borderRadius = '8px';
+      const svg = link.querySelector('svg');
+      if (svg) {
+        svg.style.stroke = 'white';
+      }
+    }
+  });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  applyActiveStyles();
+  observer.observe(document.body, {
+    attributes: true,
+    subtree: true,
+    attributeFilter: ['class']
+  });
+});
+
+// Function to set active sidebar item
+function setActiveSidebaritem() {
+  const currentPath = window.location.pathname;
+  
+  console.log(`Current path: ${currentPath}`);
+
+  document.querySelectorAll(".sidebar-options .active").forEach(el => {
+    el.classList.remove("active");
+  });
+
+  const pagePatterns = [
+    {
+      // Front Page
+      pattern: /\/simulator\//,
+      selector: 'div[id="dashboard"]',
+      type: 'self'
+    },
+    {
+      // Algorithm
+      pattern: /\/simulator\/algorithm\//,
+      selector: 'a[href="#single-mode"]',
+      type: 'self'
+    },
+    {
+      // Admin Dashboard
+      pattern: /\/admin-dashboard\//,
+      selector: 'div[id="usermanagement"]',
+      type: 'self'
+    }
+  ];
+
+  // Set active for specific page
+  for (const { pattern, selector, type } of pagePatterns) {
+    if (pattern.test(currentPath)) {
+      const element = document.querySelector(selector);
+      if (element) {
+        if (type === 'parent') {
+          element.parentElement.classList.add("active");
+        } else {
+          element.classList.add("active");
+        }
+        console.log(`Set active for ${selector}`);
+        break;
+      }
+    }
+  }
+}
 
 const processColors = [
   { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
@@ -1745,18 +1894,6 @@ function simulatorLoad() {
       }
       scriptSrc = "../util/algos/worstfit.js";
       break;
-    case "paging":
-      algoDescription.textContent = "Paging Algorithm";
-      scriptSrc = "../util/algos/paging.js";
-      break;
-    case "segmentation":
-      algoDescription.textContent = "Segmentation Algorithm";
-      scriptSrc = "../util/algos/paging-segment.js";
-      break;
-    case "seg-paging":
-      algoDescription.textContent = "Segmentation with Paging Algorithm";
-      scriptSrc = "../util/algos/paging-segmentation.js";
-      break;
     default:
       algoDescription.textContent = "";
       scriptSrc = "";
@@ -1767,31 +1904,3 @@ function simulatorLoad() {
   script.defer = true;
   document.head.appendChild(script);
 }
-
-const applyActiveStyles = () => {
-  const activeElements = document.querySelectorAll('.active');
-  activeElements.forEach(el => {
-    const link = el.tagName === 'A' ? el : el.querySelector('a');
-    if (link) {
-      link.style.color = 'white';
-      link.style.backgroundColor = 'var(--primary-color)';
-      link.style.borderRadius = '8px';
-      const svg = link.querySelector('svg');
-      if (svg) {
-        svg.style.stroke = 'white';
-      }
-    }
-  });
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  applyActiveStyles();
-  const observer = new MutationObserver(() => {
-    applyActiveStyles();
-  });
-  observer.observe(document.body, {
-    attributes: true,
-    subtree: true,
-    attributeFilter: ['class']
-  });
-});
