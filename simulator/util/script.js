@@ -232,36 +232,54 @@ const updatePagingUI = (memoryFrames) => {
   }
 
   // 2. Update Logical Pages (Left Side)
-  if (pagesContainer) {
-    pagesContainer.innerHTML = "";
-    const allocatedFrames = Object.values(memoryFrames.frames).filter(
-      (frame) => frame.status === "Occupied",
-    );
+if (pagesContainer) {
+  pagesContainer.innerHTML = "";
 
-    if (allocatedFrames.length === 0) {
-      pagesContainer.innerHTML = `
-            <div class="page page--placeholder">
-                <p>Waiting for allocation</p>
-            </div>`;
-      return;
+  const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
+
+  const allocatedFrames = Object.values(memoryFrames.frames)
+    .filter((frame) => frame.status === "Occupied")
+    .sort((a, b) => {
+      const procA = getNum(a.process);
+      const procB = getNum(b.process);
+      if (procA !== procB) return procA - procB;
+      return getNum(a.id) - getNum(b.id);
+    });
+
+  if (allocatedFrames.length === 0) {
+    pagesContainer.innerHTML = `<div class="page page--placeholder"><p>Waiting for allocation</p></div>`;
+    return;
+  }
+
+  // --- Tracking variables for the reset logic ---
+  let lastProcessId = null;
+  let perProcessPageCounter = 0;
+
+  allocatedFrames.forEach((frame) => {
+    const currentProcessId = frame.process;
+
+    // If we hit a new process, reset the counter to 0
+    if (currentProcessId !== lastProcessId) {
+      perProcessPageCounter = 0; 
+      lastProcessId = currentProcessId;
     }
 
-    allocatedFrames.forEach((frame) => {
-      const pageEl = document.createElement("div");
-      pageEl.className = "page";
-      
-      // Keep consistency with the right side cleanup
-      let cleanId = String(frame.process).replace(/process_|Process/gi, "").trim();
-      
-      pageEl.innerHTML = `
-      <p id="page-number">P${cleanId}</p>
-        <div class="frame-content">
-            <p>Frame ${frame.id} (${frame.used} / ${frame.size} KB used)</p>
-        </div>
+    const pageEl = document.createElement("div");
+    pageEl.className = "page";
+    
+    pageEl.innerHTML = `
+      <p id="page-number">P${perProcessPageCounter}</p>
+      <div class="frame-content">
+          <p>${frame.process}</p>
+      </div>
     `;
-      pagesContainer.appendChild(pageEl);
-    });
-  }
+    
+    pagesContainer.appendChild(pageEl);
+
+    // Increment the counter for the next page of THIS process
+    perProcessPageCounter++;
+  });
+}
 };
 
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
