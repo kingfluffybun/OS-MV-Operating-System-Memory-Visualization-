@@ -35,6 +35,7 @@ function togglePassword(element) {
 // ========== LOGIN ==========
 function signIn() {
     const form = document.getElementById('login-form');
+    const loaderWrapper = document.getElementById("loader-wrapper");
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
@@ -45,11 +46,25 @@ function signIn() {
         const result = await login(username, password);
 
         if (result.success) {
-            messageEl.textContent = 'Login successful! Redirecting...';
+
+            if (loaderWrapper) {
+                loaderWrapper.style.display = "flex";
+                
+                loaderWrapper.style.opacity = "0";
+                
+                loaderWrapper.offsetHeight; 
+
+                loaderWrapper.classList.remove("loaded");
+                loaderWrapper.classList.add("show-loader");
+                loaderWrapper.style.opacity = "1";
+            }
+
+            messageEl.textContent = 'Login successful! Entering...';
             messageEl.style.color = '#4CAF50';
             setTimeout(() => {
                 location.href = 'simulator/index.html';
-            }, 1500);
+            }, 2500);
+
         } else {
             messageEl.textContent = result.message;
             messageEl.style.color = '#ce1e1e';

@@ -85,11 +85,16 @@ const memorySimulator = {
     };
   },
 
-  worstFitFixedStep(memoryHead, processSize) {
+  _worstFitFixedStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+        if (
+          !worstBlock ||
+          block.size > worstBlock.size ||
+          block.size === worstBlock.size
+        )
+          worstBlock = block;
       }
     }
 
@@ -116,51 +121,75 @@ const memorySimulator = {
   },
 
   performCompaction(head, processSize) {
+    // Step 1: Calculate total free space
     const totalFree = this.totalFreeSize(head);
     if (totalFree < processSize) return null;
 
+    // Step 2: Create new compacted list with only occupied nodes + one free block
     let newHead = null;
     let tail = null;
     let freeTotal = 0;
-    let idCounter = 1;
+    let newBlockId = 1;
     const idMapping = {};
 
+    // Step 3: Filter only OCCUPIED nodes and assign sequential IDs
     for (let node = head; node; node = node.next) {
       if (node.status === "Occupied") {
-        const newId = idCounter++;
-        idMapping[node.id] = newId;
-        const copy = {
-          id: newId,
+        // Create a copy of the occupied node with new ID
+        const newNode = {
+          id: newBlockId,
           size: node.size,
-          status: node.status,
+          status: "Occupied",
           next: null,
         };
-        if (!tail) newHead = copy;
-        else tail.next = copy;
-        tail = copy;
-      } else {
+
+        // Map old block ID to new block ID (for updating results)
+        idMapping[node.id] = newBlockId;
+
+        // Add to new list
+        if (!tail) {
+          newHead = newNode;
+        } else {
+          tail.next = newNode;
+        }
+        tail = newNode;
+        newBlockId++;
+      } else if (node.status === "Free") {
+        // Step 4: Sum ALL free space into one block
         freeTotal += node.size;
       }
     }
 
+    // Step 5: Create single consolidated FREE block at the end
     if (freeTotal > 0) {
       const freeNode = {
-        id: idCounter,
+        id: newBlockId,
         size: freeTotal,
         status: "Free",
         next: null,
       };
-      if (tail) tail.next = freeNode;
-      else newHead = freeNode;
+
+      if (tail) {
+        tail.next = freeNode;
+      } else {
+        // Edge case: only free blocks exist (shouldn't happen in normal use)
+        newHead = freeNode;
+      }
     }
+
     return { head: newHead, idMapping };
   },
 
-  worstFitDynamicStep(memoryHead, processSize) {
+  _worstFitDynamicStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+        if (
+          !worstBlock ||
+          block.size > worstBlock.size ||
+          block.size === worstBlock.size
+        )
+          worstBlock = block;
       }
     }
 
@@ -173,7 +202,12 @@ const memorySimulator = {
         idMapping = compacted.idMapping;
         for (let block = compactedHead; block; block = block.next) {
           if (block.status === "Free" && processSize <= block.size) {
-            if (!worstBlock || block.size > worstBlock.size) worstBlock = block;
+            if (
+              !worstBlock ||
+              block.size > worstBlock.size ||
+              block.size === worstBlock.size
+            )
+              worstBlock = block;
           }
         }
       }
@@ -226,11 +260,19 @@ const memorySimulator = {
   },
 
   // Compatibility layer for existing script.js calls.
-  bestFitFixedStep(memoryHead, processSize) {
-    return this.worstFitFixedStep(memoryHead, processSize);
+  worstFitFixedStep(memoryHead, processSize) {
+    return this._worstFitFixedStep(memoryHead, processSize);
   },
 
-  bestFitDynamicStep(memoryHead, processSize) {
-    return this.worstFitDynamicStep(memoryHead, processSize);
+  worstFitDynamicStep(memoryHead, processSize) {
+    return this._worstFitDynamicStep(memoryHead, processSize);
+  },
+
+  allocateFixedStep(memoryHead, processSize) {
+    return this._worstFitFixedStep(memoryHead, processSize);
+  },
+
+  allocateDynamicStep(memoryHead, processSize) {
+    return this._worstFitDynamicStep(memoryHead, processSize);
   },
 };

@@ -44,128 +44,130 @@ const memorySimulator = {
         return this.totalFreeFrames(memoryFrames) * memoryFrames.frameSize;
     },
 
-    paging(memoryFrames, pageSize, processes) {
-        const frames = this.cloneFrames(memoryFrames);
-        const results = {};
-        let allocatedSize = 0;
-        let successfulAllocations = 0;
-        let internalFragmentation = 0;
+paging(memoryFrames, pageSize, processes) {
+    const frames = this.cloneFrames(memoryFrames);
+    const results = {};
+    const pSize = Number(pageSize); // Force numeric type
+    let allocatedSize = 0;
+    let successfulAllocations = 0;
+    let internalFragmentation = 0;
 
-        for (const pId in processes) {
-            if (!Object.prototype.hasOwnProperty.call(processes, pId)) continue;
-            const size = processes[pId];
-            const pagesNeeded = Math.ceil(size / pageSize);
-            const freeFrames = this.totalFreeFrames(frames);
-
-            if (freeFrames < pagesNeeded) {
-                results[pId] = {
-                    size,
-                    pagesNeeded,
-                    frameIds: {},
-                    internalFragmentation: null,
-                    status: "Unallocated"
-                };
-                continue;
-            }
-
-            const allocatedFrames = {};
-            let remaining = size;
-            let allocatedCount = 0;
-
-            for (const key in frames.frames) {
-                if (allocatedCount >= pagesNeeded) break;
-                const frame = frames.frames[key];
-                if (frame.status !== "Free") continue;
-
-                const used = remaining > pageSize ? pageSize : remaining;
-                frame.status = "Occupied";
-                frame.process = pId;
-                frame.page = allocatedCount + 1;
-                frame.used = used;
-                allocatedFrames[key] = true;
-                allocatedCount++;
-                remaining -= used;
-            }
-
-            const processInternal = pagesNeeded * pageSize - size;
-            allocatedSize += size;
-            internalFragmentation += processInternal;
-            successfulAllocations++;
-
-            results[pId] = {
-                size,
-                pagesNeeded,
-                frameIds: allocatedFrames,
-                internalFragmentation: processInternal,
-                status: "Allocated"
-            };
-        }
-
-        return {
-            results,
-            stats: {
-                successfulAllocations,
-                allocatedSize,
-                internalFragmentation,
-                freeFrames: this.totalFreeFrames(frames),
-                freeMemory: this.totalFreeMemory(frames),
-                totalFrames: frames.count,
-                pageSize,
-                externalFragmentation: 0
-            },
-            frames
-        };
-    },
-
-    pagingStep(memoryFrames, processSize, pageSize, processId) {
-        const frames = this.cloneFrames(memoryFrames);
-        const pagesNeeded = Math.ceil(processSize / pageSize);
+    for (const pId in processes) {
+        if (!Object.prototype.hasOwnProperty.call(processes, pId)) continue;
+        const size = Number(processes[pId]); // Force numeric type
+        const pagesNeeded = Math.ceil(size / pSize);
         const freeFrames = this.totalFreeFrames(frames);
 
         if (freeFrames < pagesNeeded) {
-            return {
-                result: {
-                    size: processSize,
-                    pagesNeeded,
-                    frameIds: {},
-                    internalFragmentation: null,
-                    status: "Unallocated"
-                },
-                frames
-            };
+            results[pId] = { size, pagesNeeded, frameIds: {}, status: "Unallocated" };
+            continue;
         }
 
-        const allocatedFrames = {};
-        let remaining = processSize;
+        let remaining = size;
         let allocatedCount = 0;
+        const allocatedFrames = {};
 
         for (const key in frames.frames) {
             if (allocatedCount >= pagesNeeded) break;
             const frame = frames.frames[key];
             if (frame.status !== "Free") continue;
 
-            const used = remaining > pageSize ? pageSize : remaining;
+            const used = remaining > pSize ? pSize : remaining;
             frame.status = "Occupied";
-            frame.process = processId;
+            frame.process = pId;
             frame.page = allocatedCount + 1;
-            frame.used = used;
+            frame.used = Number(used); // Prevents "1010" concatenation
+            
             allocatedFrames[key] = true;
             allocatedCount++;
             remaining -= used;
         }
 
-        const internal = pagesNeeded * pageSize - processSize;
+        const processInternal = (pagesNeeded * pSize) - size;
+        allocatedSize += size;
+        internalFragmentation += processInternal;
+        successfulAllocations++;
+
+        results[pId] = { size, pagesNeeded, frameIds: allocatedFrames, internalFragmentation: processInternal, status: "Allocated" };
+    }
+
+    return { 
+        results, 
+        stats: { 
+            successfulAllocations, 
+            allocatedSize, 
+            internalFragmentation, 
+            freeFrames: this.totalFreeFrames(frames), 
+            freeMemory: this.totalFreeMemory(frames), 
+            totalFrames: frames.count, 
+            pageSize: pSize, 
+            externalFragmentation: 0 
+        }, 
+        frames 
+    };
+},
+
+pagingStep(memoryFrames, processSize, pageSize, processId) {
+    const frames = this.cloneFrames(memoryFrames);
+    const pSize = Number(pageSize); // Force numeric type
+    const pSizeActual = Number(processSize); // Force numeric type
+    const pagesNeeded = Math.ceil(pSizeActual / pSize);
+    const freeFrames = this.totalFreeFrames(frames);
+
+    if (freeFrames < pagesNeeded) {
         return {
-            result: {
-                size: processSize,
-                pagesNeeded,
-                frameIds: allocatedFrames,
-                internalFragmentation: internal,
-                status: "Allocated"
-            },
+            result: { size: pSizeActual, pagesNeeded, frameIds: {}, status: "Unallocated" },
             frames
         };
-    },
+    }
+
+    const freeFrameKeys = Object.keys(frames.frames).filter(key => frames.frames[key].status === "Free");
+    
+    // Shuffle logic for randomized physical frame assignment
+    for (let i = freeFrameKeys.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [freeFrameKeys[i], freeFrameKeys[j]] = [freeFrameKeys[j], freeFrameKeys[i]];
+    }
+
+    const allocatedFrames = {};
+    let remaining = pSizeActual;
+    let allocatedCount = 0;
+
+    // Use underscore split for IDs like "process_1"
+    const processNum = parseInt(processId.split('_')[1]) || 1;
+
+    // Optimized Single-Loop Logic: Step 2 for even, Step 1 for odd
+    const step = (processNum % 2 === 0) ? 2 : 1;
+    const limit = (processNum % 2 === 0) ? pagesNeeded * 2 : pagesNeeded;
+
+    for (let i = 0; i < limit && allocatedCount < pagesNeeded; i += step) {
+        if (i >= freeFrameKeys.length) break;
+        const key = freeFrameKeys[i];
+        const frame = frames.frames[key];
+
+        const used = remaining > pSize ? pSize : remaining;
+        frame.status = "Occupied";
+        frame.process = processId;
+        frame.page = allocatedCount + 1;
+        frame.used = Number(used); // Fixes UI display bugs
+        
+        allocatedFrames[key] = true;
+        allocatedCount++;
+        remaining -= used;
+    }
+
+    const internal = (pagesNeeded * pSize) - pSizeActual;
+    return {
+        result: { 
+            size: pSizeActual, 
+            pagesNeeded, 
+            frameIds: allocatedFrames, 
+            internalFragmentation: internal, 
+            status: "Allocated" 
+        },
+        frames
+    };
+},
 
     createPageTable(memoryFrames) {
         const table = {};

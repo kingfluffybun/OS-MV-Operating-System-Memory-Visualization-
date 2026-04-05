@@ -1,0 +1,190 @@
+const getPagingInputs = () => {
+  const pageSizeInput = document.getElementById("page-frame-size");
+  const memorySizeInput = document.getElementById("memory-size");
+  const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+  const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
+  return { pageSize, memorySize };
+};
+
+const getPagingFrameCount = () => {
+  const { pageSize, memorySize } = getPagingInputs();
+  if (Number.isNaN(pageSize) || pageSize <= 0) return 0;
+  if (Number.isNaN(memorySize) || memorySize <= 0) return 0;
+  return Math.floor(memorySize / pageSize);
+};
+
+const resetPagingUI = () => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+  if (pagesContainer) pagesContainer.innerHTML = "";
+  if (framesContainer) framesContainer.innerHTML = "";
+};
+
+const initializePagingUI = (memoryFrames) => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+
+if (framesContainer) {
+    framesContainer.innerHTML = "";
+    Object.values(memoryFrames.frames).forEach((frame) => {
+        const frameEl = document.createElement("div");
+        frameEl.className = "frame";
+        
+        // STAGE 1: Aggressive cleanup of the status label
+        // This removes 'process_', any existing 'Process' word, and extra spaces
+        let cleanId = frame.status === "Occupied" 
+            ? String(frame.process).replace(/process_|Process/gi, "").trim() 
+            : "";
+
+        const statusLabel = frame.status === "Occupied" 
+            ? `Process ${cleanId}` 
+            : "Free";
+            
+        // STAGE 2: Absolute separation of numbers
+        // Using an HTML entity (&nbsp;) and a slash to force the browser to separate them
+        const usageInfo = frame.status === "Occupied"
+            ? `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`
+            : `<p>${frame.size} KB</p>`;
+
+        frameEl.innerHTML = `
+            <p id="frame-number">F${frame.id}</p>
+            <div class="frame-content">
+                <p>${statusLabel}</p>
+                <p>${usageInfo}</p>
+            </div>
+        `;
+        framesContainer.appendChild(frameEl);
+    });
+}
+};
+
+/** * Helper to get the color object based on process name.
+ * Extracts the number from strings like "Process 1" or "process_1".
+ */
+const getProcessColor = (procName) => {
+  if (!procName) return { bg: "transparent", border: "transparent" };
+  const id = parseInt(String(procName).replace(/\D/g, "")) || 0;
+  const colorIndex = (id - 1) % processColors.length;
+  return processColors[colorIndex];
+};
+
+const updatePagingUI = (memoryFrames) => {
+  const pagesContainer = document.querySelector(".pages-container");
+  const framesContainer = document.querySelector(".frames-container");
+  const tableContainer = document.querySelector("#page-table-body");
+  
+  if (!memoryFrames) return;
+
+  // 1. Helper to calculate Page Numbers for each process
+  const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
+  const frameToPageMap = {};
+  const processCounters = {};
+
+  const sortedOccupied = Object.values(memoryFrames.frames)
+    .filter((f) => f.status === "Occupied")
+    .sort((a, b) => {
+      const procA = getNum(a.process);
+      const procB = getNum(b.process);
+      if (procA !== procB) return procA - procB;
+      return getNum(a.id) - getNum(b.id);
+    });
+
+  sortedOccupied.forEach((frame) => {
+    const procName = frame.process;
+    if (processCounters[procName] === undefined) {
+      processCounters[procName] = 0;
+    }
+    frameToPageMap[frame.id] = processCounters[procName]++;
+  });
+
+  // 2. Update Physical Frames (Right Side)
+  if (framesContainer) {
+    framesContainer.innerHTML = "";
+    Object.values(memoryFrames.frames).forEach((frame) => {
+      const frameEl = document.createElement("div");
+      frameEl.className = "frame";
+
+      let statusLabel = "Free";
+      if (frame.status === "Occupied") {
+        const pageNum = frameToPageMap[frame.id];
+        statusLabel = `${frame.process} - Page ${pageNum}`;
+        const colors = getProcessColor(frame.process);
+        const contentDiv = frameEl.querySelector(".frame-content"); // We'll set this after innerHTML
+      }
+
+      const usageInfo = frame.status === "Occupied" 
+        ? `&nbsp;` 
+        : `&nbsp;<span>${frame.size} KB</span>`;
+
+      frameEl.innerHTML = `
+            <p id="frame-number">F${frame.id}</p>
+            <div class="frame-content">
+                <p>${statusLabel}</p>
+                ${usageInfo}
+            </div>
+        `;
+        const contentDiv = frameEl.querySelector(".frame-content");
+        if (frame.status === "Occupied" && contentDiv) {
+            const colors = getProcessColor(frame.process);
+            contentDiv.style.backgroundColor = colors.bg;
+            contentDiv.style.borderbottm = `4px solid ${colors.border}`;
+        }
+      framesContainer.appendChild(frameEl);
+    });
+  }
+
+  // 3. Update Virtual Pages (Left Side)
+  if (pagesContainer) {
+    pagesContainer.innerHTML = "";
+    if (sortedOccupied.length === 0) {
+      pagesContainer.innerHTML = `<div class="page page--placeholder"><p>Waiting for allocation</p></div>`;
+    } else {
+      let lastProcId = null;
+      let localCounter = 0;
+
+      sortedOccupied.forEach((frame) => {
+        if (frame.process !== lastProcId) {
+          localCounter = 0;
+          lastProcId = frame.process;
+        }
+
+        const pageEl = document.createElement("div");
+        pageEl.className = "page";
+        // Apply colors
+        const colors = getProcessColor(frame.process);
+        pageEl.innerHTML = `
+          <p id="page-number">P${localCounter}</p>
+          <div class="frame-content">
+              <p>${frame.process}</p>
+              <p>&nbsp;(${frame.used} / ${frame.size} KB used)</p>
+          </div>
+        `;
+        const contentDiv = pageEl.querySelector(".frame-content");
+        if (contentDiv) {
+            contentDiv.style.backgroundColor = colors.bg;
+            contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+        }
+        pagesContainer.appendChild(pageEl);
+        localCounter++;
+      });
+    }
+  }
+
+if (tableContainer) {
+    tableContainer.innerHTML = ""; 
+
+    sortedOccupied.forEach((frame) => {
+      const pageNum = frameToPageMap[frame.id];
+
+      const rowEl = document.createElement("tr");
+      rowEl.className = "page-table-row"; 
+
+      rowEl.innerHTML = `
+          <td class="table-column proc-id">${frame.process}</td>
+          <td class="table-column page-num">Page ${pageNum}</td>
+          <td class="table-column frame-num">Frame ${frame.id}</td>
+      `;
+      tableContainer.appendChild(rowEl);
+    });
+  }
+};
