@@ -3,14 +3,17 @@
         <h1 id="h1">OS-MV</h1>
         <p>Operating System <br> Management Visualizer</p>
     </div>
+
     <div class="sidebar-options">
-        <div id="dashboard">
-            <a href="../index.html">
+        <!-- Dashboard -->
+        <div id="menu-dashboard" style="display: none;">
+            <a href="/simulator/index.html">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard-icon lucide-layout-dashboard"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                 <p>Dashboard</p>
             </a>
         </div>
-        <div>
+        <!-- Simulation (For Algorithm) -->
+        <div id="menu-simulation" style="display: none;">
             <button onclick="toggleSubMenu(this)" class="dropdown-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-bar-big-icon lucide-chart-bar-big"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><rect x="7" y="13" width="9" height="4" rx="1"/><rect x="7" y="5" width="12" height="4" rx="1"/></svg>
                 <p>Simulation</p>
@@ -18,17 +21,39 @@
             </button>
             <div class="sub-menu">
                 <div>
-                    <a href="#single-mode">
+                    <a href="#single-mode" id="single-mode">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-zap-icon lucide-zap"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10"/></svg>
                         <p>Single Mode</p>
                     </a>
-                    <a href="#comparison-mode">
+                    <a href="#comparison-mode" id="comparison-mode">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-comparison-icon lucide-comparison"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
                         <p>Comparison Mode</p>
                     </a>
                 </div>
             </div>
         </div>
+        <!-- User Management (For Admin Dashboard) -->
+        <div id="menu-usermanagement" style="display: none;">
+            <a href="#usermanagement">
+                <svg xmlns="http://www.w3.org/2000/svg " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+                <p>User Management</p>
+            </a>
+        </div>
+        <!-- Back to Simulator (For Admin Dashboard) -->
+        <div id="menu-back-simulator" style="display: none;" class="bottom-options">
+            <a href="../simulator/index.html">
+                <svg xmlns="http://www.w3.org/2000/svg " width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+                <p>Go back to simulator</p>
+            </a>
+        </div>
+        <!-- Admin Dashboard -->
+        <div id="menu-admin-dashboard" style="display: none;">
+            <a href="../admin-dashboard/index.html">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-icon lucide-circle-user"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
+                <p>Admin Dashboard</p>
+            </a>
+        </div>
+        <!-- Profile (For All)-->
         <div style="display: flex; align-items: center;">
             <a href="#profile">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-user-icon lucide-circle-user"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"/></svg>
@@ -37,6 +62,7 @@
                 </div>
             </a>
         </div>
+        <!-- Logout (For All) -->
         <div>
             <a href="../index.html" onclick="logout()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>

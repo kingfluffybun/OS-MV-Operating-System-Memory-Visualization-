@@ -6,10 +6,12 @@
 // submenuButtons.classList.add("");
 
 // ========== SIDEBAR ==========
+// Load sidebar
 document.addEventListener("DOMContentLoaded", () => {
-  // Load sidebar
   loadSidebar().then(() => {
+    showMenu();
     initSidebarFunctions();
+    loadCurrentUser();
   });
 });
 
@@ -21,22 +23,11 @@ async function loadSidebar() {
     return;
   }
 
-  const currentPath = window.location.pathname;
-  let sidebarUrl = "";
-
-  if (currentPath.includes("/admin-dashboard/")) {
-    sidebarUrl = "../../sidebar/admin-sidebar.html";
-  } else if (currentPath.includes("/simulator/algorithm/")) {
-    sidebarUrl = "../../sidebar/simulator-sidebar.html";
-  } else {
-    sidebarUrl = "../../sidebar/default-sidebar.html";
-  }
-
   try {
-    const response = await fetch(sidebarUrl);
+    const response = await fetch("../../sidebar/sidebar.html");
     const data = await response.text();
     container.innerHTML = data;
-    console.log(`Loaded ${sidebarUrl}`);
+    console.log("Sidebar loaded successfully");
   } catch (error) {
     console.error("Error loading sidebar:", error);
   }
@@ -70,10 +61,6 @@ function initSidebarFunctions() {
   if (toggleButton) {
     toggleButton.addEventListener("click", toggleSideBar);
   }
-
-  loadCurrentUser();
-  setActiveSidebaritem();
-  applyActiveStyles();
 }
 
 const toggleSideBar = () => {
@@ -113,6 +100,53 @@ const toggleSubMenu = (button) => {
   button.classList.toggle("rotate");
 };
 
+function showMenu() {
+  const currentPath = window.location.pathname;
+
+  const Menus = [
+    'menu-dashboard',
+    'menu-simulation',
+    'menu-usermanagement',
+    'menu-back-simulator'
+  ];
+
+  Menus.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+
+  // Check which page is user on
+  const isAdmin = currentPath.includes('/admin-dashboard/');
+  const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath === ('/simulator/');
+  const isSimulator = currentPath.includes('/simulator/algorithm/');
+
+  // Show correct menu
+  if (isAdmin) {
+    document.getElementById('menu-usermanagement').style.display = 'block';
+    document.getElementById('menu-back-simulator').style.display = 'block';
+    document.getElementById('menu-usermanagement').classList.add('active');
+  } else if (isFrontPage || isSimulator) {
+    document.getElementById('menu-dashboard').style.display = 'block';
+    document.getElementById('menu-simulation').style.display = 'block';
+
+    if (isFrontPage) {
+      document.getElementById('menu-dashboard').classList.add('active');
+    } else if (isSimulator) {
+      document.getElementById('single-mode').classList.add('active');
+
+      const simDiv = document.getElementById('menu-simulation');
+      const dropBtn = simDiv.querySelector('.dropdown-btn');
+      const subMenu = simDiv.querySelector('.sub-menu');
+
+      if (dropBtn && subMenu) {
+        dropBtn.classList.add('rotate');
+        subMenu.classList.add('show');
+      }
+    }
+  }
+}
+
+// Display username
 function loadCurrentUser() {
   const stored = JSON.parse(sessionStorage.getItem("currentUser"));
 
@@ -120,79 +154,6 @@ function loadCurrentUser() {
     document.getElementById("username").textContent = stored.username;
   } else {
     document.getElementById("username").textContent = "Guest";
-  }
-}
-
-const applyActiveStyles = () => {
-  const activeElements = document.querySelectorAll('.active');
-  activeElements.forEach(el => {
-    const link = el.tagName === 'A' ? el : el.querySelector('a');
-    if (link) {
-      link.style.color = 'white';
-      link.style.backgroundColor = 'var(--primary-color)';
-      link.style.borderRadius = '8px';
-      const svg = link.querySelector('svg');
-      if (svg) {
-        svg.style.stroke = 'white';
-      }
-    }
-  });
-};
-
-document.addEventListener('DOMContentLoaded', () => {
-  applyActiveStyles();
-  observer.observe(document.body, {
-    attributes: true,
-    subtree: true,
-    attributeFilter: ['class']
-  });
-});
-
-// Function to set active sidebar item
-function setActiveSidebaritem() {
-  const currentPath = window.location.pathname;
-  
-  console.log(`Current path: ${currentPath}`);
-
-  document.querySelectorAll(".sidebar-options .active").forEach(el => {
-    el.classList.remove("active");
-  });
-
-  const pagePatterns = [
-    {
-      // Front Page
-      pattern: /\/simulator\//,
-      selector: 'div[id="dashboard"]',
-      type: 'self'
-    },
-    {
-      // Algorithm
-      pattern: /\/simulator\/algorithm\//,
-      selector: 'a[href="#single-mode"]',
-      type: 'self'
-    },
-    {
-      // Admin Dashboard
-      pattern: /\/admin-dashboard\//,
-      selector: 'div[id="usermanagement"]',
-      type: 'self'
-    }
-  ];
-
-  // Set active for specific page
-  for (const { pattern, selector, type } of pagePatterns) {
-    if (pattern.test(currentPath)) {
-      const element = document.querySelector(selector);
-      if (element) {
-        if (type === 'parent') {
-          element.parentElement.classList.add("active");
-        } else {
-          element.classList.add("active");
-        }
-        console.log(`Set active for ${selector}`);
-        break;
-      }
-    }
   }
 }
 
@@ -1904,3 +1865,28 @@ function simulatorLoad() {
   script.defer = true;
   document.head.appendChild(script);
 }
+
+// const applyActiveStyles = () => {
+//   const activeElements = document.querySelectorAll('.active');
+//   activeElements.forEach(el => {
+//     const link = el.tagName === 'A' ? el : el.querySelector('a');
+//     if (link) {
+//       link.style.color = 'white';
+//       link.style.backgroundColor = 'var(--primary-color)';
+//       link.style.borderRadius = '8px';
+//       const svg = link.querySelector('svg');
+//       if (svg) {
+//         svg.style.stroke = 'white';
+//       }
+//     }
+//   });
+// };
+
+// document.addEventListener('DOMContentLoaded', () => {
+//   applyActiveStyles();
+//   observer.observe(document.body, {
+//     attributes: true,
+//     subtree: true,
+//     attributeFilter: ['class']
+//   });
+// });

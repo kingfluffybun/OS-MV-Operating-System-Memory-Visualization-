@@ -63,6 +63,49 @@ function createTables() {
     `);
 }
 
+async function createAdminAcc() {
+    console.log('Creating admin account if it does not exist...');
+
+    if(!db) await initDB();
+
+    try {
+        const checkStmt = db.prepare('SELECT user_id FROM users WHERE user_role = ?');
+        checkStmt.bind(['admin']);
+        const exists = checkStmt.step();
+        checkStmt.free();
+
+        if (exists) {
+            console.log('Admin account already exists.');
+            return;
+        }
+
+        console.log('Creating admin account...');
+
+        const adminUsername = 'admin';
+        const password = 'HiMgaP33ps!';
+
+        const hashedPassword = await hashPassword(password);
+        const recoveryKey = await generateRecoveryWords();
+        const hashedRecoveryKey = await hashRecoveryKey(recoveryKey);
+
+        const stmt = db.prepare(`
+            INSERT INTO users (username, password, recovery_key, user_role, created_at, updated_at)
+            VALUES (?, ?, ?, 'admin', datetime('now'), datetime('now'))
+        `);
+        stmt.run([adminUsername, hashedPassword, hashedRecoveryKey]);
+        stmt.free();
+        saveDB();
+
+        sessionStorage.setItem('adminCreated', JSON.stringify({
+            username: adminUsername,
+            password: password,
+            recoveryKey: recoveryKey
+        }));
+    } catch (e) {
+        console.error('Error creating admin account:', e);
+    }
+}
+
 function saveDB() {
     if (!db) return;
     const data = db.export();
@@ -342,3 +385,20 @@ function loadUsers() {
         `;
     })
 }
+
+// ========== Auto Initizialze Database ==========
+(function autoInit() {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            initDB().then(() => {
+                console.log('Database initialized.');
+                createAdminAcc();
+            });
+        });
+    } else {
+        initDB().then(() => {
+            console.log('Database initialized.');
+            createAdminAcc();
+        });
+    }
+})();
