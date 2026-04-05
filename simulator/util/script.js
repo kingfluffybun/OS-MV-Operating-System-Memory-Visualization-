@@ -1624,34 +1624,94 @@ function startSimulation(event) {
   // 1. Stop the browser from refreshing/changing the URL
   event.preventDefault();
 
-  const form = document.getElementById("simulation-Option");
-
-  // 2. Get the selected algorithm
-  const selected = form.querySelector('input[name="algo"]:checked');
-
-  // 3. Get the toggle state
-  const isDynamic = form.querySelector(".checkbox").checked;
-
-  if (selected) {
-    const algo = selected.value; // e.g., "first-fit"
-    const algoFileSegment =
-      {
-        "first-fit": "First-Fit",
-        "next-fit": "Next-Fit",
-        "Best-Fit": "Best-Fit",
-        "Worst-Fit": "Worst-Fit",
-      }[algo] || algo;
-
-    let fileName = "simulation-" + algoFileSegment;
-    if (isDynamic) {
-      fileName += "-Dynamic";
-    }
-
-    console.log("Redirecting to: " + fileName + ".html");
-    window.location.href = "algorithms/" + fileName + ".html";
-  } else {
-    alert("Please select an algorithm!");
+  const algo = document.querySelector('input[name="algo"]:checked');
+  if (!algo) {
+    alert("Please select an algorithm.");
+    return;
   }
+
+  let algoWhat = algo.value;
+
+  sessionStorage.setItem('selectedAlgo', algo.value);
+
+  // Check if dynamic selected
+  const isDynamic = document.querySelector('.toggle-partition input').checked;
+  sessionStorage.setItem('selectedPartition', isDynamic ? 'dynamic': 'fixed');
+  
+  const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
+  const whatAlgo = toggle.checked;
+  const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
+
+  window.location.href = `/simulator/algorithm/?algorithm=${algoParam}`;
+}
+
+function hub() {
+  sessionStorage.removeItem('selectedAlgo');
+  sessionStorage.removeItem('selectedPartition');
+}
+
+function simulatorLoad() {
+  const selectedAlgo = sessionStorage.getItem('selectedAlgo');
+  const selectedPartition = sessionStorage.getItem('selectedPartition');
+  const algoDescription = document.getElementById('algo-description');
+  let scriptSrc = "";
+
+  if (selectedPartition === "dynamic") {
+    document.body.setAttribute('data-partition-mode', 'dynamic');
+  } else {
+    document.body.removeAttribute('data-partition-mode');
+  }
+
+  switch (selectedAlgo.toLowerCase()) {
+    case "first-fit":
+      algoDescription.textContent = "First Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "First Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/firstfit.js"; 
+      break;
+    case "next-fit":
+      algoDescription.textContent = "Next Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Next Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/nextfit.js";
+      break;
+    case "best-fit":
+      algoDescription.textContent = "Best Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Best Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/bestfit.js";
+      break;
+    case "worst-fit":
+      algoDescription.textContent = "Worst Fit Algorithm - Fixed Partition";
+      if (selectedPartition === "dynamic") {
+        algoDescription.textContent = "Worst Fit Algorithm - Dynamic Partition";
+      }
+      scriptSrc = "../util/algos/worstfit.js";
+      break;
+    case "paging":
+      algoDescription.textContent = "Paging Algorithm";
+      scriptSrc = "../util/algos/paging.js";
+      break;
+    case "segmentation":
+      algoDescription.textContent = "Segmentation Algorithm";
+      scriptSrc = "../util/algos/paging-segment.js";
+      break;
+    case "seg-paging":
+      algoDescription.textContent = "Segmentation with Paging Algorithm";
+      scriptSrc = "../util/algos/paging-segmentation.js";
+      break;
+    default:
+      algoDescription.textContent = "";
+      scriptSrc = "";
+  }
+
+  const script = document.createElement('script');
+  script.src = scriptSrc;
+  script.defer = true;
+  document.head.appendChild(script);
 }
 
 const applyActiveStyles = () => {
