@@ -197,92 +197,107 @@ if (framesContainer) {
 const updatePagingUI = (memoryFrames) => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
+  const tableContainer = document.querySelector("#page-table-body");
+  
   if (!memoryFrames) return;
 
-// 1. Helper to calculate Page Numbers for each process
-const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
-const frameToPageMap = {};
-const processCounters = {};
+  // 1. Helper to calculate Page Numbers for each process
+  const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
+  const frameToPageMap = {};
+  const processCounters = {};
 
-// Sort frames by process then ID (same logic as the Left Side) to determine logical P#
-const sortedOccupied = Object.values(memoryFrames.frames)
-  .filter((f) => f.status === "Occupied")
-  .sort((a, b) => {
-    const procA = getNum(a.process);
-    const procB = getNum(b.process);
-    if (procA !== procB) return procA - procB;
-    return getNum(a.id) - getNum(b.id);
+  const sortedOccupied = Object.values(memoryFrames.frames)
+    .filter((f) => f.status === "Occupied")
+    .sort((a, b) => {
+      const procA = getNum(a.process);
+      const procB = getNum(b.process);
+      if (procA !== procB) return procA - procB;
+      return getNum(a.id) - getNum(b.id);
+    });
+
+  sortedOccupied.forEach((frame) => {
+    const procName = frame.process;
+    if (processCounters[procName] === undefined) {
+      processCounters[procName] = 0;
+    }
+    frameToPageMap[frame.id] = processCounters[procName]++;
   });
 
-sortedOccupied.forEach((frame) => {
-  const procName = frame.process;
-  if (processCounters[procName] === undefined) {
-    processCounters[procName] = 0;
-  }
-  // Record that this specific Frame ID is Page X for this process
-  frameToPageMap[frame.id] = processCounters[procName]++;
-});
+  // 2. Update Physical Frames (Right Side)
+  if (framesContainer) {
+    framesContainer.innerHTML = "";
+    Object.values(memoryFrames.frames).forEach((frame) => {
+      const frameEl = document.createElement("div");
+      frameEl.className = "frame";
 
-// 2. Update Physical Frames (Right Side)
-if (framesContainer) {
-  framesContainer.innerHTML = "";
-  Object.values(memoryFrames.frames).forEach((frame) => {
-    const frameEl = document.createElement("div");
-    frameEl.className = "frame";
+      let statusLabel = "Free";
+      if (frame.status === "Occupied") {
+        const pageNum = frameToPageMap[frame.id];
+        statusLabel = `${frame.process} - Page ${pageNum}`;
+      }
 
-    let statusLabel = "Free";
-    if (frame.status === "Occupied") {
-      const pageNum = frameToPageMap[frame.id];
-      // Format: Process X - P0
-      statusLabel = `${frame.process} - Page ${pageNum}`;
-    }
+      const usageInfo = frame.status === "Occupied" 
+        ? `&nbsp;` 
+        : `&nbsp;<span>${frame.size} KB</span>`;
 
-    const usageInfo = frame.status === "Occupied" 
-      ? `&nbsp;` 
-      : `&nbsp;<span>${frame.size} KB</span>`;
-
-    frameEl.innerHTML = `
+      frameEl.innerHTML = `
             <p>F${frame.id}</p>
             <div class="frame-content">
                 <p>${statusLabel}</p>
                 ${usageInfo}
             </div>
         `;
-    framesContainer.appendChild(frameEl);
-  });
-}
-
-// 3. Update Logical Pages (Left Side)
-if (pagesContainer) {
-  pagesContainer.innerHTML = "";
-
-  if (sortedOccupied.length === 0) {
-    pagesContainer.innerHTML = `<div class="page page--placeholder"><p>Waiting for allocation</p></div>`;
-  } else {
-    // We can reuse the sortedOccupied list we made above
-    let lastProcId = null;
-    let localCounter = 0;
-
-    sortedOccupied.forEach((frame) => {
-      if (frame.process !== lastProcId) {
-        localCounter = 0;
-        lastProcId = frame.process;
-      }
-
-      const pageEl = document.createElement("div");
-      pageEl.className = "page";
-      pageEl.innerHTML = `
-        <p>P${localCounter}</p>
-        <div class="frame-content">
-            <p>${frame.process}</p>
-            <p>&nbsp;(${frame.used} / ${frame.size} KB used)</p>
-        </div>
-      `;
-      pagesContainer.appendChild(pageEl);
-      localCounter++;
+      framesContainer.appendChild(frameEl);
     });
   }
-}
+
+  // 3. Update Virtual Pages (Left Side)
+  if (pagesContainer) {
+    pagesContainer.innerHTML = "";
+    if (sortedOccupied.length === 0) {
+      pagesContainer.innerHTML = `<div class="page page--placeholder"><p>Waiting for allocation</p></div>`;
+    } else {
+      let lastProcId = null;
+      let localCounter = 0;
+
+      sortedOccupied.forEach((frame) => {
+        if (frame.process !== lastProcId) {
+          localCounter = 0;
+          lastProcId = frame.process;
+        }
+
+        const pageEl = document.createElement("div");
+        pageEl.className = "page";
+        pageEl.innerHTML = `
+          <p>P${localCounter}</p>
+          <div class="frame-content">
+              <p>${frame.process}</p>
+              <p>&nbsp;(${frame.used} / ${frame.size} KB used)</p>
+          </div>
+        `;
+        pagesContainer.appendChild(pageEl);
+        localCounter++;
+      });
+    }
+  }
+
+if (tableContainer) {
+    tableContainer.innerHTML = ""; 
+
+    sortedOccupied.forEach((frame) => {
+      const pageNum = frameToPageMap[frame.id];
+
+      const rowEl = document.createElement("tr");
+      rowEl.className = "page-table-row"; 
+
+      rowEl.innerHTML = `
+          <td class="table-column proc-id">${frame.process}</td>
+          <td class="table-column page-num">Page ${pageNum}</td>
+          <td class="table-column frame-num">Frame ${frame.id}</td>
+      `;
+      tableContainer.appendChild(rowEl);
+    });
+  }
 };
 
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
@@ -477,24 +492,18 @@ const randomize_value = document.getElementById("randomize-value");
 
 randomize_value.addEventListener("click", () => {
   const pagingBtn = document.querySelector(".paging-btn"); 
-  const isCurrentlyPaging = pagingBtn && pagingBtn.classList.contains("active");
-
   let min, max;
 
   if (isPagingMode()) {
-    // Range: 2^3 (8 KB) to 2^6 (64 KB)
     min = 3;
     max = 6;
   } else {
-    // Default for other algorithms (e.g., First Fit, Best Fit)
-    // Range: 2^4 (16 KB) to 2^8 (256 KB)
     min = 4;
     max = 8;
   }
 
   const processSize = Math.pow(
-    2,
-    Math.floor(Math.random() * (max - min + 1)) + min,
+    2, Math.floor(Math.random() * (max - min + 1)) + min,
   );
 
   const nextProcessId = processContainer.querySelectorAll(".process").length + 1;

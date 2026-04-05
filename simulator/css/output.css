@@ -467,3 +467,23 @@ button[type="submit"] {
     pointer-events: auto;
     transform: scale(1);
 }
+
+.page-table-info {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.page-table-info th, 
+.page-table-info td {
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 14px;
+    color: #333;
+}
+
+.page-table-info th {
+    font-weight: bold;
+    color: #000;
+    background-color: #f9f9f9;
+}
