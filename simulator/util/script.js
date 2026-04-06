@@ -1,10 +1,3 @@
-// const toggleButton = document.getElementById("toggle-btn");
-// const sidebar = document.getElementById("sidebar");
-// const logo = document.getElementById("logo");
-// const logoH1 = document.getElementById("h1");
-// let submenuButtons = document.querySelectorAll(".dropdown-btn");
-// submenuButtons.classList.add("");
-
 // ========== SIDEBAR ==========
 // Load sidebar
 document.addEventListener("DOMContentLoaded", () => {

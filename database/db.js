@@ -4,8 +4,8 @@ const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-was
 
 let SQL = null;
 let db = null;
-const DB_NAME = 'OVMS_db';
-const STORAGE_KEY = 'OVMS_db_data';
+const DB_NAME = 'OSMV_db';
+const STORAGE_KEY = 'OSMV_db_data';
 const ADMIN_CREATED = 'admin_created';
 
 // ========== SQL.JS SETUP ==========
