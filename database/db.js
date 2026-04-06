@@ -1,4 +1,3 @@
-
 // ========== DB SETUP ==========
 const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
 const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm';
@@ -7,7 +6,9 @@ let SQL = null;
 let db = null;
 const DB_NAME = 'OVMS_db';
 const STORAGE_KEY = 'OVMS_db_data';
+const ADMIN_CREATED = 'admin_created';
 
+// ========== SQL.JS SETUP ==========
 async function initSQL() {
     if (SQL) return SQL;
 
@@ -26,6 +27,7 @@ async function initSQL() {
     return SQL;
 }
 
+// ========== DB SETUP ==========
 async function initDB() {
     if (db) return db;
     await initSQL();
@@ -63,49 +65,6 @@ function createTables() {
     `);
 }
 
-async function createAdminAcc() {
-    console.log('Creating admin account if it does not exist...');
-
-    if(!db) await initDB();
-
-    try {
-        const checkStmt = db.prepare('SELECT user_id FROM users WHERE user_role = ?');
-        checkStmt.bind(['admin']);
-        const exists = checkStmt.step();
-        checkStmt.free();
-
-        if (exists) {
-            console.log('Admin account already exists.');
-            return;
-        }
-
-        console.log('Creating admin account...');
-
-        const adminUsername = 'admin';
-        const password = 'HiMgaP33ps!';
-
-        const hashedPassword = await hashPassword(password);
-        const recoveryKey = await generateRecoveryWords();
-        const hashedRecoveryKey = await hashRecoveryKey(recoveryKey);
-
-        const stmt = db.prepare(`
-            INSERT INTO users (username, password, recovery_key, user_role, created_at, updated_at)
-            VALUES (?, ?, ?, 'admin', datetime('now'), datetime('now'))
-        `);
-        stmt.run([adminUsername, hashedPassword, hashedRecoveryKey]);
-        stmt.free();
-        saveDB();
-
-        sessionStorage.setItem('adminCreated', JSON.stringify({
-            username: adminUsername,
-            password: password,
-            recoveryKey: recoveryKey
-        }));
-    } catch (e) {
-        console.error('Error creating admin account:', e);
-    }
-}
-
 function saveDB() {
     if (!db) return;
     const data = db.export();
@@ -129,6 +88,73 @@ async function hashRecoveryKey(recoveryKey) {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// ========== ADMIN ACCOUNT ==========
+async function checkAdmin() {
+    await initDB();
+
+    // Check if admin exists in database
+    const checkStmt = db.prepare('SELECT user_id FROM users WHERE user_role =?');
+    checkStmt.bind(['admin']);
+    const exists = checkStmt.step();
+    checkStmt.free();
+
+    if (exists) {
+        localStorage.setItem(ADMIN_CREATED, "true");
+        return false;
+    }
+
+    console.log('Creating admin account...');
+
+    const adminData = await createAdminAcc();
+
+    localStorage.setItem(ADMIN_CREATED, "true");
+
+    sessionStorage.setItem('tempAdminData', JSON.stringify({
+        username: adminData.username,
+        password: adminData.password,
+        recoveryKey: adminData.recoveryKey,
+        showOnce: true
+    }));
+
+    return true; //Admin was created
+}
+
+async function createAdminAcc() {
+    const username = 'admin';
+    const password = generateRandomPassword();
+    const recoveryKey = generateRecoveryWords();
+    const hashedPassword = await hashPassword(password);
+    const hashedRecoveryKey = await hashRecoveryKey(recoveryKey);
+
+    const stmt = db.prepare(`
+        INSERT INTO users (username, password, recovery_key, user_role, created_at, updated_at)
+        VALUES (?, ?, ?, 'admin', datetime('now'), datetime('now'));
+    `);
+    stmt.run([username, hashedPassword, hashedRecoveryKey]);
+    stmt.free();
+    saveDB();
+
+    return {
+        username: username,
+        password: password,
+        recoveryKey: recoveryKey
+    };
+}
+
+// Generate a random password for admin
+function generateRandomPassword() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    const cryptoObj = window.crypto || window.msCrypto;
+
+    for (let i = 0; i < 12; i++) {
+        const array = new Uint32Array(1);
+        cryptoObj.getRandomValues(array);
+        password += chars[array[0] % chars.length];
+    }
+    return password;
 }
 
 // ========== RECOVERY ==========
@@ -178,7 +204,7 @@ async function resetPassword(username, newPassword, confirmNewPassword) {
         return {success: false};
     }
     
-    if (!/[A-Z]/.test(newPassword) && !/[a-z]/.test(newPassword)) {
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) {
         return {success: false};
     }
     
@@ -225,7 +251,7 @@ async function validateRegistration(username, password, confirmPassword) {
         return {success: false};
     }
     
-    if (!/[A-Z]/.test(password) && !/[a-z]/.test(password)) {
+    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
         return {success: false};
     }
     
@@ -389,16 +415,15 @@ function loadUsers() {
 // ========== Auto Initizialze Database ==========
 (function autoInit() {
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            initDB().then(() => {
-                console.log('Database initialized.');
-                createAdminAcc();
-            });
-        });
+        document.addEventListener('DOMContentLoaded', initApp);
     } else {
-        initDB().then(() => {
-            console.log('Database initialized.');
-            createAdminAcc();
-        });
+        initApp();
     }
 })();
+
+async function initApp() {
+    const needsAdmin = await checkAdmin();
+    if (needsAdmin) {
+        window.location.href = '/admin-dashboard/admin-setup/index.html';
+    }
+}

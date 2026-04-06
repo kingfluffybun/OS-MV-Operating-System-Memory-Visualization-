@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OS-MV Admin Setup</title>
+    <!-- <link rel="stylesheet" href="/style.css"> -->
+</head>
+<body>
+    <!-- Welcome Message -->
+    <div id="welcome-step">
+        <h1>👋 Welcome to OS-MV!</h1>
+        <p>Hey! It looks like this is your first time using this app.</p>
+        <p>We've created an admin account just for you — and <strong>you only</strong>.</p>
+        <p class="warning">⚠️ This is the <strong>only time</strong> these credentials will be shown. Please save them securely!</p>
+        
+        <button id="show-creds-btn">Continue to View Credentials</button>
+    </div>
+
+    <!-- Admin Credentials -->
+    <div id="creds-step" style="display: none;">
+        <h1>🔐 Admin Account Credentials</h1>
+        <p class="warning">Save these now! They will not be shown again.</p>
+        
+        <div id="credentials">
+            <h2>Admin Username:</h2>
+            <p id="admin-username">-</p>
+            
+            <h2>Admin Password:</h2>
+            <p id="admin-password">-</p>
+            
+            <h2>Recovery Key (12 words):</h2>
+            <p id="admin-recovery">-</p>
+        </div>
+        
+        <button id="copy-creds">📋 Copy to Clipboard</button>
+        <button id="download-creds">💾 Download as File</button>
+        
+        <p id="status"></p>
+        
+        <button id="continue-btn">✅ I have saved these credentials — Continue to App</button>
+    </div>
+
+    <script src="/bip-39.js"></script>
+    <script src="/database/db.js"></script>
+    <script src="/admin-dashboard/admin-setup/admin-setup.js"></script>
+</body>
+</html>

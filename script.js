@@ -282,6 +282,7 @@ function generateRecoveryWords() {
 
     generatedRecoveryKeys = words.join(' ');
     sessionStorage.setItem('recoveryKeys', generatedRecoveryKeys);
+    return generatedRecoveryKeys;
 }
 
 // Display recovery words
@@ -633,7 +634,7 @@ function ResetRequirementsCheck() {
     }
 }
 
-// ========== Admin Panel ==========
+// ========== ADMIN PANEL ==========
 function checkAdminAccess() {
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 
