@@ -424,6 +424,6 @@ function loadUsers() {
 async function initApp() {
     const needsAdmin = await checkAdmin();
     if (needsAdmin) {
-        window.location.href = '/admin-dashboard/admin-setup/index.html';
+        window.location.href = './admin-dashboard/admin-setup/index.html';
     }
 }
