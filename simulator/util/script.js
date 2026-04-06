@@ -74,19 +74,19 @@ const toggleSideBar = () => {
   logo.classList.toggle("hidden");
   logoH1.classList.toggle("hidden");
 
-  if (!sidebar.classList.contains("close")) {
-    const subMenu = sidebar.querySelector(".sub-menu");
-    const dropdownBtn = sidebar.querySelector(".dropdown-btn");
-    if (subMenu && !subMenu.classList.contains("show")) {
-      subMenu.classList.add("show");
-      dropdownBtn.classList.add("rotate");
-    }
-  } else {
-    Array.from(sidebar.getElementsByClassName("show")).forEach((element) => {
-      element.classList.remove("show");
-      element.previousElementSibling.classList.remove("rotate");
-    });
-  }
+//   if (!sidebar.classList.contains("close")) {
+//     const subMenu = sidebar.querySelector(".sub-menu");
+//     const dropdownBtn = sidebar.querySelector(".dropdown-btn");
+//     if (subMenu && !subMenu.classList.contains("show")) {
+//       subMenu.classList.add("show");
+//       dropdownBtn.classList.add("rotate");
+//     }
+//   } else {
+//     Array.from(sidebar.getElementsByClassName("show")).forEach((element) => {
+//       element.classList.remove("show");
+//       element.previousElementSibling.classList.remove("rotate");
+//     });
+//   }
 };
 
 const toggleSubMenu = (button) => {
@@ -1806,7 +1806,16 @@ function startSimulation(event) {
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
 
-  window.location.href = `/simulator/algorithm/?algorithm=${algoParam}`;
+  if (["first-fit", "next-fit", "best-fit", "worst-fit"].includes(algoWhat)) {
+    window.location.href = `algorithm/index.html?algorithm=${algoParam}`;
+  } else {
+    switch (algoWhat) {
+        case "Paging": window.location.href = `algorithm/simulation-Paging.html`;
+        case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html`;
+    }
+  }
+
+  
 }
 
 function hub() {
