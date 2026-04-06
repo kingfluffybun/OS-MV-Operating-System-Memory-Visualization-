@@ -1803,8 +1803,8 @@ function startSimulation(event) {
     window.location.href = `algorithm/index.html?algorithm=${algoParam}`;
   } else {
     switch (algoWhat) {
-        case "Paging": window.location.href = `algorithm/simulation-Paging.html`;
-        case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html`;
+        case "Paging": window.location.href = `algorithm/simulation-Paging.html`; break;
+        case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html`; break;
     }
   }
 
