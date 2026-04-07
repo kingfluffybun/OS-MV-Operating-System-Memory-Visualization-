@@ -4,23 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OS-MV Admin Setup</title>
-    <!-- <link rel="stylesheet" href="/style.css"> -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Welcome Message -->
     <div id="welcome-step">
-        <h1>👋 Welcome to OS-MV!</h1>
+        <img src="../../LOGO/LOGO_4.jpg" alt="OS-MV Logo" class="app-logo">
+        <h1>Welcome to OS-MV!</h1>
         <p>Hey! It looks like this is your first time using this app.</p>
         <p>We've created an admin account just for you — and <strong>you only</strong>.</p>
-        <p class="warning">⚠️ This is the <strong>only time</strong> these credentials will be shown. Please save them securely!</p>
+
+        <p class="warning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert-icon lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            <span>This is the <strong>only time</strong> these credentials will be shown. Please save them securely!</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert-icon lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </p>
         
         <button id="show-creds-btn">Continue to View Credentials</button>
     </div>
 
     <!-- Admin Credentials -->
     <div id="creds-step" style="display: none;">
-        <h1>🔐 Admin Account Credentials</h1>
-        <p class="warning">Save these now! They will not be shown again.</p>
+        <h1>Admin Account Credentials</h1>
+        <p class="warning">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert-icon lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Save these now! They will not be shown again.
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-triangle-alert-icon lucide-triangle-alert"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        </p>
         
         <div id="credentials">
             <h2>Admin Username:</h2>
@@ -33,16 +43,23 @@
             <p id="admin-recovery">-</p>
         </div>
         
-        <button id="copy-creds">📋 Copy to Clipboard</button>
-        <button id="download-creds">💾 Download as File</button>
+        <button id="copy-creds">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-clipboard"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>
+            <span>Copy to Clipboard</span>
+        </button>
+
+        <button id="download-creds">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-download"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>
+            <span>Download as File</span>
+        </button>
         
         <p id="status"></p>
         
-        <button id="continue-btn">✅ I have saved these credentials — Continue to App</button>
+        <button id="continue-btn">I have saved these credentials — Continue to App</button>
     </div>
 
     <script src="/bip-39.js"></script>
     <script src="/database/db.js"></script>
-    <script src="/admin-dashboard/admin-setup/admin-setup.js"></script>
+    <script src="admin-setup.js"></script>
 </body>
 </html>
