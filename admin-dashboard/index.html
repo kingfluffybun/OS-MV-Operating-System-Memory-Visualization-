@@ -8,7 +8,7 @@
     <script src="../simulator/util/script.js" defer></script>
     <script src="../database/db.js" defer></script>
 </head>
-<body onload="checkAdminAccess()">
+<body onload="initAdminDashboard()">
     <!-- Loader -->
     <div id="loader-wrapper">   
         <div class="loader-content">
@@ -51,6 +51,11 @@
     </section>
 
 <script>
+    async function initAdminDashboard() {
+        checkAdminAccess();
+        await loadUsers();
+    }
+
     window.addEventListener("load", function() {
         const loaderWrapper = document.getElementById("loader-wrapper");
         
@@ -62,6 +67,7 @@
             }, 600);
         }, 1500); 
     });
+
 </script>
 
 </body>

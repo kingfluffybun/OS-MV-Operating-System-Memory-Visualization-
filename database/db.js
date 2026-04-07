@@ -362,6 +362,14 @@ async function login(username, password) {
     if (hasResult && user && user.user_id && user.user_id > 0) {
         if (user.username === username) {
             sessionStorage.setItem('currentUser', JSON.stringify(user));
+
+            const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+            activeSessions[user.user_id] = {
+                username: user.username,
+                lastActivity: Date.now()
+            };
+            localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+
             return {
                 success: true,
                 user: user
@@ -385,39 +393,197 @@ function isLoggedIn() {
 }
 
 function logout(event) {
-    console.log('hi')
     if (event) event.preventDefault();
-    
-    sessionStorage.removeItem('currentUser');
 
     const base = getBasePath();
     window.location.href = base + "index.html";
+
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (currentUser) {
+        const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+        delete activeSessions[currentUser.user_id];
+        localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+    }
+
+    sessionStorage.removeItem('currentUser');
 }
 
 // ========== Admin Panel ==========
-function loadUsers() {
+async function loadUsers() {
     const tableBody = document.getElementById('user-table-body');
-    const db = JSON.parse(localStorage.getItem("OVMS_db_data"));
+    await initDB();
 
-    if (!db || !db.users) {
-        tableBody.innerHTML = `<tr><td colspan="5">No users found</td></tr>`;
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    const currentAdminId = currentUser ? currentUser.user_id : null;
+
+    try {
+        const stmt = db.prepare(`
+            SELECT user_id, username, user_role, created_at, updated_at
+            FROM users ORDER BY created_at DESC;
+        `);
+
+        const users = [];
+        while (stmt.step()) {
+            users.push(stmt.getAsObject());
+        }
+        stmt.free();
+
+        if (users.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No users found</td></tr>`;
+            return;
+        }
+
+        const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+        const now = Date.now();
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
+
+        tableBody.innerHTML = "";
+
+        users.forEach(user => {
+            const isAdmin = user.user_role === 'admin';
+            const isCurrentUser = user.user_id === currentAdminId;
+            const row = document.createElement('tr');
+
+            // determine if user is online
+            const session = activeSessions[user.user_id];
+            const isOnline = false;
+            const lastSeen = 'Never';
+
+            // if (session) {
+            //     const timeSinceActivity = now - session.lastActivity;
+            //     isOnline = timeSinceActivity;
+
+            //     // Format last seen
+            //     const seconds = Math.floor(timeSinceActivity / 1000);
+            //     const minutes = Math.floor(seconds / 60);
+            //     const hours = Math.floor(minutes / 60);
+                
+            //     if (isOnline) {
+            //         lastSeen = 'Active now';
+            //     } else if (minutes < 1) {
+            //         lastSeen = 'Just now';
+            //     } else if (minutes < 60) {
+            //         lastSeen = `${minutes}m ago`;
+            //     } else if (hours < 24) {
+            //         lastSeen = `${hours}h ago`;
+            //     } else {
+            //         lastSeen = formatDate(session.lastActivity);
+            //     }
+            // }
+            
+            const statusClass = isOnline ? 'online' : 'offline';
+            const statusText = isOnline ? 'Online' : 'Offline';
+
+            // action buttons
+            let actionButtons = '';
+            if (isCurrentUser) {
+                actionButtons = `<span style="color: #666; font-style: italic;">Current Admin</span>`;
+            } else {
+                actionButtons = `<button onclick="editUser(${user.user_id})" class="btn-edit">Edit</button>
+                    <button onclick="deleteUser(${user.user_id})" class="btn-delete">Delete</button>`;
+            }
+
+            row.innerHTML = `
+                <td class="username-cell">${escapeHtml(user.username)} ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}</td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td>${formatDate(user.created_at)}</td>
+                <td>${formatDate(user.updated_at)}</td>
+                <td style="text-align: center;">${actionButtons}</td>
+            `;
+
+            tableBody.appendChild(row);
+        });
+    } catch (e) {
+        console.error('Error loading users:', e);
+        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error loading users</td></tr>`;
+    }
+}
+
+// Update user activity (call this periodically or on user actions)
+function updateUserActivity() {
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (!currentUser) return;
+
+    const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+    
+    activeSessions[currentUser.user_id] = {
+        username: currentUser.username,
+        lastActivity: Date.now()
+    };
+
+    localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+}
+
+// Clean up expired sessions
+function cleanupExpiredSessions() {
+    const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+    const now = Date.now();
+    const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+    let hasChanges = false;
+    for (const userId in activeSessions) {
+        if (now - activeSessions[userId].lastActivity > SESSION_TIMEOUT) {
+            delete activeSessions[userId];
+            hasChanges = true;
+        }
     }
 
-    tableBody.innerHTML = "";
+    if (hasChanges) {
+        localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+    }
+}
 
-    db.users.forEach(user => {
-        const row = document.createElement('tr');
-        const isOnline = user.lastSession === "Active Now";
+// Call cleanup on admin dashboard load
+cleanupExpiredSessions();
 
-        row.innerHTML = `
-            <td class="username-cell>${user.username}</td>
-            <td>${formatDate(user.created_at)}</td>
-            <td>
-                < class="badge ${isOnline ? "Online" : "Offline"}">
-                    ${user.lastSession || "Offline"}
-                </
-        `;
-    })
+// make username safe to display
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// format date
+function formatDate(dateString) {
+    const isoString = dateString.replace(' ', 'T');
+    const date = new Date(isoString);
+    
+    return date.toLocaleString({
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Placeholder plng to
+// edit/delete user
+function editUser(userId) {
+    alert (`Edit user with ID: ${userId} - placeholder`);
+}
+
+function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    
+    // prevent self deleting
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (currentUser &&currentUser.user_id === userId) {
+        alert('You cannot delete yourself.');
+        return;
+    }
+    
+    try {
+        const stmt = db.prepare(`DELETE FROM users WHERE user_id = ? AND user_role != ?`); // prevent admin deletion
+        stmt.run([userId, 'admin']);
+        stmt.free();
+        saveDB();
+        loadUsers();
+        alert ('User deleted successfully.');
+    } catch (e) {
+        console.error('Error deleting user:', e);
+        alert ('Error deleting user.');
+    }
 }
 
 // ========== Auto Initizialze Database ==========
