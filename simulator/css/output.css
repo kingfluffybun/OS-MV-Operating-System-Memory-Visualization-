@@ -56,6 +56,8 @@ body {
     flex-direction: column;
     grid-area: sidebar;
     padding: 6vh 20px;
+    box-sizing: border-box;
+    height: 100%;
 }
 #sidebar {
     box-sizing: border-box;
@@ -67,6 +69,8 @@ body {
     text-wrap: nowrap;
     transition: 300ms ease-in-out;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
 }
 #sidebar.close {
     padding: 6vh 5px;
@@ -174,6 +178,8 @@ body {
     height: 100%;
     flex-grow: 1;
     gap: 12px;
+    /* overflow-y: auto; */
+    min-height: 0;
 }
 
 .sidebar-options div a {
