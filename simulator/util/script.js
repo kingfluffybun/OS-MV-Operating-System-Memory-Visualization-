@@ -2,6 +2,7 @@
 // Load sidebar
 document.addEventListener("DOMContentLoaded", () => {
   loadSidebar().then(() => {
+    sidebarLinks();
     showMenu();
     initSidebarFunctions();
     loadCurrentUser();
@@ -17,13 +18,45 @@ async function loadSidebar() {
   }
 
   try {
-    const response = await fetch("../../sidebar/sidebar.html");
+    const response = await fetch("/sidebar/sidebar.html");
     const data = await response.text();
     container.innerHTML = data;
     console.log("Sidebar loaded successfully");
   } catch (error) {
     console.error("Error loading sidebar:", error);
   }
+}
+
+// Basically ginagawan nya ng base path para pag iba ung current path nya, pumupunta parin sya sa tamang link,
+// either dadagdagan ng ../ or ./ (kase need sya relative pathing)
+const getBasePath = () => {
+  const path = window.location.pathname;
+  
+  if (path.includes('/admin-dashboard/')) return '../';
+  if (path.includes('/simulator/algorithm/')) return '../../';
+  if (path.includes('/simulator/')) return '../';
+  return './';
+}
+
+// Ito naman, since nakuha na ung base path (which is ../ or ./). ito ung dudugtong sa url.
+const sidebarLinks = () => {
+  const base = getBasePath();
+
+  const linkMap = [
+    {id: 'menu-dashboard', path: 'simulator/index.html'},
+    {id: 'menu-admin-dashboard', path: 'admin-dashboard/index.html'},
+    {id: 'menu-back-simulator', path: 'simulator/index.html'}, // for admin dashboard
+  ];
+
+  linkMap.forEach(item => {
+    const link = document.getElementById(item.id);
+    if(!link) return;
+
+    const anchor = link.querySelector('a');
+    if (!anchor) return;
+
+    anchor.setAttribute('href', base + item.path);
+  });
 }
 
 // Initialize sidebar functions
@@ -79,48 +112,58 @@ const toggleSubMenu = (button) => {
   button.classList.toggle("rotate");
 };
 
+// Show correct menu
 function showMenu() {
   const currentPath = window.location.pathname;
+  const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+
+  const isAdminUser = currentUser && currentUser.user_role === 'admin';
 
   const Menus = [
     'menu-dashboard',
     'menu-simulation',
     'menu-usermanagement',
-    'menu-back-simulator'
+    'menu-back-simulator',
+    'menu-admin-dashboard'
   ];
 
+  // Hide all menus for now
   Menus.forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.style.display = 'none';
+    if (el) {
+      el.style.display = 'none';
+      el.classList.remove('active');
+    }
   });
 
   // Check which page is user on
-  const isAdmin = currentPath.includes('/admin-dashboard/');
-  const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath === ('/simulator/');
+  const isAdminPage = currentPath.includes('/admin-dashboard/');
   const isSimulator = currentPath.includes('/simulator/algorithm/');
+  const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
 
-  // Show correct menu
-  if (isAdmin) {
-    document.getElementById('menu-usermanagement').style.display = '';
-    document.getElementById('menu-back-simulator').style.display = '';
-    document.getElementById('menu-usermanagement').classList.add('active');
-  } else if (isFrontPage || isSimulator) {
+  // Admin Menu
+  if (isAdminUser) {
+    const adminMenu = document.getElementById('menu-admin-dashboard');
+    if (!isAdminPage) adminMenu.style.display = '';
+
+    if (isAdminPage) {
+      document.getElementById('menu-usermanagement').style.display = '';
+      document.getElementById('menu-usermanagement').classList.add('active');
+      document.getElementById('menu-back-simulator').style.display = '';
+    }
+  }
+
+  // If on simulator page
+  if (!isAdminPage) {
     document.getElementById('menu-dashboard').style.display = '';
     document.getElementById('menu-simulation').style.display = '';
 
     if (isFrontPage) {
       document.getElementById('menu-dashboard').classList.add('active');
-    } else if (isSimulator) {
+    }
+
+    if (isSimulator) {
       document.getElementById('single-mode').classList.add('active');
-
-      const simDiv = document.getElementById('menu-simulation');
-      const dropBtn = simDiv.querySelector('.dropdown-btn');
-      const subMenu = simDiv.querySelector('.sub-menu');
-
-      if (dropBtn && subMenu) {
-        dropBtn.classList.add('rotate');
-        subMenu.classList.add('show');
-      }
     }
   }
 }
@@ -128,11 +171,12 @@ function showMenu() {
 // Display username
 function loadCurrentUser() {
   const stored = JSON.parse(sessionStorage.getItem("currentUser"));
+  const username = document.getElementById("username");
 
   if (stored && stored.username) {
-    document.getElementById("username").textContent = stored.username;
+    username.textContent = stored.username;
   } else {
-    document.getElementById("username").textContent = "Guest";
+    username.textContent = "Guest";
   }
 }
 

@@ -384,8 +384,14 @@ function isLoggedIn() {
     return sessionStorage.getItem('currentUser') !== null;
 }
 
-function logout() {
+function logout(event) {
+    console.log('hi')
+    if (event) event.preventDefault();
+    
     sessionStorage.removeItem('currentUser');
+
+    const base = getBasePath();
+    window.location.href = base + "index.html";
 }
 
 // ========== Admin Panel ==========
