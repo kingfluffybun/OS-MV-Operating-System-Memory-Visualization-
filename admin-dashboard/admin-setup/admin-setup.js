@@ -4,7 +4,7 @@ function initAdminSetup() {
     const credsData = sessionStorage.getItem('tempAdminData');
     
     if (!credsData) {
-        window.location.href = '/';
+        window.location.href = '/index.html';
         return;
     }
 
