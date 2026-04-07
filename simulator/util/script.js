@@ -66,20 +66,6 @@ const toggleSideBar = () => {
   toggleButton.classList.toggle("rotate");
   logo.classList.toggle("hidden");
   logoH1.classList.toggle("hidden");
-
-//   if (!sidebar.classList.contains("close")) {
-//     const subMenu = sidebar.querySelector(".sub-menu");
-//     const dropdownBtn = sidebar.querySelector(".dropdown-btn");
-//     if (subMenu && !subMenu.classList.contains("show")) {
-//       subMenu.classList.add("show");
-//       dropdownBtn.classList.add("rotate");
-//     }
-//   } else {
-//     Array.from(sidebar.getElementsByClassName("show")).forEach((element) => {
-//       element.classList.remove("show");
-//       element.previousElementSibling.classList.remove("rotate");
-//     });
-//   }
 };
 
 const toggleSubMenu = (button) => {
@@ -115,12 +101,12 @@ function showMenu() {
 
   // Show correct menu
   if (isAdmin) {
-    document.getElementById('menu-usermanagement').style.display = 'block';
-    document.getElementById('menu-back-simulator').style.display = 'block';
+    document.getElementById('menu-usermanagement').style.display = '';
+    document.getElementById('menu-back-simulator').style.display = '';
     document.getElementById('menu-usermanagement').classList.add('active');
   } else if (isFrontPage || isSimulator) {
-    document.getElementById('menu-dashboard').style.display = 'block';
-    document.getElementById('menu-simulation').style.display = 'block';
+    document.getElementById('menu-dashboard').style.display = '';
+    document.getElementById('menu-simulation').style.display = '';
 
     if (isFrontPage) {
       document.getElementById('menu-dashboard').classList.add('active');
