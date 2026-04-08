@@ -156,8 +156,6 @@ function showMenu() {
       document.getElementById('menu-usermanagement').style.display = '';
       document.getElementById('menu-usermanagement').classList.add('active');
       document.getElementById('menu-back-simulator').style.display = '';
-    } else {
-      document.getElementById('menu-admin-dashboard').style.display = 'none';
     }
   }
 
