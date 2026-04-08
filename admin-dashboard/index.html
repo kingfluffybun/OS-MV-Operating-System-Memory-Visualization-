@@ -9,6 +9,7 @@
     <script src="../database/db.js" defer></script>
 </head>
 <body onload="initAdminDashboard()">
+
     <!-- Loader -->
     <div id="loader-wrapper">   
         <div class="loader-content">
@@ -49,26 +50,6 @@
             </div>
         </div>
     </section>
-
-<script>
-    async function initAdminDashboard() {
-        checkAdminAccess();
-        await loadUsers();
-    }
-
-    window.addEventListener("load", function() {
-        const loaderWrapper = document.getElementById("loader-wrapper");
-        
-        setTimeout(() => {
-            loaderWrapper.classList.add("loaded");
-            
-            setTimeout(() => {
-                loaderWrapper.style.display = "none";
-            }, 600);
-        }, 1500); 
-    });
-
-</script>
 
 </body>
 </html>

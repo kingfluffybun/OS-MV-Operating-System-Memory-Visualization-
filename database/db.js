@@ -362,6 +362,15 @@ async function login(username, password) {
     if (hasResult && user && user.user_id && user.user_id > 0) {
         if (user.username === username) {
             sessionStorage.setItem('currentUser', JSON.stringify(user));
+
+            // Track activity
+            const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+            activeSession[user.user_id] = {
+                username: user.username,
+                lastActivity: Date.now()
+            };
+            localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+
             return {
                 success: true,
                 user: user
@@ -386,23 +395,47 @@ function isLoggedIn() {
 
 function logout(event) {
     if (event) event.preventDefault();
-
     const base = getBasePath();
     window.location.href = base + "index.html";
 
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    // if (currentUser) {
-    //     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-    //     delete activeSessions[currentUser.user_id];
-    //     localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-    // }
+    if (currentUser) {
+        const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        delete activeSession[currentUser.user_id];
+        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+    }
 
     sessionStorage.removeItem('currentUser');
 }
 
 // ========== Admin Panel ==========
+async function initAdminDashboard() {
+        checkAdminAccess();
+    }
+
+    window.addEventListener("load", async function() {
+        const loaderWrapper = document.getElementById("loader-wrapper");
+        
+        setTimeout(() => {
+            loaderWrapper.classList.add("loaded");
+            
+            setTimeout(() => {
+                loaderWrapper.style.display = "none";
+            }, 600);
+        }, 1500);
+        
+        await loadUsers();
+    });
+
+// Load users
 async function loadUsers() {
     const tableBody = document.getElementById('user-table-body');
+
+    // if (!tableBody) {
+    //     console.error('user-table-body element not found');
+    //     return;
+    // }
+
     await initDB();
 
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -411,137 +444,223 @@ async function loadUsers() {
     try {
         const stmt = db.prepare(`
             SELECT user_id, username, user_role, created_at, updated_at
-            FROM users ORDER BY created_at DESC;
+            FROM users ORDER BY user_role DESC, created_at DESC;
         `);
-
         const users = [];
         while (stmt.step()) {
             users.push(stmt.getAsObject());
         }
         stmt.free();
 
+        // Check if there are any users
         if (users.length === 0) {
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center;">No users found</td></tr>`;
+            tableBody.innerHTML = '<tr><td colspan="5" class="text-center">No users found.</td></tr>';
             return;
         }
 
-        tableBody.innerHTML = "";
+        const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        const now = Date.now();
+        const SESSION_TIMEOUT = 5 * 60 * 1000;
 
-        users.forEach(user => {
+        tableBody.innerHTML = '';
+
+        users.forEach(function(user) {
             const isAdmin = user.user_role === 'admin';
             const isCurrentUser = user.user_id === currentAdminId;
             const row = document.createElement('tr');
 
-            // action buttons
-            let actionButtons = '';
-            if (isCurrentUser) {
-                actionButtons = `<span style="color: #666; font-style: italic;">Current Admin</span>`;
+            const session = activeSession[user.user_id];
+            let isOnline = false;
+            let lastActivity = '';
+
+            if (session) {
+                const timeSince = now - session.lastActivity;
+                isOnline = timeSince < SESSION_TIMEOUT;
+
+                const minutes = Math.floor(timeSince / 60000);
+                const hours = Math.floor(minutes / 60);
+
+                if (isOnline) {
+                    lastActivity = 'Online';
+                } else if (minutes < 1) {
+                    lastActivity = 'Just now';
+                } else if (minutes < 60) {
+                    lastActivity = minutes + 'm ago';
+                } else if (hours < 24) {
+                    lastActivity = hours + 'h ago';
+                } else {
+                    lastActivity = formatDate(user.updated_at);
+                }
             } else {
-                actionButtons = `<button onclick="editUser(${user.user_id})" class="btn-edit">Edit</button>
-                    <button onclick="deleteUser(${user.user_id})" class="btn-delete">Delete</button>`;
+                lastActivity = formatDate(user.updated_at);
             }
 
-            row.innerHTML = `
-                <td class="username-cell">${escapeHtml(user.username)} ${isAdmin ? '<span class="admin-badge">ADMIN</span>' : ''}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>${formatDate(user.created_at)}</td>
-                <td>${formatDate(user.updated_at)}</td>
-                <td style="text-align: center;">${actionButtons}</td>
-            `;
+            const statusClass = isOnline ? 'online' : 'offline';
+            const statusText = isOnline ? 'Online' : 'Offline';
+
+            let actionButtons = '';
+            if (isCurrentUser) {
+                actionButtons = `<span style="color: #00c30d; font-style: italic;">Current Admin</span>`
+            } else {
+                const roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + (isAdmin ? 'user' : 'admin') + '\')" class="btn-role">' + (isAdmin ? 'Demote' : 'Promote') + '</button>';
+                const deleteBtn = '<button onclick="deleteUser(' + user.user_id + ')" class="btn-delete">Delete</button>';
+                actionButtons = roleBtn + deleteBtn;
+            }
+
+            row.innerHTML = 
+                // Username with admin badge if admin ang user
+                '<td class="username-cell">' + escapeHtml(user.username) + (isAdmin ? ' <span class="admin-badge">ADMIN</span>' : '') + '</td>' +
+                // Status (Online/Offline)
+                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                // Created At
+                '<td>' + formatDate(user.created_at) + '</td>' +
+                // Last Activity
+                '<td>' + lastActivity + '</td>' +
+                // Actions
+                '<td style="text-align: center;">' + actionButtons + '</td>';
 
             tableBody.appendChild(row);
         });
     } catch (e) {
-        console.error('Error loading users:', e);
-        tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: red;">Error loading users</td></tr>`;
+        tableBody.innerHTML = "<tr><td colspan='5'>Error loading users</td></tr>";
     }
-}
-
-// Update user activity (call this periodically or on user actions)
-// function updateUserActivity() {
-//     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-//     if (!currentUser) return;
-
-//     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-    
-//     activeSessions[currentUser.user_id] = {
-//         username: currentUser.username,
-//         lastActivity: Date.now()
-//     };
-
-//     localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-// }
-
-// Clean up expired sessions
-// function cleanupExpiredSessions() {
-//     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-//     const now = Date.now();
-//     const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
-
-//     let hasChanges = false;
-//     for (const userId in activeSessions) {
-//         if (now - activeSessions[userId].lastActivity > SESSION_TIMEOUT) {
-//             delete activeSessions[userId];
-//             hasChanges = true;
-//         }
-//     }
-
-//     if (hasChanges) {
-//         localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-//     }
-// }
-
-// // Call cleanup on admin dashboard load
-// cleanupExpiredSessions();
-
-// make username safe to display
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// format date
-function formatDate(dateString) {
-    const isoString = dateString.replace(' ', 'T');
-    const date = new Date(isoString);
-    
-    return date.toLocaleString({
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-}
-
-// Placeholder plng to
-// edit/delete user
-function editUser(userId) {
-    alert (`Edit user with ID: ${userId} - placeholder`);
 }
 
 function deleteUser(userId) {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-    
-    // prevent self deleting
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    if (currentUser &&currentUser.user_id === userId) {
-        alert('You cannot delete yourself.');
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (currentUser && currentUser.user_id === userId) {
+        alert('You cannot delete your own account while logged in.');
         return;
     }
-    
+
     try {
-        const stmt = db.prepare(`DELETE FROM users WHERE user_id = ? AND user_role != ?`); // prevent admin deletion
-        stmt.run([userId, 'admin']);
+        let stmt = db.prepare(`DELETE FROM users WHERE user_id = ? AND user_id != ?`);
+        stmt.run([userId, currentUser.user_id]);
         stmt.free();
         saveDB();
+
+        let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        delete activeSession[userId];
+        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+
         loadUsers();
         alert ('User deleted successfully.');
     } catch (e) {
         console.error('Error deleting user:', e);
-        alert ('Error deleting user.');
+        alert('Failed to delete user');
     }
+}
+
+function updateUserActivity(userId) {
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+
+    activeSession[currentUser.user_id] = {
+        username: currentUser.username,
+        lastActivity: Date.now()
+    };
+
+    localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+}
+
+function changeRole(userId, newRole) {
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    if (currentUser && currentUser.user_id === userId) {
+        alert('You cannot change your own role while logged in.');
+        return;
+    }
+
+    let action = newRole === 'admin' ? 'promote' : 'demote';
+    if (!confirm('Are you sure you want to ' + action + ' this user?')) return;
+
+    try {
+        let stmt = db.prepare(`
+            UPDATE users SET user_role = ?, updated_at = datetime(\'now\') WHERE user_id = ? AND user_id != ?
+        `);
+        stmt.run([newRole, userId, currentUser.user_id]);
+        stmt.free();
+        saveDB();
+        loadUsers();
+        alert('User role updated successfully.');
+    } catch (e) {
+        alert('Failed to update user role');
+    }
+}
+
+function cleanupSessions() {
+    let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+    let now = Date.now();
+    let SESSION_TIMEOUT = 5 * 60 * 1000;
+
+    let hasChanges = false;
+    for (let userId in activeSession) {
+        if (now - activeSession[userId].lastActivity > SESSION_TIMEOUT) {
+            delete activeSession[userId];
+            hasChanges = true;
+        }
+    }
+
+    if (hasChanges) {
+        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+    }
+}
+
+function encryptData(text) {
+    if (!text) return '';
+    const key = 'OSMV_session_key' + (navigator.userAgent || '').slice(0, 10);
+    let result = '';
+    for (let i = 0; i < text.length; i++) {
+        result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+    }
+    return btoa(result);
+}
+
+function decryptData(encrypted) {
+    if (!encrypted) return '';
+    try {
+        const key = 'OSMV_session_key' + (navigator.userAgent || '').slice(0, 10);
+        const text = atob(encrypted);
+        let result = '';
+        for (let i = 0; i < text.length; i++) {
+            result += String.fromCharCode(text.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+        }
+        return result;
+    } catch (e) {
+        return '';
+    }
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'N/A';
+
+    let isoString = dateString.toString().replace(' ', 'T');
+    let date = new Date(isoString);
+
+    if (isNaN(date.getTime())) {
+        let timestamp = Number(dateString);
+        if (!isNaN(timestamp)) {
+            date = new Date(timestamp);
+        } else {
+            return 'Invalid date';
+        }
+    }
+
+    let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    let month = months[date.getMonth()];
+    let day = date.getDate();
+    let year = date.getFullYear();
+    let hours = date.getHours().toString().padStart(2, '0');
+    let minutes = date.getMinutes().toString().padStart(2, '0');
+
+    return month + ' ' + day + ', ' + year + ' ' + hours + ':' + minutes;
+}
+
+function escapeHtml(text) {
+    let div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // ========== Auto Initizialze Database ==========
