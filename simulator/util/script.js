@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadSidebar() {
-  console.log("loadSidebar function called");
+  // console.log("loadSidebar function called");
   const container = document.getElementById("sidebar-container");
 
   if (!container) {
@@ -19,7 +19,7 @@ async function loadSidebar() {
   }
 
   try {
-    const response = await fetch("/sidebar/sidebar.html");
+    const response = await fetch("../../sidebar/sidebar.html");
     const data = await response.text();
     container.innerHTML = data;
     console.log("Sidebar loaded successfully");
@@ -31,7 +31,7 @@ async function loadSidebar() {
 // Basically ginagawan nya ng base path para pag iba ung current path nya, pumupunta parin sya sa tamang link,
 // either dadagdagan ng ../ or ./ (kase need sya relative pathing)
 const getBasePath = () => {
-  console.log("getBasePath function called");
+  // console.log("getBasePath function called");
   const path = window.location.pathname;
   
   if (path.includes('/admin-dashboard/')) return '../';
@@ -42,7 +42,7 @@ const getBasePath = () => {
 
 // Ito naman, since nakuha na ung base path (which is ../ or ./). ito ung dudugtong sa url.
 const sidebarLinks = () => {
-  console.log("sidebarLinks function called");
+  // console.log("sidebarLinks function called");
   const base = getBasePath();
 
   const linkMap = [
@@ -64,7 +64,7 @@ const sidebarLinks = () => {
 
 // Initialize sidebar functions
 function initSidebarFunctions() {
-  console.log("initSidebarFunctions function called");
+  // console.log("initSidebarFunctions function called");
   const toggleButton = document.getElementById("toggle-btn");
   const sidebar = document.getElementById("sidebar");
   const logo = document.getElementById("logo");
@@ -94,7 +94,7 @@ function initSidebarFunctions() {
 }
 
 const toggleSideBar = () => {
-  console.log("toggleSideBar function called");
+  // console.log("toggleSideBar function called");
   const sidebar = window.sidebar || document.getElementById("sidebar");
   const toggleButton = window.toggleButton || document.getElementById("toggle-btn");
   const logo = window.logo || document.getElementById("logo");
@@ -156,6 +156,8 @@ function showMenu() {
       document.getElementById('menu-usermanagement').style.display = '';
       document.getElementById('menu-usermanagement').classList.add('active');
       document.getElementById('menu-back-simulator').style.display = '';
+    } else {
+      document.getElementById('menu-admin-dashboard').style.display = 'none';
     }
   }
 
