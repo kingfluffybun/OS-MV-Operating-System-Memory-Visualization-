@@ -362,14 +362,6 @@ async function login(username, password) {
     if (hasResult && user && user.user_id && user.user_id > 0) {
         if (user.username === username) {
             sessionStorage.setItem('currentUser', JSON.stringify(user));
-
-            const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-            activeSessions[user.user_id] = {
-                username: user.username,
-                lastActivity: Date.now()
-            };
-            localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-
             return {
                 success: true,
                 user: user
@@ -399,11 +391,11 @@ function logout(event) {
     window.location.href = base + "index.html";
 
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    if (currentUser) {
-        const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-        delete activeSessions[currentUser.user_id];
-        localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-    }
+    // if (currentUser) {
+    //     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+    //     delete activeSessions[currentUser.user_id];
+    //     localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+    // }
 
     sessionStorage.removeItem('currentUser');
 }
@@ -433,46 +425,12 @@ async function loadUsers() {
             return;
         }
 
-        const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-        const now = Date.now();
-        const SESSION_TIMEOUT = 5 * 60 * 1000;
-
         tableBody.innerHTML = "";
 
         users.forEach(user => {
             const isAdmin = user.user_role === 'admin';
             const isCurrentUser = user.user_id === currentAdminId;
             const row = document.createElement('tr');
-
-            // determine if user is online
-            const session = activeSessions[user.user_id];
-            const isOnline = false;
-            const lastSeen = 'Never';
-
-            // if (session) {
-            //     const timeSinceActivity = now - session.lastActivity;
-            //     isOnline = timeSinceActivity;
-
-            //     // Format last seen
-            //     const seconds = Math.floor(timeSinceActivity / 1000);
-            //     const minutes = Math.floor(seconds / 60);
-            //     const hours = Math.floor(minutes / 60);
-                
-            //     if (isOnline) {
-            //         lastSeen = 'Active now';
-            //     } else if (minutes < 1) {
-            //         lastSeen = 'Just now';
-            //     } else if (minutes < 60) {
-            //         lastSeen = `${minutes}m ago`;
-            //     } else if (hours < 24) {
-            //         lastSeen = `${hours}h ago`;
-            //     } else {
-            //         lastSeen = formatDate(session.lastActivity);
-            //     }
-            // }
-            
-            const statusClass = isOnline ? 'online' : 'offline';
-            const statusText = isOnline ? 'Online' : 'Offline';
 
             // action buttons
             let actionButtons = '';
@@ -500,41 +458,41 @@ async function loadUsers() {
 }
 
 // Update user activity (call this periodically or on user actions)
-function updateUserActivity() {
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    if (!currentUser) return;
+// function updateUserActivity() {
+//     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+//     if (!currentUser) return;
 
-    const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+//     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
     
-    activeSessions[currentUser.user_id] = {
-        username: currentUser.username,
-        lastActivity: Date.now()
-    };
+//     activeSessions[currentUser.user_id] = {
+//         username: currentUser.username,
+//         lastActivity: Date.now()
+//     };
 
-    localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-}
+//     localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+// }
 
 // Clean up expired sessions
-function cleanupExpiredSessions() {
-    const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
-    const now = Date.now();
-    const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+// function cleanupExpiredSessions() {
+//     const activeSessions = JSON.parse(localStorage.getItem('activeSessions') || '{}');
+//     const now = Date.now();
+//     const SESSION_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
-    let hasChanges = false;
-    for (const userId in activeSessions) {
-        if (now - activeSessions[userId].lastActivity > SESSION_TIMEOUT) {
-            delete activeSessions[userId];
-            hasChanges = true;
-        }
-    }
+//     let hasChanges = false;
+//     for (const userId in activeSessions) {
+//         if (now - activeSessions[userId].lastActivity > SESSION_TIMEOUT) {
+//             delete activeSessions[userId];
+//             hasChanges = true;
+//         }
+//     }
 
-    if (hasChanges) {
-        localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
-    }
-}
+//     if (hasChanges) {
+//         localStorage.setItem('activeSessions', JSON.stringify(activeSessions));
+//     }
+// }
 
-// Call cleanup on admin dashboard load
-cleanupExpiredSessions();
+// // Call cleanup on admin dashboard load
+// cleanupExpiredSessions();
 
 // make username safe to display
 function escapeHtml(text) {

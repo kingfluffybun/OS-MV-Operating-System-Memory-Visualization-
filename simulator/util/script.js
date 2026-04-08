@@ -10,6 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 async function loadSidebar() {
+  console.log("loadSidebar function called");
   const container = document.getElementById("sidebar-container");
 
   if (!container) {
@@ -30,6 +31,7 @@ async function loadSidebar() {
 // Basically ginagawan nya ng base path para pag iba ung current path nya, pumupunta parin sya sa tamang link,
 // either dadagdagan ng ../ or ./ (kase need sya relative pathing)
 const getBasePath = () => {
+  console.log("getBasePath function called");
   const path = window.location.pathname;
   
   if (path.includes('/admin-dashboard/')) return '../';
@@ -40,6 +42,7 @@ const getBasePath = () => {
 
 // Ito naman, since nakuha na ung base path (which is ../ or ./). ito ung dudugtong sa url.
 const sidebarLinks = () => {
+  console.log("sidebarLinks function called");
   const base = getBasePath();
 
   const linkMap = [
@@ -61,6 +64,7 @@ const sidebarLinks = () => {
 
 // Initialize sidebar functions
 function initSidebarFunctions() {
+  console.log("initSidebarFunctions function called");
   const toggleButton = document.getElementById("toggle-btn");
   const sidebar = document.getElementById("sidebar");
   const logo = document.getElementById("logo");
@@ -90,6 +94,7 @@ function initSidebarFunctions() {
 }
 
 const toggleSideBar = () => {
+  console.log("toggleSideBar function called");
   const sidebar = window.sidebar || document.getElementById("sidebar");
   const toggleButton = window.toggleButton || document.getElementById("toggle-btn");
   const logo = window.logo || document.getElementById("logo");
@@ -102,6 +107,7 @@ const toggleSideBar = () => {
 };
 
 const toggleSubMenu = (button) => {
+  console.log("toggleSubMenu function called");
   const sidebar = window.sidebar || document.getElementById("sidebar");
 
   if (sidebar.classList.contains("close")) {
