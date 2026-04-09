@@ -176,7 +176,7 @@ const memorySimulator = {
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
         const leftover = block.size - processSize;
-        const displayBlockId = block.parentId || block.id;
+        const displayBlockId = block.id;
         block.size = processSize;
         block.status = "Occupied";
 
@@ -188,7 +188,7 @@ const memorySimulator = {
             size: leftover,
             status: "Free",
             next: block.next,
-            parentId: displayBlockId,
+            parentId: block.id,
           };
         }
 
@@ -215,7 +215,7 @@ const memorySimulator = {
       for (let block = compactedHead; block; block = block.next) {
         if (block.status === "Free" && processSize <= block.size) {
           const leftover = block.size - processSize;
-          const displayBlockId = block.parentId || block.id;
+          const displayBlockId = block.id;
           block.size = processSize;
           block.status = "Occupied";
 
@@ -227,7 +227,7 @@ const memorySimulator = {
               size: leftover,
               status: "Free",
               next: block.next,
-              parentId: displayBlockId,
+              parentId: block.id,
             };
           }
 
