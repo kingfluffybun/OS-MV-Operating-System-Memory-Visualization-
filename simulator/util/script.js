@@ -270,7 +270,7 @@ const isDynamicPartitionMode = () =>
   document.body.dataset.partitionMode === "dynamic";
 
 const isPagingMode = () =>
-  !!document.querySelector(".main-grid.paging") ||
+  !!document.querySelector(".main-grid paging") ||
   window.location.pathname.endsWith("simulation-Paging.html");
 
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
@@ -1814,7 +1814,6 @@ if (simulationContainer) {
 }
 
 function startSimulation(event) {
-  // 1. Stop the browser from refreshing/changing the URL
   event.preventDefault();
 
   const algo = document.querySelector('input[name="algo"]:checked');
@@ -1824,37 +1823,83 @@ function startSimulation(event) {
   }
 
   let algoWhat = algo.value;
-
   sessionStorage.setItem('selectedAlgo', algo.value);
 
   // Check if dynamic selected
   const isDynamic = document.querySelector('.toggle-partition input').checked;
-  sessionStorage.setItem('selectedPartition', isDynamic ? 'dynamic': 'fixed');
+  sessionStorage.setItem('selectedPartition', isDynamic ? "dynamic" : "fixed");
+
+  if (algoWhat === "Paging") {
+    sessionStorage.setItem('selectedPartition', "paging");
+  }
   
   const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
 
-  if (["first-fit", "next-fit", "best-fit", "worst-fit"].includes(algoWhat)) {
+  if (["first-fit", "next-fit", "best-fit", "worst-fit"].includes(algoWhat.toLowerCase())) {
     window.location.href = `algorithm/index.html?algorithm=${algoParam}`;
   } else {
     switch (algoWhat) {
-        case "Paging": window.location.href = `algorithm/simulation-Paging.html`; break;
-        case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html`; break;
+      case "Paging": window.location.href = `algorithm/index.html?algorithm=paging`;
+      break;
     }
   }
-
-  
-}
-
-function hub() {
-  sessionStorage.removeItem('selectedAlgo');
-  sessionStorage.removeItem('selectedPartition');
 }
 
 function simulatorLoad() {
-  const selectedAlgo = sessionStorage.getItem('selectedAlgo');
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlAlgo = urlParams.get('algo');
+  const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
   const selectedPartition = sessionStorage.getItem('selectedPartition');
+  // const algoDescription = document.getElementById('algo-description');
+  // let scriptSrc = "";
+
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+
+  if (standardView) standardView.style.display = 'none';
+  if (pagingView) pagingView.style.display = 'none';
+
+  if (selectedAlgo === "Paging") {
+    if (pagingView) pagingView.style.display = 'grid';
+    loadPagingScript();
+  } else {
+    if (standardView) standardView.style.display = 'grid';
+    loadDefaultScript(selectedAlgo, selectedPartition);
+  }
+}
+
+function loadPagingScript(callback) {
+  if (window.pagingScriptLoaded) {
+    if (callback) callback();
+    return;
+  };
+
+  let loadedCount = 0;
+  const checkLoaded = () => {
+    loadedCount++;
+    if (loadedCount === 2) {
+      window.pagingScriptLoaded = true;
+      if (callback) callback();
+    }
+  }
+
+  const script1 = document.createElement('script');
+  script1.src = "../util/algos/paging.js";
+  script1.onload = checkLoaded;
+
+  const script2 = document.createElement('script');
+  script2.src = "../util/pagingUI.js";
+  script2.onload = checkLoaded;
+
+  document.head.appendChild(script1);
+  document.head.appendChild(script2);
+
+  // window.pagingScriptLoaded = true;
+}
+
+function loadDefaultScript(selectedAlgo, selectedPartition) {
   const algoDescription = document.getElementById('algo-description');
   let scriptSrc = "";
 
@@ -1898,10 +1943,18 @@ function simulatorLoad() {
       scriptSrc = "";
   }
 
-  const script = document.createElement('script');
-  script.src = scriptSrc;
-  script.defer = true;
-  document.head.appendChild(script);
+  if (scriptSrc && !window.defaultLoaded) {
+    const script = document.createElement('script');
+    script.src = scriptSrc;
+    script.defer = true;
+    document.head.appendChild(script);
+    window.defaultLoaded = true;
+  }
+}
+
+function hub() {
+  sessionStorage.removeItem('selectedAlgo');
+  sessionStorage.removeItem('selectedPartition');
 }
 
 // const applyActiveStyles = () => {
