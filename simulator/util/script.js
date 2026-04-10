@@ -1,122 +1,31 @@
-// ========== SIDEBAR ==========
-// Load sidebar
-document.addEventListener("DOMContentLoaded", () => {
-  loadSidebar().then(() => {
-    sidebarLinks();
-    showMenu();
-    initSidebarFunctions();
-    loadCurrentUser();
-  });
-});
-
-async function loadSidebar() {
-  // console.log("loadSidebar function called");
-  const container = document.getElementById("sidebar-container");
-
-  if (!container) {
-    console.error("Sidebar container not found");
+(function loadUtilityScripts() {
+  const currentScript = document.currentScript;
+  if (!currentScript) {
     return;
   }
 
-  try {
-    const response = await fetch("../../sidebar/sidebar.html");
-    const data = await response.text();
-    container.innerHTML = data;
-    console.log("Sidebar loaded successfully");
-  } catch (error) {
-    console.error("Error loading sidebar:", error);
-  }
-}
-
-// Basically ginagawan nya ng base path para pag iba ung current path nya, pumupunta parin sya sa tamang link,
-// either dadagdagan ng ../ or ./ (kase need sya relative pathing)
-const getBasePath = () => {
-  // console.log("getBasePath function called");
-  const path = window.location.pathname;
-  
-  if (path.includes('/admin-dashboard/')) return '../';
-  if (path.includes('/simulator/algorithm/')) return '../../';
-  if (path.includes('/simulator/')) return '../';
-  return './';
-}
-
-// Ito naman, since nakuha na ung base path (which is ../ or ./). ito ung dudugtong sa url.
-const sidebarLinks = () => {
-  // console.log("sidebarLinks function called");
-  const base = getBasePath();
-
-  const linkMap = [
-    {id: 'menu-dashboard', path: 'simulator/index.html'},
-    {id: 'menu-admin-dashboard', path: 'admin-dashboard/index.html'},
-    {id: 'menu-back-simulator', path: 'simulator/index.html'}, // for admin dashboard
+  const scriptSrc = currentScript.src;
+  const scriptDir = scriptSrc.substring(0, scriptSrc.lastIndexOf('/') + 1);
+  const utilityScripts = [
+    'sidebarFunctions.js',
+    'blockFunctions.js',
+    'processFunctions.js',
+    'uiFunctions.js',
   ];
 
-  linkMap.forEach(item => {
-    const link = document.getElementById(item.id);
-    if(!link) return;
+  utilityScripts.forEach((fileName) => {
+    const scriptUrl = scriptDir + fileName;
+    if (document.querySelector(`script[src="${scriptUrl}"]`)) {
+      return;
+    }
 
-    const anchor = link.querySelector('a');
-    if (!anchor) return;
-
-    anchor.setAttribute('href', base + item.path);
+    const script = document.createElement('script');
+    script.src = scriptUrl;
+    script.defer = true;
+    script.async = false;
+    document.head.appendChild(script);
   });
-}
-
-// Initialize sidebar functions
-function initSidebarFunctions() {
-  // console.log("initSidebarFunctions function called");
-  const toggleButton = document.getElementById("toggle-btn");
-  const sidebar = document.getElementById("sidebar");
-  const logo = document.getElementById("logo");
-  const logoH1 = document.getElementById("h1");
-
-  if (!sidebar) {
-    console.error("Sidebar not found");
-    return;
-  }
-
-  // Store elements in the global scope
-  window.sidebar = sidebar;
-  window.toggleButton = toggleButton;
-  window.logo = logo;
-  window.logoH1 = logoH1;
-
-  console.log("Sidebar elements found: ", {
-    toggleButton: !!toggleButton,
-    sidebar: !!sidebar,
-    logo: !!logo,
-    logoH1: !!logoH1
-  });
-
-  if (toggleButton) {
-    toggleButton.addEventListener("click", toggleSideBar);
-  }
-}
-
-const toggleSideBar = () => {
-  // console.log("toggleSideBar function called");
-  const sidebar = window.sidebar || document.getElementById("sidebar");
-  const toggleButton = window.toggleButton || document.getElementById("toggle-btn");
-  const logo = window.logo || document.getElementById("logo");
-  const logoH1 = window.logoH1 || document.getElementById("h1");
-
-  sidebar.classList.toggle("close");
-  toggleButton.classList.toggle("rotate");
-  logo.classList.toggle("hidden");
-  logoH1.classList.toggle("hidden");
-};
-
-const toggleSubMenu = (button) => {
-  console.log("toggleSubMenu function called");
-  const sidebar = window.sidebar || document.getElementById("sidebar");
-
-  if (sidebar.classList.contains("close")) {
-    toggleSideBar();
-  }
-
-  button.nextElementSibling.classList.toggle("show");
-  button.classList.toggle("rotate");
-};
+})();
 
 // Show correct menu
 function showMenu() {
@@ -186,78 +95,6 @@ function loadCurrentUser() {
   }
 }
 
-const processColors = [
-  { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
-  { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
-  { bg: "#FDFFB6", border: "#BEBF88" }, // Cream
-  { bg: "#CAFFBF", border: "#98BF8F" }, // Tea Green
-  { bg: "#9BF6FF", border: "#7DC6CE" }, // Electric Aqua
-  { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
-  { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
-  { bg: "#FFC6FF", border: "#BF94BF" }, // Mavue
-];
-
-const processContainer = document.querySelector(".process-container");
-let processIdCounter = processContainer
-  ? processContainer.querySelectorAll(".process").length + 1
-  : 1;
-
-// Simulation state
-let currentStep = 0;
-let isPlaying = false;
-let speed = 1;
-
-const scrollDown = () => {
-  if (processContainer) {
-    processContainer.scrollTo({
-      top: processContainer.scrollHeight,
-      behavior: "smooth",
-    });
-  }
-};
-
-const highlightCurrentProcess = () => {
-  document
-    .querySelectorAll(".process")
-    .forEach((p) => p.classList.remove("current"));
-  const processes = document.querySelectorAll(".process");
-  if (currentStep < processes.length) {
-    const activeProcess = processes[currentStep];
-    activeProcess.classList.add("current");
-    activeProcess.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "start",
-    });
-  }
-};
-
-const createProcessElement = (id, sizeKb) => {
-  const process = document.createElement("div");
-  process.className = "process";
-  process.id = `process-${id}`;
-
-  const colorIndex = (id - 1) % processColors.length;
-  const colorPair = processColors[colorIndex];
-  process.setAttribute("data-bg", colorPair.bg);
-  process.setAttribute("data-border", colorPair.border);
-  process.style.backgroundColor = colorPair.bg;
-  process.style.borderBottomColor = colorPair.border;
-
-  process.innerHTML = `
-        <div class="process-content">
-            <p>Process ${id}</p>
-            <p>${sizeKb}</p>
-            <p>&nbsp;KB</p>
-        </div>
-        <div class="process-action">
-            <button type="button" class="edit-process-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
-            <button type="button" class="delete-process-btn"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-        </div>
-    `;
-  return process;
-};
-
 const simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
   document.querySelector(".simulation .container") ||
@@ -278,190 +115,7 @@ function isPagingMode() {
   const urlAlgo = urlParams.get("algo");
 
   return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
-
-  // if (pagingView) {
-  //   const display = window.getComputedStyle(pagingView).display;
-  //   if (display === "grid" || display === "block") {
-  //     return true;
-  //   }
-  // }
-
-  // const selectedAlgo = sessionStorage.getItem("selected-algo");
-  // if (selectedAlgo === "paging") {
-  //   return true;
-  // }
-
-  // const urlParams = new URLSearchParams(window.location.search);
-  // if (urlParams.get("algo") === "paging") {
-  //   return true;
-  // }
-
-  // return false;
 }
-
-// const isPagingMode = () =>
-//   !!document.querySelector(".main-grid paging") ||
-//   window.location.pathname.endsWith("simulation-Paging.html");
-
-/** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
-const disableMemoryBlockControls = () => {
-  if (!simulationContainer) return;
-  simulationContainer
-    .querySelectorAll(".block .process-action")
-    .forEach((action) => {
-      action.style.display = "none";
-    });
-  simulationContainer
-    .querySelectorAll(".block .edit-block-btn")
-    .forEach((btn) => {
-      btn.disabled = true;
-    });
-  simulationContainer
-    .querySelectorAll(".block .delete-block-btn")
-    .forEach((btn) => {
-      btn.disabled = true;
-    });
-};
-
-const updateTotalMemory = () => {
-  const blocks = simulationContainer
-    ? simulationContainer.querySelectorAll(".block h2")
-    : [];
-  const total = Array.from(blocks).reduce((sum, sizeElement) => {
-    const parsed = parseInt(sizeElement.textContent, 10);
-    return sum + (Number.isNaN(parsed) ? 0 : parsed);
-  }, 0);
-  if (totalMemoryValue) {
-    totalMemoryValue.textContent = `${total} KB`;
-  }
-};
-
-const renumberBlocks = () => {
-  const blocks = simulationContainer
-    ? simulationContainer.querySelectorAll(".block")
-    : [];
-  let blockNumber = 1;
-  blocks.forEach((block) => {
-    const isSplitFree = block.classList.contains("block--split-free");
-    const label = block.querySelector("p");
-    if (isSplitFree) {
-      if (label) label.textContent = "";
-      block.dataset.partitionLabel = "";
-      return;
-    }
-    if (label) {
-      label.textContent = `Block ${blockNumber}`;
-    }
-    block.id = `block-${blockNumber}`;
-    block.dataset.partitionLabel = String(blockNumber);
-    blockNumber++;
-  });
-};
-
-const renumberProcesses = () => {
-  const processes = processContainer
-    ? processContainer.querySelectorAll(".process")
-    : [];
-  processes.forEach((process, index) => {
-    const label = process.querySelector(".process-content p:first-child");
-    const newId = index + 1;
-    if (label) {
-      label.textContent = `Process ${index + 1}`;
-    }
-    process.id = `process-${newId}`;
-
-    const colorIndex = index % processColors.length;
-    const colorPair = processColors[colorIndex];
-
-    process.setAttribute("data-bg", colorPair.bg);
-    process.setAttribute("data-border", colorPair.border);
-    process.style.backgroundColor = colorPair.bg;
-    process.style.borderBottomColor = colorPair.border;
-  });
-};
-
-const createBlockElement = (id, sizeKb, options = {}) => {
-  const partitionLabel =
-    options.partitionLabel != null ? options.partitionLabel : id;
-  const block = document.createElement("div");
-  block.className = options.isSplitFree ? "block block--split-free" : "block";
-  block.id = `block-${id}`;
-  block.dataset.partitionLabel = options.isSplitFree
-    ? ""
-    : String(partitionLabel);
-  block.style.width = "120px";
-  block.style.position = "relative";
-  const titleText = options.isSplitFree ? "" : `Block ${partitionLabel}`;
-  block.innerHTML = `
-        <p>${titleText}</p>
-        <div class="block-content">
-            <div>
-                <p class="block-status">Free</p>
-            </div>
-            <div class="block-size">
-                <h2><span class="block-size-value">${sizeKb}</span></h2>
-                <h2>&nbsp;KB</h2>
-            </div>
-        </div>
-        <div></div>
-        <div class="process-action">
-            <button type="button" class="edit-block-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil-icon lucide-pencil"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z"/><path d="m15 5 4 4"/></svg></button>
-            <button type="button" class="delete-block-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
-        </div>
-    `;
-  return block;
-};
-
-const insertDynamicFreeSplitAfter = (
-  allocatedEl,
-  allocatedSizeKb,
-  freeSizeKb,
-  freeNodeId,
-  allocatedBlockId,
-) => {
-  if (!allocatedEl || freeSizeKb <= 0 || freeNodeId == null) {
-    return;
-  }
-
-  const nameEl = allocatedEl.querySelector("p");
-  if (nameEl) {
-    const lbl = allocatedEl.dataset.partitionLabel;
-    nameEl.textContent = lbl ? `Block ${lbl}` : "";
-  }
-  allocatedEl.dataset.partitionLabel = String(allocatedBlockId);
-
-  // For visual
-  const wasStandaloneHole =
-    window.getComputedStyle(allocatedEl).borderTopLeftRadius !== "0px";
-  if (wasStandaloneHole) {
-    allocatedEl.style.borderRadius = "12px 0px 0px 12px";
-  } else {
-    allocatedEl.style.borderRadius = "0px 0px 0px 0px";
-  }
-
-  const sizeNumEl = allocatedEl.querySelector(".block-size-value");
-  if (sizeNumEl) {
-    sizeNumEl.textContent = String(allocatedSizeKb);
-  }
-  const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
-    isSplitFree: true,
-  });
-
-  // For visual
-  freeEl.style.borderRadius = "0px 12px 12px 0px";
-  freeEl.style.marginLeft = "-10px";
-
-  allocatedEl.after(freeEl);
-  resizeBlocks();
-  disableMemoryBlockControls();
-};
-
-const removeElement = (button, selector) => {
-  const wrapper = button.closest(selector);
-  if (wrapper && wrapper.parentElement) {
-    wrapper.parentElement.removeChild(wrapper);
-  }
-};
 
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
@@ -545,58 +199,6 @@ function attachProcessListeners() {
   }
 }
 
-// const add_process_btn = document.getElementById("add-process-btn");
-// add_process_btn.addEventListener("click", () => {
-//   const processSizeInput = document.getElementById("process-size");
-//   const processSize = parseInt(processSizeInput.value, 10);
-
-//   // --- NEW VALIDATION CHECK START ---
-//   // This prevents the user from adding a process that is larger than the total memory.
-//   if (isPagingMode()) {
-//     const { memorySize } = getPagingInputs();
-//     if (processSize > memorySize) {
-//       alert(`Process size (${processSize} KB) cannot exceed total memory (${memorySize} KB)!`);
-//       return; // Stops the function here so the massive process isn't added
-//     }
-//   }
-//   // --- NEW VALIDATION CHECK END ---
-
-//   if (!processContainer || Number.isNaN(processSize) || processSize <= 0) {
-//     return;
-//   }
-
-//   const nextProcessId =
-//     processContainer.querySelectorAll(".process").length + 1;
-//   const newProcess = createProcessElement(nextProcessId, processSize);
-//   processContainer.appendChild(newProcess);
-//   processSizeInput.value = "";
-//   scrollDown();
-// });
-
-// const randomize_value = document.getElementById("randomize-value");
-
-// randomize_value.addEventListener("click", () => {
-//   const pagingBtn = document.querySelector(".paging-btn"); 
-//   let min, max;
-
-//   if (isPagingMode()) {
-//     min = 3;
-//     max = 6;
-//   } else {
-//     min = 4;
-//     max = 8;
-//   }
-
-//   const processSize = Math.pow(
-//     2, Math.floor(Math.random() * (max - min + 1)) + min,
-//   );
-
-//   const nextProcessId = processContainer.querySelectorAll(".process").length + 1;
-//   const newProcess = createProcessElement(nextProcessId, processSize);
-//   processContainer.appendChild(newProcess);
-//   scrollDown();
-// });
-
 const scrollToRight = () => {
   if (simulationContainer) {
     simulationContainer.scrollTo({
@@ -626,90 +228,6 @@ if (add_block_btn) {
     scrollToRight();
   });
 }
-
-const startInlineEdit = (element, onCommit) => {
-  const oldText = element.textContent.trim();
-  const oldValue = parseInt(oldText, 10);
-  element.contentEditable = "true";
-  element.dataset.editing = "true";
-  element.classList.add("inline-editable");
-
-  const cleanup = (commitValue) => {
-    element.removeAttribute("contenteditable");
-    element.classList.remove("inline-editable");
-    delete element.dataset.editing;
-    element.removeEventListener("blur", onBlur);
-    element.removeEventListener("keydown", onKeyDown);
-    if (commitValue !== null) {
-      element.textContent = `${commitValue}`;
-      onCommit(commitValue);
-    } else {
-      element.textContent = `${oldValue}`;
-    }
-  };
-
-  const onBlur = () => {
-    const text = element.textContent.trim();
-    const parsed = parseInt(text, 10);
-    const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
-  };
-
-  const onKeyDown = (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      element.blur();
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      element.textContent = `${oldValue}`;
-      cleanup(null);
-    }
-  };
-
-  element.addEventListener("blur", onBlur);
-  element.addEventListener("keydown", onKeyDown);
-  element.focus();
-
-  const range = document.createRange();
-  range.selectNodeContents(element);
-  const selection = window.getSelection();
-  selection.removeAllRanges();
-  selection.addRange(range);
-};
-
-const editProcess = (process) => {
-  const sizeEl = process.querySelector(".process-content p:nth-child(2)");
-  startInlineEdit(sizeEl, (parsedSize) => {});
-};
-
-const resizeBlocks = () => {
-  const blocks = Array.from(simulationContainer.querySelectorAll(".block"));
-  const pxPerKb = 0.5;
-  const minWidth = 80;
-
-  blocks.forEach((block) => {
-    const sizeEl = block.querySelector("h2");
-    const blockSize = sizeEl ? parseInt(sizeEl.textContent, 10) : 0;
-
-    if (blockSize > 0) {
-      const calculatedWidth = blockSize * pxPerKb;
-      block.style.width = `${minWidth + calculatedWidth}px`;
-      // block.style.width = `${Math.max(minWidth, calculatedWidth)}px`;
-      block.style.flex = "0 0 auto";
-    }
-  });
-};
-
-const editBlock = (block) => {
-  const sizeEl = block.querySelector(".block-size-value"); // ← FIXED: target the span
-  if (!sizeEl) return;
-
-  startInlineEdit(sizeEl, (parsedSize) => {
-    updateTotalMemory();
-    resizeBlocks();
-  });
-};
 
 if (processContainer) {
   processContainer.addEventListener("click", (event) => {
@@ -776,260 +294,10 @@ if (simulationContainer) {
   });
 }
 
-function appendConsoleMessage(message) {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
-
-  let consoleContainer = null;
-
-  if (activeView) {
-    consoleContainer = activeView.querySelector(".console .container");
-  }
-
-  if (!consoleContainer) {
-    consoleContainer = document.querySelector(".console .container");
-  }
-
-  if (!consoleContainer) return;
-  const p = document.createElement("p");
-  const timestamp = new Date().toLocaleTimeString();
-  p.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-  consoleContainer.appendChild(p);
-  consoleContainer.scrollTop = consoleContainer.scrollHeight;
-}
-
-appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
-
-function initPagingConsole() {
-  const pagingView = document.getElementById('paging-view');
-  if (!pagingView) return;
-
-  const consoleContainer = pagingView.querySelector('.console .container');
-  if (!consoleContainer) return;
-
-  consoleContainer.innerHTML = '';
-
-  appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
-}
-
-// const consoleContainer = document.querySelector(".console .container");
-
-// const appendConsoleMessage = (message) => {
-//   if (!consoleContainer) return;
-//   const p = document.createElement("p");
-//   const timestamp = new Date().toLocaleTimeString();
-//   p.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
-//   consoleContainer.appendChild(p);
-//   consoleContainer.scrollTop = consoleContainer.scrollHeight;
-// };
-// appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
-
-const getProcessSizes = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
-
-  const activeProcessContainer = activeView ? activeView.querySelector(".process-container") : processContainer;
-
-  if (!activeProcessContainer) return [];
-
-  return Array.from(activeProcessContainer.querySelectorAll(".process"))
-    .map((process) => {
-      const sizeEl = process.querySelector(".process-content p:nth-child(2)");
-      const size = sizeEl ? parseInt(sizeEl.textContent, 10) : NaN;
-      return Number.isNaN(size) ? null : size;
-    })
-    .filter((size) => size !== null);
-};
-
-const getBlockSizes = () => {
-  if (!simulationContainer) return [];
-  return Array.from(simulationContainer.querySelectorAll(".block"))
-    .map((block) => {
-      const sizeEl = block.querySelector("h2");
-      const size = sizeEl ? parseInt(sizeEl.textContent, 10) : NaN;
-      return Number.isNaN(size) ? null : size;
-    })
-    .filter((size) => size !== null);
-};
-
-const updateBlockVisuals = (results) => {
-  if (!simulationContainer) return;
-
-  simulationContainer.querySelectorAll(".block").forEach((block) => {
-    // Re-apply hatch pattern on internal frag blocks (colors stored as data attrs)
-    if (block.classList.contains("block--fixed-waste")) {
-      const hatchBg = block.dataset.hatchBg;
-      const hatchBorder = block.dataset.hatchBorder;
-      if (hatchBg && hatchBorder) {
-        const hatchPattern = `repeating-linear-gradient(
-                    45deg,
-                    ${hatchBg}75,
-                    ${hatchBg}75 5px,
-                    ${hatchBorder} 5px,
-                    ${hatchBorder} 10px
-                )`;
-        block.style.background = hatchPattern;
-        block.style.borderBottom = `8px solid ${hatchBorder}`;
-      }
-      return;
-    }
-
-    // Skip dynamic free-hole blocks
-    if (block.classList.contains("block--split-free")) {
-      return;
-    }
-
-    const sizeDisplay = block.querySelector(".block-size-value");
-
-    let bgColor = "";
-    let borderColor = "";
-    let isAllocated = false;
-    let processActualSize = null;
-
-    // CRITICAL FIX: Find allocation by checking the process currently on this block
-    // This avoids the mismatch between result.block (remapped sequential ID) and partitionLabel (displayBlock)
-    const currentStatusLabel = block.querySelector(".block-status");
-    const processTextContent = currentStatusLabel?.textContent?.trim();
-    
-    let currentAllocation = null;
-    if (processTextContent && processTextContent.startsWith("Process")) {
-      // The status label already shows which process is on this block - use that
-      currentAllocation = [processTextContent, results[processTextContent]];
-    }
-    
-    // Fallback: if status doesn't show process, search by block position
-    if (!currentAllocation) {
-      const blockPos = Array.from(simulationContainer.querySelectorAll(".block"))
-        .filter((b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste"))
-        .indexOf(block) + 1;
-      
-      currentAllocation = Object.entries(results).find(
-        ([_, res]) => res.status === "Allocated" && parseInt(res.block, 10) === blockPos,
-      );
-    }
-
-    let allocationProcessKey = null;
-    if (currentAllocation) {
-      const [processKey, result] = currentAllocation;
-      allocationProcessKey = processKey;
-      const pNum = processKey.match(/\d+/)[0];
-      const processElem = document.getElementById(`process-${pNum}`);
-
-      if (processElem) {
-        bgColor = processElem.getAttribute("data-bg");
-        borderColor = processElem.getAttribute("data-border");
-        isAllocated = true;
-        processActualSize = result.size; // This ensures we show the process KB
-      }
-    }
-
-    if (isAllocated) {
-      block.style.background = bgColor;
-      block.style.borderBottom = `8px solid ${borderColor}`;
-      block.classList.add("allocated");
-      const statusLabel = block.querySelector(".block-status");
-      if (statusLabel && allocationProcessKey) {
-        statusLabel.textContent = allocationProcessKey;
-      }
-      if (sizeDisplay && processActualSize !== null) {
-        sizeDisplay.textContent = processActualSize;
-      }
-      // Update block label to show displayBlock if available
-      const [processKey, result] = currentAllocation;
-      if (result.displayBlock) {
-        // Set partition label for grouping detection
-        block.dataset.partitionLabel = String(result.displayBlock);
-        const titleEl = block.querySelector("p");
-        if (titleEl) {
-          // Only show label if this is NOT a middle or last block in a group
-          if (!block.classList.contains("block-group-middle") && !block.classList.contains("block-group-last")) {
-            titleEl.textContent = `Block ${result.displayBlock}`;
-          } else {
-            titleEl.textContent = "";
-          }
-        }
-      }
-    } else {
-      // Restore to original partition size
-      const originalSize = block.dataset.originalSize;
-      if (sizeDisplay && originalSize) {
-        sizeDisplay.textContent = originalSize;
-      }
-      block.style.background = "";
-      block.style.borderBottom = "";
-      block.classList.remove("allocated");
-    }
-  });
-};
-
-const updateStatistics = (stats) => {
-  const standardView = document.getElementById("standard-view");
-  const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
-
-  const query = (id) => {
-    const el = activeView ? activeView.querySelector('#' + id) : document.getElementById(id);
-    return el || document.getElementById(id);
-  };
-
-  const allocatedEl = query('allocated-value');
-  const totalFreeEl = query('total-free-value');
-  const internalFragEl = query('internal-frag-value');
-  const externalFragEl = query('external-frag-value');
-  const utilEl = query('util-value');
-  const successEl = query('success-rate-value');
-
-  // const allocatedEl = document.getElementById("allocated-value");
-  // const totalFreeEl = document.getElementById("total-free-value");
-  // const internalFragEl = document.getElementById("internal-frag-value");
-  // const externalFragEl = document.getElementById("external-frag-value");
-  // const utilEl = document.getElementById("util-value");
-  // const successEl = document.getElementById("success-rate-value");
-
-  if (allocatedEl)
-    allocatedEl.textContent = `${Math.round(stats.allocatedSize)} KB`;
-  if (totalFreeEl)
-    totalFreeEl.textContent = `${Math.round(stats.totalFree)} KB`;
-  if (internalFragEl)
-    internalFragEl.textContent = `${Math.round(stats.intFragmentation)} KB`;
-  if (externalFragEl)
-    externalFragEl.textContent = `${Math.round(stats.externalFragmentation)} KB`;
-  if (utilEl) utilEl.textContent = `${stats.memoryUtilization.toFixed(1)}%`;
-  if (successEl) successEl.textContent = `${stats.successRate.toFixed(1)}%`;
-};
-
 let playInterval = null;
 let simulationState = null;
 
-const setTotalMemoryDisplay = (total) => {
-  const totalMemoryEl = document.getElementById("total-memory-value");
-  if (totalMemoryEl) totalMemoryEl.textContent = `${Math.round(total)} KB`;
-};
-
-function resetConsole() {
-  const standardView = document.getElementById("standard-view");
-  const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
-
-
-  const consoleContainer = activeView.querySelector(".console .container");
-
-  if (!consoleContainer) return;
-  consoleContainer.innerHTML = "";
-}
-
-// const resetConsole = () => {
-//   const standardView = document.getElementById("standard-view");
-//   const pagingView = document.getElementById("paging-view");
-//   const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
-
-//   const consoleContainer = activeView.querySelector(".console-container");
-
-//   if (!consoleContainer) return;
-//   consoleContainer.innerHTML = "AAAAAAAAAA";
-// };
+// UI helper functions are loaded from uiFunctions.js
 
 const resetBlocksUI = () => {
   // 1. Remove all blocks created by splitting logic (waste fragments and dynamic holes)
@@ -1216,38 +484,7 @@ const prepareSimulation = () => {
     document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
     disableMemoryBlockControls();
   }
-
   return true;
-
-  // Disable buttons during simulation
-  // const addBtn = document.getElementById("add-block-btn");
-  // if (addBtn) {
-  //   addBtn.style.display = "none";
-  // }
-
-  // const randomizeBtn = document.getElementById("randomize-value");
-  // if (randomizeBtn) {
-  //   randomizeBtn.disabled = true;
-  // }
-
-  // Array.from(document.getElementsByClassName("add-block")).forEach((el) => {
-  //   if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
-  //     el.disabled = true;
-  //   }
-  // });
-
-  // Array.from(document.getElementsByClassName("input-prcs")).forEach((el) => {
-  //   if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
-  //     el.disabled = true;
-  //   }
-  // });
-
-  // document
-  //   .querySelectorAll(".process-action")
-  //   .forEach((action) => (action.style.display = "none"));
-  // disableMemoryBlockControls();
-
-  // return true;
 };
 
 const insertFixedWasteSplitAfter = (
@@ -1883,16 +1120,6 @@ const togglePlayStop = () => {
   }
 }
 
-// const togglePlayStop = () => {
-//   if (playInterval) {
-//     stopBtn.style.display = `flex`;
-//     playBtn.style.display = `none`;
-//   } else {
-//     playBtn.style.display = `flex`;
-//     stopBtn.style.display = `none`;
-//   }
-// };
-
 const runPlay = () => {
   try {
     const isFirstPlay = !simulationState;
@@ -2028,71 +1255,9 @@ const runReset = () => {
 
   attachSimulationListeners();
 
-  // document.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
-  // document.querySelectorAll(".edit-block-btn").forEach((btn) => (btn.disabled = false));
-  // document.querySelectorAll(".delete-block-btn").forEach((btn) => (btn.disabled = false));
 };
 
-// const runReset = () => {
-//   if (playInterval) {
-//     clearInterval(playInterval);
-//     playInterval = null;
-//   }
 
-//   // Capture the state before nullifying
-//   const isDynamic = isDynamicPartitionMode();
-
-//   simulationState = null;
-//   currentStep = 0;
-
-//   // UI RESET
-//   resetBlocksUI(); // This now handles removing the "Waste" and "Hole" blocks
-//   resetConsole();
-
-//   // If you use a pre-sim state for Dynamic (like compaction), restore it
-//   if (isDynamic && preSimBlockState && preSimBlockState.length) {
-//     restorePreSimulationBlocks();
-//   }
-
-//   if (isPagingMode()) {
-//     resetPagingUI();
-//   }
-
-//   // Standard Updates
-//   updateStatistics({
-//     allocatedSize: 0,
-//     totalFree: 0,
-//     intFragmentation: 0,
-//     externalFragmentation: 0,
-//     memoryUtilization: 0,
-//     successRate: 0,
-//   });
-//   updateTotalMemory();
-//   togglePlayStop();
-//   appendConsoleMessage("Simulation reset.");
-
-//   // Resetting Inputs & Buttons
-//   document
-//     .querySelectorAll(".process")
-//     .forEach((p) => p.classList.remove("current"));
-//   const addBtn = document.getElementById("add-block-btn");
-//   if (addBtn) {
-//     addBtn.style.display = "flex";
-//   }
-//   const randomizeBtn = document.getElementById("randomize-value");
-//   if (randomizeBtn) {
-//     randomizeBtn.disabled = false;
-//   }
-//   document
-//     .querySelectorAll(".process-action")
-//     .forEach((action) => (action.style.display = ""));
-//   document
-//     .querySelectorAll(".edit-block-btn")
-//     .forEach((btn) => (btn.disabled = false));
-//   document
-//     .querySelectorAll(".delete-block-btn")
-//     .forEach((btn) => (btn.disabled = false));
-// };
 
 function reEnableSimulationButtons() {
   const standardView = document.getElementById('standard-view');
@@ -2188,33 +1353,6 @@ function attachSimulationListeners(viewType) {
   attachProcessListeners();
 }
 
-// const playBtn = document.getElementById("play-btn");
-// if (playBtn) {
-//   playBtn.addEventListener("click", runPlay);
-// }
-
-// const stopBtn = document.getElementById("stop-btn");
-// if (stopBtn) {
-//   stopBtn.addEventListener("click", runStop);
-// }
-
-// const nextBtn = document.getElementById("next-btn");
-// if (nextBtn) {
-//   nextBtn.addEventListener("click", runStep);
-// }
-
-// const resetBtn = document.getElementById("reset-btn");
-// if (resetBtn) {
-//   resetBtn.addEventListener("click", runReset);
-// }
-
-// const slider = document.getElementById("slider");
-// if (slider) {
-//   slider.addEventListener("input", (e) => {
-//     speed = parseFloat(e.target.value);
-//   });
-// }
-
 if (simulationContainer) {
   updateTotalMemory();
 }
@@ -2286,29 +1424,6 @@ function simulatorLoad() {
   }
 }
 
-// function simulatorLoad() {
-//   const urlParams = new URLSearchParams(window.location.search);
-//   const urlAlgo = urlParams.get('algo');
-//   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
-//   const selectedPartition = sessionStorage.getItem('selectedPartition');
-//   // const algoDescription = document.getElementById('algo-description');
-//   // let scriptSrc = "";
-
-//   const standardView = document.getElementById('standard-view');
-//   const pagingView = document.getElementById('paging-view');
-
-//   if (standardView) standardView.style.display = 'none';
-//   if (pagingView) pagingView.style.display = 'none';
-
-//   if (selectedAlgo === "Paging") {
-//     if (pagingView) pagingView.style.display = 'grid';
-//     loadPagingScript();
-//   } else {
-//     if (standardView) standardView.style.display = 'grid';
-//     loadDefaultScript(selectedAlgo, selectedPartition);
-//   }
-// }
-
 function loadPagingScript(callback) {
   if (window.pagingScriptLoaded) {
     console.log("Paging script already loaded");
@@ -2348,35 +1463,6 @@ function loadPagingScript(callback) {
   document.head.appendChild(script1);
   document.head.appendChild(script2);
 }
-
-// function loadPagingScript(callback) {
-//   if (window.pagingScriptLoaded) {
-//     if (callback) callback();
-//     return;
-//   };
-
-//   let loadedCount = 0;
-//   const checkLoaded = () => {
-//     loadedCount++;
-//     if (loadedCount === 2) {
-//       window.pagingScriptLoaded = true;
-//       if (callback) callback();
-//     }
-//   }
-
-//   const script1 = document.createElement('script');
-//   script1.src = "../util/algos/paging.js";
-//   script1.onload = checkLoaded;
-
-//   const script2 = document.createElement('script');
-//   script2.src = "../util/pagingUI.js";
-//   script2.onload = checkLoaded;
-
-//   document.head.appendChild(script1);
-//   document.head.appendChild(script2);
-
-//   // window.pagingScriptLoaded = true;
-// }
 
 function loadDefaultScript(selectedAlgo, selectedPartition) {
   const algoDescription = document.getElementById('algo-description');
@@ -2435,28 +1521,3 @@ function hub() {
   sessionStorage.removeItem('selectedAlgo');
   sessionStorage.removeItem('selectedPartition');
 }
-
-// const applyActiveStyles = () => {
-//   const activeElements = document.querySelectorAll('.active');
-//   activeElements.forEach(el => {
-//     const link = el.tagName === 'A' ? el : el.querySelector('a');
-//     if (link) {
-//       link.style.color = 'white';
-//       link.style.backgroundColor = 'var(--primary-color)';
-//       link.style.borderRadius = '8px';
-//       const svg = link.querySelector('svg');
-//       if (svg) {
-//         svg.style.stroke = 'white';
-//       }
-//     }
-//   });
-// };
-
-// document.addEventListener('DOMContentLoaded', () => {
-//   applyActiveStyles();
-//   observer.observe(document.body, {
-//     attributes: true,
-//     subtree: true,
-//     attributeFilter: ['class']
-//   });
-// });
