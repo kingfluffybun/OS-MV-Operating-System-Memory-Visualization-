@@ -269,9 +269,39 @@ let preSimBlockState = null;
 const isDynamicPartitionMode = () =>
   document.body.dataset.partitionMode === "dynamic";
 
-const isPagingMode = () =>
-  !!document.querySelector(".main-grid paging") ||
-  window.location.pathname.endsWith("simulation-Paging.html");
+function isPagingMode() {
+  const pagingView = document.getElementById("paging-view");
+  const isPaging = pagingView && pagingView.style.display === "grid";
+
+  const selectedAlgo = sessionStorage.getItem("selectedAlgo");
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlAlgo = urlParams.get("algo");
+
+  return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
+
+  // if (pagingView) {
+  //   const display = window.getComputedStyle(pagingView).display;
+  //   if (display === "grid" || display === "block") {
+  //     return true;
+  //   }
+  // }
+
+  // const selectedAlgo = sessionStorage.getItem("selected-algo");
+  // if (selectedAlgo === "paging") {
+  //   return true;
+  // }
+
+  // const urlParams = new URLSearchParams(window.location.search);
+  // if (urlParams.get("algo") === "paging") {
+  //   return true;
+  // }
+
+  // return false;
+}
+
+// const isPagingMode = () =>
+//   !!document.querySelector(".main-grid paging") ||
+//   window.location.pathname.endsWith("simulation-Paging.html");
 
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
 const disableMemoryBlockControls = () => {
@@ -433,57 +463,139 @@ const removeElement = (button, selector) => {
   }
 };
 
-const add_process_btn = document.getElementById("add-process-btn");
-add_process_btn.addEventListener("click", () => {
-  const processSizeInput = document.getElementById("process-size");
-  const processSize = parseInt(processSizeInput.value, 10);
+function attachProcessListeners() {
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
 
-  // --- NEW VALIDATION CHECK START ---
-  // This prevents the user from adding a process that is larger than the total memory.
-  if (isPagingMode()) {
-    const { memorySize } = getPagingInputs();
-    if (processSize > memorySize) {
-      alert(`Process size (${processSize} KB) cannot exceed total memory (${memorySize} KB)!`);
-      return; // Stops the function here so the massive process isn't added
-    }
+  if (!activeView) return;
+
+  const addProcessBtn = activeView.querySelector("#add-process-btn");
+  const randomizeBtn = activeView.querySelector("#randomize-value");
+  const processSizeInput = activeView.querySelector("#process-size");
+
+  if (addProcessBtn) {
+    const newAddBtn = addProcessBtn.cloneNode(true);
+    addProcessBtn.parentNode.replaceChild(newAddBtn, addProcessBtn);
+
+    newAddBtn.addEventListener("click", () => {
+      const size = parseInt(activeView.querySelector("#process-size").value, 10);
+      if (!size || size <= 0) return;
+
+      if (isPagingMode()) {
+        const pagingprocessContainer = activeView.querySelector(".process-container");
+        const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        pagingprocessContainer.appendChild(newProcess);
+        activeView.querySelector("#process-size").value = '';
+
+        if (pagingprocessContainer) {
+          pagingprocessContainer.scrollTo({
+            top: pagingprocessContainer.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      } else {
+        if (!processContainer) return;
+        const nextId = processContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        processContainer.appendChild(newProcess);
+        if (processSizeInput) processSizeInput.value = '';
+        scrollDown();
+      }
+    });
   }
-  // --- NEW VALIDATION CHECK END ---
 
-  if (!processContainer || Number.isNaN(processSize) || processSize <= 0) {
-    return;
+  if (randomizeBtn) {
+    const newRandomizeBtn = randomizeBtn.cloneNode(true);
+    randomizeBtn.parentNode.replaceChild(newRandomizeBtn, randomizeBtn);
+
+    newRandomizeBtn.addEventListener("click", function() {
+      let min, max;
+
+      if (isPagingMode()) {
+        min = 3;
+        max = 6;
+      } else {
+        min = 4;
+        max = 8;
+      }
+
+      const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
+
+      if (isPagingMode()) {
+        const pagingProcessContainer = activeView.querySelector(".process-container");
+        const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        pagingProcessContainer.appendChild(newProcess);
+        if (pagingProcessContainer) {
+          pagingProcessContainer.scrollTo({
+            top: pagingProcessContainer.scrollHeight,
+            behavior: "smooth",
+          });
+        }
+      } else {
+        if (!processContainer) return;
+        const nextId = processContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        processContainer.appendChild(newProcess);
+        scrollDown();
+      }
+    });
   }
+}
 
-  const nextProcessId =
-    processContainer.querySelectorAll(".process").length + 1;
-  const newProcess = createProcessElement(nextProcessId, processSize);
-  processContainer.appendChild(newProcess);
-  processSizeInput.value = "";
-  scrollDown();
-});
+// const add_process_btn = document.getElementById("add-process-btn");
+// add_process_btn.addEventListener("click", () => {
+//   const processSizeInput = document.getElementById("process-size");
+//   const processSize = parseInt(processSizeInput.value, 10);
 
-const randomize_value = document.getElementById("randomize-value");
+//   // --- NEW VALIDATION CHECK START ---
+//   // This prevents the user from adding a process that is larger than the total memory.
+//   if (isPagingMode()) {
+//     const { memorySize } = getPagingInputs();
+//     if (processSize > memorySize) {
+//       alert(`Process size (${processSize} KB) cannot exceed total memory (${memorySize} KB)!`);
+//       return; // Stops the function here so the massive process isn't added
+//     }
+//   }
+//   // --- NEW VALIDATION CHECK END ---
 
-randomize_value.addEventListener("click", () => {
-  const pagingBtn = document.querySelector(".paging-btn"); 
-  let min, max;
+//   if (!processContainer || Number.isNaN(processSize) || processSize <= 0) {
+//     return;
+//   }
 
-  if (isPagingMode()) {
-    min = 3;
-    max = 6;
-  } else {
-    min = 4;
-    max = 8;
-  }
+//   const nextProcessId =
+//     processContainer.querySelectorAll(".process").length + 1;
+//   const newProcess = createProcessElement(nextProcessId, processSize);
+//   processContainer.appendChild(newProcess);
+//   processSizeInput.value = "";
+//   scrollDown();
+// });
 
-  const processSize = Math.pow(
-    2, Math.floor(Math.random() * (max - min + 1)) + min,
-  );
+// const randomize_value = document.getElementById("randomize-value");
 
-  const nextProcessId = processContainer.querySelectorAll(".process").length + 1;
-  const newProcess = createProcessElement(nextProcessId, processSize);
-  processContainer.appendChild(newProcess);
-  scrollDown();
-});
+// randomize_value.addEventListener("click", () => {
+//   const pagingBtn = document.querySelector(".paging-btn"); 
+//   let min, max;
+
+//   if (isPagingMode()) {
+//     min = 3;
+//     max = 6;
+//   } else {
+//     min = 4;
+//     max = 8;
+//   }
+
+//   const processSize = Math.pow(
+//     2, Math.floor(Math.random() * (max - min + 1)) + min,
+//   );
+
+//   const nextProcessId = processContainer.querySelectorAll(".process").length + 1;
+//   const newProcess = createProcessElement(nextProcessId, processSize);
+//   processContainer.appendChild(newProcess);
+//   scrollDown();
+// });
 
 const scrollToRight = () => {
   if (simulationContainer) {
@@ -664,21 +776,65 @@ if (simulationContainer) {
   });
 }
 
-const consoleContainer = document.querySelector(".console .container");
+function appendConsoleMessage(message) {
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
 
-const appendConsoleMessage = (message) => {
+  let consoleContainer = null;
+
+  if (activeView) {
+    consoleContainer = activeView.querySelector(".console .container");
+  }
+
+  if (!consoleContainer) {
+    consoleContainer = document.querySelector(".console .container");
+  }
+
   if (!consoleContainer) return;
   const p = document.createElement("p");
   const timestamp = new Date().toLocaleTimeString();
   p.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
   consoleContainer.appendChild(p);
   consoleContainer.scrollTop = consoleContainer.scrollHeight;
-};
+}
+
 appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
 
+function initPagingConsole() {
+  const pagingView = document.getElementById('paging-view');
+  if (!pagingView) return;
+
+  const consoleContainer = pagingView.querySelector('.console .container');
+  if (!consoleContainer) return;
+
+  consoleContainer.innerHTML = '';
+
+  appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
+}
+
+// const consoleContainer = document.querySelector(".console .container");
+
+// const appendConsoleMessage = (message) => {
+//   if (!consoleContainer) return;
+//   const p = document.createElement("p");
+//   const timestamp = new Date().toLocaleTimeString();
+//   p.innerHTML = `<span class="timestamp">[${timestamp}]</span> ${message}`;
+//   consoleContainer.appendChild(p);
+//   consoleContainer.scrollTop = consoleContainer.scrollHeight;
+// };
+// appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
+
 const getProcessSizes = () => {
-  if (!processContainer) return [];
-  return Array.from(processContainer.querySelectorAll(".process"))
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+
+  const activeProcessContainer = activeView ? activeView.querySelector(".process-container") : processContainer;
+
+  if (!activeProcessContainer) return [];
+
+  return Array.from(activeProcessContainer.querySelectorAll(".process"))
     .map((process) => {
       const sizeEl = process.querySelector(".process-content p:nth-child(2)");
       const size = sizeEl ? parseInt(sizeEl.textContent, 10) : NaN;
@@ -809,12 +965,28 @@ const updateBlockVisuals = (results) => {
 };
 
 const updateStatistics = (stats) => {
-  const allocatedEl = document.getElementById("allocated-value");
-  const totalFreeEl = document.getElementById("total-free-value");
-  const internalFragEl = document.getElementById("internal-frag-value");
-  const externalFragEl = document.getElementById("external-frag-value");
-  const utilEl = document.getElementById("util-value");
-  const successEl = document.getElementById("success-rate-value");
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+
+  const query = (id) => {
+    const el = activeView ? activeView.querySelector('#' + id) : document.getElementById(id);
+    return el || document.getElementById(id);
+  };
+
+  const allocatedEl = query('allocated-value');
+  const totalFreeEl = query('total-free-value');
+  const internalFragEl = query('internal-frag-value');
+  const externalFragEl = query('external-frag-value');
+  const utilEl = query('util-value');
+  const successEl = query('success-rate-value');
+
+  // const allocatedEl = document.getElementById("allocated-value");
+  // const totalFreeEl = document.getElementById("total-free-value");
+  // const internalFragEl = document.getElementById("internal-frag-value");
+  // const externalFragEl = document.getElementById("external-frag-value");
+  // const utilEl = document.getElementById("util-value");
+  // const successEl = document.getElementById("success-rate-value");
 
   if (allocatedEl)
     allocatedEl.textContent = `${Math.round(stats.allocatedSize)} KB`;
@@ -836,10 +1008,28 @@ const setTotalMemoryDisplay = (total) => {
   if (totalMemoryEl) totalMemoryEl.textContent = `${Math.round(total)} KB`;
 };
 
-const resetConsole = () => {
+function resetConsole() {
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+
+
+  const consoleContainer = activeView.querySelector(".console .container");
+
   if (!consoleContainer) return;
   consoleContainer.innerHTML = "";
-};
+}
+
+// const resetConsole = () => {
+//   const standardView = document.getElementById("standard-view");
+//   const pagingView = document.getElementById("paging-view");
+//   const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+
+//   const consoleContainer = activeView.querySelector(".console-container");
+
+//   if (!consoleContainer) return;
+//   consoleContainer.innerHTML = "AAAAAAAAAA";
+// };
 
 const resetBlocksUI = () => {
   // 1. Remove all blocks created by splitting logic (waste fragments and dynamic holes)
@@ -899,8 +1089,12 @@ const restorePreSimulationBlocks = () => {
 
 const prepareSimulation = () => {
   const processes = getProcessSizes();
-  const blocks = getBlockSizes();
   const isPaging = isPagingMode();
+  const blocks = getBlockSizes();
+
+  // if (!isPaging) {
+  //   blocks = getBlockSizes();
+  // }
 
   if (!processes.length) {
     appendConsoleMessage("No processes in queue to allocate.");
@@ -934,7 +1128,7 @@ const prepareSimulation = () => {
     }
 
     simulationState = {
-      processes,
+      processes: processes,
       memoryFrames: memorySimulator.createFrames(frameCount, pageSize),
       currentIndex: 0,
       pageAllocationIndex: 0,
@@ -945,13 +1139,15 @@ const prepareSimulation = () => {
         intFragmentation: 0,
       },
     };
+    initializePagingUI(simulationState.memoryFrames, processes);
+
   } else {
     if (isDynamicPartitionMode()) {
       preSimBlockState = getBlockSizes().slice();
     }
 
     simulationState = {
-      processes,
+      processes: processes,
       memoryHead: memorySimulator.createLinkedMemory(blocks),
       currentIndex: 0,
       results: {},
@@ -965,7 +1161,7 @@ const prepareSimulation = () => {
 
   // Stamp the original size on every block element NOW, before any step shrinks them.
   // resetBlocksUI reads this to restore the display on reset.
-  if (simulationContainer) {
+  if (!isPaging && simulationContainer) {
     simulationContainer.querySelectorAll(".block").forEach((block) => {
       const sizeEl =
         block.querySelector(".block-size-value") || block.querySelector("h2");
@@ -1010,35 +1206,48 @@ const prepareSimulation = () => {
   currentStep = 0;
   highlightCurrentProcess();
 
-  // Disable buttons during simulation
-  const addBtn = document.getElementById("add-block-btn");
-  if (addBtn) {
-    addBtn.style.display = "none";
+  if (!isPaging) {
+    const addBtn = document.getElementById('add-block-btn');
+    if (addBtn) addBtn.style.display = 'none';
+
+    const randomizeBtn = document.getElementById('randomize-value');
+    if (randomizeBtn) randomizeBtn.disabled = true;
+
+    document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
+    disableMemoryBlockControls();
   }
-
-  const randomizeBtn = document.getElementById("randomize-value");
-  if (randomizeBtn) {
-    randomizeBtn.disabled = true;
-  }
-
-  Array.from(document.getElementsByClassName("add-block")).forEach((el) => {
-    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
-      el.disabled = true;
-    }
-  });
-
-  Array.from(document.getElementsByClassName("input-prcs")).forEach((el) => {
-    if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
-      el.disabled = true;
-    }
-  });
-
-  document
-    .querySelectorAll(".process-action")
-    .forEach((action) => (action.style.display = "none"));
-  disableMemoryBlockControls();
 
   return true;
+
+  // Disable buttons during simulation
+  // const addBtn = document.getElementById("add-block-btn");
+  // if (addBtn) {
+  //   addBtn.style.display = "none";
+  // }
+
+  // const randomizeBtn = document.getElementById("randomize-value");
+  // if (randomizeBtn) {
+  //   randomizeBtn.disabled = true;
+  // }
+
+  // Array.from(document.getElementsByClassName("add-block")).forEach((el) => {
+  //   if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+  //     el.disabled = true;
+  //   }
+  // });
+
+  // Array.from(document.getElementsByClassName("input-prcs")).forEach((el) => {
+  //   if (el instanceof HTMLButtonElement || el instanceof HTMLInputElement) {
+  //     el.disabled = true;
+  //   }
+  // });
+
+  // document
+  //   .querySelectorAll(".process-action")
+  //   .forEach((action) => (action.style.display = "none"));
+  // disableMemoryBlockControls();
+
+  // return true;
 };
 
 const insertFixedWasteSplitAfter = (
@@ -1397,6 +1606,7 @@ const runStep = () => {
           playInterval = null;
           togglePlayStop();
         }
+        reEnableSimulationButtons();
         return false;
       }
       // Continue with next process in next runStep call
@@ -1656,14 +1866,32 @@ const getStepDelay = () => {
 };
 
 const togglePlayStop = () => {
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  if (!activeView) return;
+
+  const playBtn = activeView.querySelector("#play-btn");
+  const stopBtn = activeView.querySelector("#stop-btn");
+
   if (playInterval) {
-    stopBtn.style.display = `flex`;
-    playBtn.style.display = `none`;
+    if (stopBtn) stopBtn.style.display = `flex`;
+    if (playBtn) playBtn.style.display = `none`;
   } else {
-    playBtn.style.display = `flex`;
-    stopBtn.style.display = `none`;
+    if (playBtn) playBtn.style.display = `flex`;
+    if (stopBtn) stopBtn.style.display = `none`;
   }
-};
+}
+
+// const togglePlayStop = () => {
+//   if (playInterval) {
+//     stopBtn.style.display = `flex`;
+//     playBtn.style.display = `none`;
+//   } else {
+//     playBtn.style.display = `flex`;
+//     stopBtn.style.display = `none`;
+//   }
+// };
 
 const runPlay = () => {
   try {
@@ -1678,11 +1906,22 @@ const runPlay = () => {
       playInterval = null;
     }
 
+    const standardView = document.getElementById('standard-view');
+    const pagingView = document.getElementById('paging-view');
+    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+
+    const playBtn = document.querySelector("#play-btn");
+    const stopBtn = document.querySelector("#stop-btn");
+
+    playBtn.style.display = `none`;
+    stopBtn.style.display = `flex`;
+
     const startAllocation = () => {
       const delay = getStepDelay();
       const didRun = runStep();
       if (!didRun) {
         togglePlayStop();
+        reEnableSimulationButtons();
         return;
       }
 
@@ -1692,6 +1931,7 @@ const runPlay = () => {
           clearInterval(playInterval);
           playInterval = null;
           togglePlayStop();
+          reEnableSimulationButtons();
         }
       }, delay);
     };
@@ -1727,17 +1967,14 @@ const runReset = () => {
     playInterval = null;
   }
 
-  // Capture the state before nullifying
   const isDynamic = isDynamicPartitionMode();
 
   simulationState = null;
   currentStep = 0;
 
-  // UI RESET
-  resetBlocksUI(); // This now handles removing the "Waste" and "Hole" blocks
+  resetBlocksUI();
   resetConsole();
 
-  // If you use a pre-sim state for Dynamic (like compaction), restore it
   if (isDynamic && preSimBlockState && preSimBlockState.length) {
     restorePreSimulationBlocks();
   }
@@ -1746,7 +1983,6 @@ const runReset = () => {
     resetPagingUI();
   }
 
-  // Standard Updates
   updateStatistics({
     allocatedSize: 0,
     totalFree: 0,
@@ -1759,18 +1995,27 @@ const runReset = () => {
   togglePlayStop();
   appendConsoleMessage("Simulation reset.");
 
-  // Resetting Inputs & Buttons
-  document
-    .querySelectorAll(".process")
-    .forEach((p) => p.classList.remove("current"));
-  const addBtn = document.getElementById("add-block-btn");
-  if (addBtn) {
-    addBtn.style.display = "flex";
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+
+  if (activeView) {
+    activeView.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
+
+    const addBtn = activeView.querySelector("#add-block-btn");
+    if (addBtn) {
+      addBtn.style.display = "flex";
+    }
+
+    const randomizeBtn = activeView.querySelector("#randomize-value");
+    if (randomizeBtn) {
+      randomizeBtn.disabled = false;
+      randomizeBtn.style.display = "";
+    }
+
+    activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
   }
-  const randomizeBtn = document.getElementById("randomize-value");
-  if (randomizeBtn) {
-    randomizeBtn.disabled = false;
-  }
+
   document
     .querySelectorAll(".process-action")
     .forEach((action) => (action.style.display = ""));
@@ -1780,34 +2025,195 @@ const runReset = () => {
   document
     .querySelectorAll(".delete-block-btn")
     .forEach((btn) => (btn.disabled = false));
+
+  attachSimulationListeners();
+
+  // document.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
+  // document.querySelectorAll(".edit-block-btn").forEach((btn) => (btn.disabled = false));
+  // document.querySelectorAll(".delete-block-btn").forEach((btn) => (btn.disabled = false));
 };
 
-const playBtn = document.getElementById("play-btn");
-if (playBtn) {
-  playBtn.addEventListener("click", runPlay);
-}
+// const runReset = () => {
+//   if (playInterval) {
+//     clearInterval(playInterval);
+//     playInterval = null;
+//   }
 
-const stopBtn = document.getElementById("stop-btn");
-if (stopBtn) {
-  stopBtn.addEventListener("click", runStop);
-}
+//   // Capture the state before nullifying
+//   const isDynamic = isDynamicPartitionMode();
 
-const nextBtn = document.getElementById("next-btn");
-if (nextBtn) {
-  nextBtn.addEventListener("click", runStep);
-}
+//   simulationState = null;
+//   currentStep = 0;
 
-const resetBtn = document.getElementById("reset-btn");
-if (resetBtn) {
-  resetBtn.addEventListener("click", runReset);
-}
+//   // UI RESET
+//   resetBlocksUI(); // This now handles removing the "Waste" and "Hole" blocks
+//   resetConsole();
 
-const slider = document.getElementById("slider");
-if (slider) {
-  slider.addEventListener("input", (e) => {
-    speed = parseFloat(e.target.value);
+//   // If you use a pre-sim state for Dynamic (like compaction), restore it
+//   if (isDynamic && preSimBlockState && preSimBlockState.length) {
+//     restorePreSimulationBlocks();
+//   }
+
+//   if (isPagingMode()) {
+//     resetPagingUI();
+//   }
+
+//   // Standard Updates
+//   updateStatistics({
+//     allocatedSize: 0,
+//     totalFree: 0,
+//     intFragmentation: 0,
+//     externalFragmentation: 0,
+//     memoryUtilization: 0,
+//     successRate: 0,
+//   });
+//   updateTotalMemory();
+//   togglePlayStop();
+//   appendConsoleMessage("Simulation reset.");
+
+//   // Resetting Inputs & Buttons
+//   document
+//     .querySelectorAll(".process")
+//     .forEach((p) => p.classList.remove("current"));
+//   const addBtn = document.getElementById("add-block-btn");
+//   if (addBtn) {
+//     addBtn.style.display = "flex";
+//   }
+//   const randomizeBtn = document.getElementById("randomize-value");
+//   if (randomizeBtn) {
+//     randomizeBtn.disabled = false;
+//   }
+//   document
+//     .querySelectorAll(".process-action")
+//     .forEach((action) => (action.style.display = ""));
+//   document
+//     .querySelectorAll(".edit-block-btn")
+//     .forEach((btn) => (btn.disabled = false));
+//   document
+//     .querySelectorAll(".delete-block-btn")
+//     .forEach((btn) => (btn.disabled = false));
+// };
+
+function reEnableSimulationButtons() {
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  
+  if (!activeView) return;
+  
+  // Re-enable randomize button
+  const randomizeBtn = activeView.querySelector('#randomize-value');
+  if (randomizeBtn) {
+    randomizeBtn.disabled = false;
+    randomizeBtn.style.opacity = "1";
+    randomizeBtn.style.cursor = "pointer";
+  }
+  
+  // Re-enable add block button (standard view only)
+  const addBlockBtn = activeView.querySelector('#add-block-btn');
+  if (addBlockBtn) {
+    addBlockBtn.style.display = "flex";
+    addBlockBtn.disabled = false;
+    addBlockBtn.style.opacity = "1";
+    addBlockBtn.style.cursor = "pointer";
+  }
+  
+  // Re-enable process action buttons
+  activeView.querySelectorAll('.process-action').forEach(btn => {
+    btn.style.display = "";
+    btn.disabled = false;
   });
+  
+  // Re-enable edit/delete buttons
+  activeView.querySelectorAll('.edit-block-btn, .delete-block-btn').forEach(btn => {
+    btn.disabled = false;
+    btn.style.opacity = "1";
+    btn.style.cursor = "pointer";
+  });
+  
+  // Re-attach listeners to ensure they work
+  attachSimulationListeners();
 }
+
+function attachSimulationListeners(viewType) {
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+
+  if (!activeView) {
+    console.error('No active view found.');
+    return;
+  }
+
+  console.log('Attaching listeners to:', activeView.id || 'unknown view'); 
+
+  const playBtn = activeView.querySelector('#play-btn');
+  const stopBtn = activeView.querySelector('#stop-btn');
+  const nextBtn = activeView.querySelector('#next-btn');
+  const resetBtn = activeView.querySelector('#reset-btn');
+  const slider = activeView.querySelector('#slider');
+
+  console.log('Buttons found:', { playBtn: !!playBtn, stopBtn: !!stopBtn, nextBtn: !!nextBtn, resetBtn: !!resetBtn });
+
+  if (playBtn) {
+    const newPlayBtn = playBtn.cloneNode(true);
+    playBtn.parentNode.replaceChild(newPlayBtn, playBtn);
+    newPlayBtn.addEventListener("click", runPlay);
+  }
+
+  if (stopBtn) {
+    const newStopBtn = stopBtn.cloneNode(true);
+    stopBtn.parentNode.replaceChild(newStopBtn, stopBtn);
+    newStopBtn.addEventListener("click", runStop);
+  }
+
+  if (nextBtn) {
+    const newNextBtn = nextBtn.cloneNode(true);
+    nextBtn.parentNode.replaceChild(newNextBtn, nextBtn);
+    newNextBtn.addEventListener("click", runStep);
+  }
+
+  if (resetBtn) {
+    const newResetBtn = resetBtn.cloneNode(true);
+    resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+    newResetBtn.addEventListener("click", runReset);
+  }
+
+  if (slider) {
+    slider.addEventListener("input", function() {
+      speed = parseFloat(this.value);
+    });
+  }
+
+  attachProcessListeners();
+}
+
+// const playBtn = document.getElementById("play-btn");
+// if (playBtn) {
+//   playBtn.addEventListener("click", runPlay);
+// }
+
+// const stopBtn = document.getElementById("stop-btn");
+// if (stopBtn) {
+//   stopBtn.addEventListener("click", runStop);
+// }
+
+// const nextBtn = document.getElementById("next-btn");
+// if (nextBtn) {
+//   nextBtn.addEventListener("click", runStep);
+// }
+
+// const resetBtn = document.getElementById("reset-btn");
+// if (resetBtn) {
+//   resetBtn.addEventListener("click", runReset);
+// }
+
+// const slider = document.getElementById("slider");
+// if (slider) {
+//   slider.addEventListener("input", (e) => {
+//     speed = parseFloat(e.target.value);
+//   });
+// }
 
 if (simulationContainer) {
   updateTotalMemory();
@@ -1852,8 +2258,6 @@ function simulatorLoad() {
   const urlAlgo = urlParams.get('algo');
   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
   const selectedPartition = sessionStorage.getItem('selectedPartition');
-  // const algoDescription = document.getElementById('algo-description');
-  // let scriptSrc = "";
 
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
@@ -1862,42 +2266,117 @@ function simulatorLoad() {
   if (pagingView) pagingView.style.display = 'none';
 
   if (selectedAlgo === "Paging") {
-    if (pagingView) pagingView.style.display = 'grid';
-    loadPagingScript();
+    if (pagingView) {
+      pagingView.style.display = 'grid';
+
+      loadPagingScript(function() {
+        attachSimulationListeners();
+        initPagingConsole();
+        if (typeof initializePagingUI === 'function') {
+          initializePagingUI();
+        }
+      });
+    }
   } else {
-    if (standardView) standardView.style.display = 'grid';
+    if (standardView) {
+      standardView.style.display = 'grid';
+      attachSimulationListeners();
+    }
     loadDefaultScript(selectedAlgo, selectedPartition);
   }
 }
 
+// function simulatorLoad() {
+//   const urlParams = new URLSearchParams(window.location.search);
+//   const urlAlgo = urlParams.get('algo');
+//   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
+//   const selectedPartition = sessionStorage.getItem('selectedPartition');
+//   // const algoDescription = document.getElementById('algo-description');
+//   // let scriptSrc = "";
+
+//   const standardView = document.getElementById('standard-view');
+//   const pagingView = document.getElementById('paging-view');
+
+//   if (standardView) standardView.style.display = 'none';
+//   if (pagingView) pagingView.style.display = 'none';
+
+//   if (selectedAlgo === "Paging") {
+//     if (pagingView) pagingView.style.display = 'grid';
+//     loadPagingScript();
+//   } else {
+//     if (standardView) standardView.style.display = 'grid';
+//     loadDefaultScript(selectedAlgo, selectedPartition);
+//   }
+// }
+
 function loadPagingScript(callback) {
   if (window.pagingScriptLoaded) {
+    console.log("Paging script already loaded");
     if (callback) callback();
     return;
-  };
+  }
 
   let loadedCount = 0;
-  const checkLoaded = () => {
+  const totalScripts = 2;
+
+  const checkLoaded = function() {
     loadedCount++;
-    if (loadedCount === 2) {
+    console.log('Script loaded:', loadedCount, 'of', totalScripts); 
+    if (loadedCount === totalScripts) {
       window.pagingScriptLoaded = true;
+      attachSimulationListeners();
       if (callback) callback();
     }
-  }
+  };
 
   const script1 = document.createElement('script');
   script1.src = "../util/algos/paging.js";
   script1.onload = checkLoaded;
+  script1.onerror = function() {
+    console.error("Failed to load paging.js");
+    checkLoaded();
+  };
 
   const script2 = document.createElement('script');
   script2.src = "../util/pagingUI.js";
   script2.onload = checkLoaded;
+  script2.onerror = function() {
+    console.error("Failed to load pagingUI.js");
+    checkLoaded();
+  };
 
   document.head.appendChild(script1);
   document.head.appendChild(script2);
-
-  // window.pagingScriptLoaded = true;
 }
+
+// function loadPagingScript(callback) {
+//   if (window.pagingScriptLoaded) {
+//     if (callback) callback();
+//     return;
+//   };
+
+//   let loadedCount = 0;
+//   const checkLoaded = () => {
+//     loadedCount++;
+//     if (loadedCount === 2) {
+//       window.pagingScriptLoaded = true;
+//       if (callback) callback();
+//     }
+//   }
+
+//   const script1 = document.createElement('script');
+//   script1.src = "../util/algos/paging.js";
+//   script1.onload = checkLoaded;
+
+//   const script2 = document.createElement('script');
+//   script2.src = "../util/pagingUI.js";
+//   script2.onload = checkLoaded;
+
+//   document.head.appendChild(script1);
+//   document.head.appendChild(script2);
+
+//   // window.pagingScriptLoaded = true;
+// }
 
 function loadDefaultScript(selectedAlgo, selectedPartition) {
   const algoDescription = document.getElementById('algo-description');

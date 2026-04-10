@@ -641,7 +641,7 @@ function checkAdminAccess() {
     setTimeout(() => {
         if (!currentUser) {
             alert("You must login first.");
-            window.location.href = "./index.html";
+            window.location.href = "/index.html";
             return;
         }
 
