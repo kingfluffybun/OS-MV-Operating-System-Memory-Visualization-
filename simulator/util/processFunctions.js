@@ -10,7 +10,7 @@ const processColors = [
   { bg: "#FFC6FF", border: "#BF94BF" }, // Mavue
 ];
 
-const processContainer = document.querySelector(".process-container");
+// const processContainer = document.querySelector(".process-container");
 let processIdCounter = processContainer
   ? processContainer.querySelectorAll(".process").length + 1
   : 1;

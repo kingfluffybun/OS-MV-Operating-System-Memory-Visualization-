@@ -1,13 +1,22 @@
 // ========== SIDEBAR ==========
 // Load sidebar
-document.addEventListener("DOMContentLoaded", () => {
+// document.addEventListener("DOMContentLoaded", () => {
+//   loadSidebar().then(() => {
+//     sidebarLinks();
+//     showMenu();
+//     initSidebarFunctions();
+//     loadCurrentUser();
+//   });
+// });
+
+if (document.readyState !== 'loading') {
   loadSidebar().then(() => {
     sidebarLinks();
     showMenu();
     initSidebarFunctions();
     loadCurrentUser();
   });
-});
+}
 
 async function loadSidebar() {
   const container = document.getElementById("sidebar-container");

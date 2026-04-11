@@ -95,6 +95,8 @@ function loadCurrentUser() {
   }
 }
 
+const processContainer = document.querySelector(".process-container");
+
 const simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
   document.querySelector(".simulation .container") ||

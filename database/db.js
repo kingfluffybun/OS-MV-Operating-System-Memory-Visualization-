@@ -481,13 +481,13 @@ async function loadUsers() {
                 const hours = Math.floor(minutes / 60);
 
                 if (isOnline) {
-                    lastActivity = 'Online';
+                    lastActivity = '<span class="badge online">Online</span>';
                 } else if (minutes < 1) {
-                    lastActivity = 'Just now';
+                    lastActivity = '<span class="badge offline">Just now</span>';
                 } else if (minutes < 60) {
-                    lastActivity = minutes + 'm ago';
+                    lastActivity = '<span class="badge offline">' + minutes + ' m ago</span>';
                 } else if (hours < 24) {
-                    lastActivity = hours + 'h ago';
+                    lastActivity = '<span class="badge offline">' + hours + ' h ago</span>';
                 } else {
                     lastActivity = formatDate(user.updated_at);
                 }
@@ -495,23 +495,24 @@ async function loadUsers() {
                 lastActivity = formatDate(user.updated_at);
             }
 
-            const statusClass = isOnline ? 'online' : 'offline';
+            const statusClass = isOnline ? 'badge online' : 'badge offline';
             const statusText = isOnline ? 'Online' : 'Offline';
 
             let actionButtons = '';
             if (isCurrentUser) {
-                actionButtons = `<span style="color: #00c30d; font-style: italic;">Current Admin</span>`
+                actionButtons = `<span class="badge online" style="font-style: italic;">Current Admin</span>`
             } else {
-                const roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + (isAdmin ? 'user' : 'admin') + '\')" class="btn-role">' + (isAdmin ? 'Demote' : 'Promote') + '</button>';
-                const deleteBtn = '<button onclick="deleteUser(' + user.user_id + ')" class="btn-delete">Delete</button>';
-                actionButtons = roleBtn + deleteBtn;
+                const roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + (isAdmin ? 'user' : 'admin') + '\')" class="ui-btn role">' + (isAdmin ? 'Demote' : 'Promote') + '</button>';
+                const resetBtn = '<button onclick="resetPassword(' + user.user_id + ')" class="ui-btn reset">Reset Password</button>';
+                const deleteBtn = '<button onclick="deleteUser(' + user.user_id + ')" class="ui-btn delete">Delete</button>';
+                actionButtons = roleBtn + resetBtn + deleteBtn;
             }
 
             row.innerHTML = 
                 // Username with admin badge if admin ang user
-                '<td class="username-cell">' + escapeHtml(user.username) + (isAdmin ? ' <span class="admin-badge">ADMIN</span>' : '') + '</td>' +
+                '<td class="username-cell">' + escapeHtml(user.username) + (isAdmin ? ' <span class="badge admin">ADMIN</span>' : '') + '</td>' +
                 // Status (Online/Offline)
-                '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
+                '<td><span class="' + statusClass + '">' + statusText + '</span></td>' +
                 // Created At
                 '<td>' + formatDate(user.created_at) + '</td>' +
                 // Last Activity
@@ -587,6 +588,13 @@ function changeRole(userId, newRole) {
     } catch (e) {
         alert('Failed to update user role');
     }
+}
+
+function resetPassword(userId) {
+    if (!confirm('Are you sure you want to reset this user\'s password?')) return;
+
+    const resetModal = document.getElementById('reset-password-modal');
+    resetModal.style.display = 'block';
 }
 
 function cleanupSessions() {

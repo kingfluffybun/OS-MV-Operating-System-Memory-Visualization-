@@ -641,16 +641,20 @@ function checkAdminAccess() {
     setTimeout(() => {
         if (!currentUser) {
             alert("You must login first.");
-            window.location.href = "/index.html";
+            setTimeout(() => {
+                window.location.href = "/index.html";
+            }, 500);
             return;
         }
 
         if (currentUser.user_role !== "admin") {
             alert("Access denied. Admins only.");
-            window.location.href = "/simulator/index.html";
+            setTimeout(() => {
+                window.location.href = "/simulator/index.html";
+            }, 500);
             return;
         }
 
         console.log("Admin access granted.");
-    }, 1000);
+    }, 10);
 }

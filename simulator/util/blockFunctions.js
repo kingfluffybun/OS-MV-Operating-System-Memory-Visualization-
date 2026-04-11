@@ -1,14 +1,14 @@
 // ========== BLOCK FUNCTIONS ==========
-const simulationContainer =
-  document.querySelector(".simulation .simulation-scroll-track") ||
-  document.querySelector(".simulation .container") ||
-  document.querySelector(".simulation-paging .container");
-const totalMemoryValue = document.getElementById("total-memory-value");
+// const simulationContainer =
+//   document.querySelector(".simulation .simulation-scroll-track") ||
+//   document.querySelector(".simulation .container") ||
+//   document.querySelector(".simulation-paging .container");
+// const totalMemoryValue = document.getElementById("total-memory-value");
 
-let preSimBlockState = null;
+// let preSimBlockState = null;
 
-const isDynamicPartitionMode = () =>
-  document.body.dataset.partitionMode === "dynamic";
+// const isDynamicPartitionMode = () =>
+//   document.body.dataset.partitionMode === "dynamic";
 
 function isPagingMode() {
   const pagingView = document.getElementById("paging-view");
