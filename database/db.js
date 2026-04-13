@@ -430,12 +430,6 @@ async function initAdminDashboard() {
 // Load users
 async function loadUsers() {
     const tableBody = document.getElementById('user-table-body');
-
-    // if (!tableBody) {
-    //     console.error('user-table-body element not found');
-    //     return;
-    // }
-
     await initDB();
 
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
@@ -473,7 +467,10 @@ async function loadUsers() {
             let isOnline = false;
             let lastActivity = '';
 
-            if (session) {
+            if (isCurrentUser && currentUser) {
+                isOnline = true;
+                lastActivity = '<span class="badge online">Online</span>';
+            } else if (session) {
                 const timeSince = now - session.lastActivity;
                 isOnline = timeSince < SESSION_TIMEOUT;
 

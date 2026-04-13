@@ -1096,7 +1096,11 @@ const runStep = () => {
 };
 
 const getStepDelay = () => {
-  const slider = document.getElementById("slider");
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+
+  const slider = activeView ? activeView.querySelector("#slider") : null;
   const value = parseFloat(slider ? slider.value : 1) || 1;
   const maxDelay = 1200;
   const minDelay = 250;
@@ -1349,6 +1353,22 @@ function attachSimulationListeners(viewType) {
   if (slider) {
     slider.addEventListener("input", function() {
       speed = parseFloat(this.value);
+    });
+  }
+
+  const toggleBtn = activeView.querySelector("#toggle-btn");
+  if (toggleBtn) {
+
+    console.log('Attaching toggle listener to:', toggleBtn);
+    toggleBtn.removeAttribute('onclick');
+
+    const newToggleBtn = toggleBtn.cloneNode(true);
+    toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
+
+    newToggleBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSideBar();
     });
   }
 

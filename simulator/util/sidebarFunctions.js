@@ -94,15 +94,24 @@ function initSidebarFunctions() {
 }
 
 const toggleSideBar = () => {
-  const sidebar = window.sidebar || document.getElementById("sidebar");
-  const toggleButton = window.toggleButton || document.getElementById("toggle-btn");
-  const logo = window.logo || document.getElementById("logo");
-  const logoH1 = window.logoH1 || document.getElementById("h1");
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const homeView = document.getElementById('home-view');
+  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : (homeView || standardView);
+
+  const sidebar = window.sidebar || activeView.getElementById("sidebar");
+  const toggleButton = activeView ? activeView.querySelector('#toggle-btn') : null;
+  const logo = window.logo || activeView.getElementById("logo");
+  const logoH1 = window.logoH1 || activeView.getElementById("h1");
 
   sidebar.classList.toggle("close");
   toggleButton.classList.toggle("rotate");
   logo.classList.toggle("hidden");
   logoH1.classList.toggle("hidden");
+
+  if (toggleButton.classList.contains("rotate")) {
+    console.log("Sidebar is now closed");
+  }
 };
 
 const toggleSubMenu = (button) => {
