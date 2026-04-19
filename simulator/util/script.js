@@ -255,6 +255,27 @@ if (processContainer) {
   });
 }
 
+const pagingProcessContainer = document.querySelector("#paging-view .process-container");
+if (pagingProcessContainer) {
+  pagingProcessContainer.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (target.classList.contains("delete-process-btn")) {
+      removeElement(target, ".process");
+      renumberProcesses();
+      return;
+    }
+
+    if (target.classList.contains("edit-process-btn")) {
+      const process = target.closest(".process");
+      if (process) editProcess(process);
+    }
+  });
+}
+
 if (simulationContainer) {
   simulationContainer.addEventListener("click", (event) => {
     const target = event.target.closest("button");

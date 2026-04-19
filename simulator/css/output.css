@@ -189,8 +189,9 @@ body {
     padding: 12px;
 }
 
-.sidebar-options div:nth-last-child(2) {
+.sidebar-profile {
     margin-top: auto;
+    a {margin-bottom: 12px;}
 }
 
 .main {

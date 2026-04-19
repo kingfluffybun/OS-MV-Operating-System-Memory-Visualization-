@@ -101,6 +101,14 @@ const initializePagingUI = (memoryFrames, processes = []) => {
         }
         pagesContainer.appendChild(pageEl);
       }
+
+      if (processIndex < processes.length - 1) {
+        const spacer = document.createElement("div");
+        spacer.style.gridColumn = "1 / -1";
+        spacer.style.height = "12px";
+        pagesContainer.appendChild(spacer);
+      }
+
     });
   }
 };
@@ -139,13 +147,12 @@ const updatePagingUI = (memoryFrames) => {
         const pageIndex = Number.isFinite(frame.page) ? frame.page - 1 : "";
         statusLabel = `${frame.process} - Page ${pageIndex}`;
         const colors = getProcessColor(frame.process);
-        usageInfo = `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`;
+        // usageInfo = `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`;
         
         frameEl.innerHTML = `
           <p id="frame-number">F${frame.id}</p>
           <div class="frame-content">
             <p>${statusLabel}</p>
-            <p>${usageInfo}</p>
           </div>
         `;
         
@@ -217,6 +224,7 @@ const updatePagingUI = (memoryFrames) => {
 
     const frameToPageMap = {};
     const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
+    
 
     Object.values(memoryFrames.frames).forEach((frame) => {
       if (frame.status === "Occupied") {
@@ -234,6 +242,8 @@ const updatePagingUI = (memoryFrames) => {
       .forEach(([frameId, data]) => {
         const rowEl = document.createElement("tr");
         rowEl.className = "page-table-row";
+        const colors = getProcessColor(data.proc);
+        rowEl.style.borderLeft = `8px solid ${colors.bg}`;
 
         rowEl.innerHTML = `
           <td class="table-column proc-id">${data.proc}</td>

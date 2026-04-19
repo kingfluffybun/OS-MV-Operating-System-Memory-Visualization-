@@ -124,7 +124,7 @@ async function checkAdmin() {
 }
 
 async function createAdminAcc() {
-    const username = 'admin';
+    const username = 'Admin';
     const password = generateRandomPassword();
     const recoveryKey = generateRecoveryWords();
     const hashedPassword = await hashPassword(password);

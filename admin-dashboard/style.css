@@ -83,11 +83,6 @@ body {
     stroke: white;
 }
 
-.bottom-options {
-    margin-top: auto; 
-    padding-top: 20px;
-}
-
 .main {
     padding: 30px;
     display: flex;
