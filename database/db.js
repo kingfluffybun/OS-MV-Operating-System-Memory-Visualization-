@@ -406,7 +406,7 @@ function logout(event) {
     }
 
     sessionStorage.removeItem('currentUser');
-    sessionStorage.removeItem('loaderloaded');
+    sessionStorage.removeItem('loaderLoaded');
 }
 
 // ========== Admin Panel ==========
@@ -429,7 +429,7 @@ async function initAdminDashboard() {
 
 if (document.getElementById("adminPage")) {
     window.addEventListener("load", doAnimation);
-}
+} 
 
 if (document.getElementById("loginPage")) {
     window.addEventListener("load", doAnimation);
@@ -552,14 +552,21 @@ async function loadUsers() {
     }
 }
 
+// Delete user
 function deleteUser(userId) {
-    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    showPopup({
+        title: 'Delete User',
+        message: 'Are you sure you want to delete this user? This action cannot be undone.',
+        confirmClass: 'popup-btn-danger',
+        confirmText: 'Delete',
+        onConfirm: function() {
+            executeDelete(userId);
+        }
+    });
+}
 
+function executeDelete(userId) {
     let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    if (currentUser && currentUser.user_id === userId) {
-        alert('You cannot delete your own account while logged in.');
-        return;
-    }
 
     try {
         let stmt = db.prepare(`DELETE FROM users WHERE user_id = ? AND user_id != ?`);
@@ -572,34 +579,68 @@ function deleteUser(userId) {
         localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
 
         loadUsers();
-        alert ('User deleted successfully.');
+        
+        showPopup({
+            title: 'Success',
+            message: 'User deleted successfully.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
     } catch (e) {
         console.error('Error deleting user:', e);
-        alert('Failed to delete user');
+        showPopup({
+            title: 'Error',
+            message: 'Failed to delete user. Please try again.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
     }
 }
 
+// Change user role
 function changeRole(userId, newRole) {
-    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    if (currentUser && currentUser.user_id === userId) {
-        alert('You cannot change your own role while logged in.');
-        return;
-    }
-
     let action = newRole === 'admin' ? 'promote' : 'demote';
-    if (!confirm('Are you sure you want to ' + action + ' this user?')) return;
+    
+    showPopup({
+        title: 'Change Role',
+        message: 'Are you sure you want to ' + action + ' this user?',
+        confirmText: 'Yes, ' + action,
+        onConfirm: function() {
+            executeRoleChange(userId, newRole);
+        }
+    });
+}
+
+function executeRoleChange(userId, newRole) {
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
 
     try {
         let stmt = db.prepare(`
-            UPDATE users SET user_role = ?, updated_at = datetime(\'now\') WHERE user_id = ? AND user_id != ?
+            UPDATE users SET user_role = ?, updated_at = datetime('now') WHERE user_id = ? AND user_id != ?
         `);
         stmt.run([newRole, userId, currentUser.user_id]);
         stmt.free();
         saveDB();
         loadUsers();
-        alert('User role updated successfully.');
+        
+        showPopup({
+            title: 'Success',
+            message: 'User role updated successfully.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
     } catch (e) {
-        alert('Failed to update user role');
+        console.error('Error changing role:', e);
+        showPopup({
+            title: 'Error',
+            message: 'Failed to update user role. Please try again.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
     }
 }
 
@@ -688,6 +729,68 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// ========== POPUP SYSTEM ==========
+
+let popupCallback = null;
+
+function initPopup() {
+    const overlay = document.getElementById('popup-overlay');
+    const closeBtn = document.getElementById('popup-close');
+    const cancelBtn = document.getElementById('popup-cancel');
+    const confirmBtn = document.getElementById('popup-confirm');
+
+    if (closeBtn) closeBtn.addEventListener('click', hidePopup);
+    if (cancelBtn) cancelBtn.addEventListener('click', hidePopup);
+    if (confirmBtn) confirmBtn.addEventListener('click', handlePopupConfirm);
+    
+    // Close on overlay click
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) hidePopup();
+        });
+    }
+}
+
+function showPopup(options) {
+    const overlay = document.getElementById('popup-overlay');
+    const title = document.getElementById('popup-title');
+    const message = document.getElementById('popup-message');
+    const confirmBtn = document.getElementById('popup-confirm');
+    const cancelBtn = document.getElementById('popup-cancel');
+
+    if (!overlay) return;
+
+    // Set content
+    title.textContent = options.title || 'Confirm';
+    message.textContent = options.message || 'Are you sure?';
+    
+    // Set button styles
+    confirmBtn.className = 'popup-btn ' + (options.confirmClass || 'popup-btn-confirm');
+    confirmBtn.textContent = options.confirmText || 'Confirm';
+    cancelBtn.textContent = options.cancelText || 'Cancel';
+    
+    // Store callback
+    popupCallback = options.onConfirm || null;
+    
+    // Show popup
+    overlay.style.display = 'flex';
+}
+
+function hidePopup() {
+    const overlay = document.getElementById('popup-overlay');
+    if (overlay) overlay.style.display = 'none';
+    popupCallback = null;
+}
+
+function handlePopupConfirm() {
+    if (typeof popupCallback === 'function') {
+        popupCallback();
+    }
+    hidePopup();
+}
+
+document.addEventListener('DOMContentLoaded', initPopup);
 
 // ========== Auto Initizialze Database ==========
 (function autoInit() {
