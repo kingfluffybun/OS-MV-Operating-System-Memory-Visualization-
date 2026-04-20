@@ -415,6 +415,27 @@ document.getElementById('word-0').addEventListener('paste', (e) => {
     });
 });
 
+// ========== ADMIN PANEL ==========
+function checkAdminAccess() {
+    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+
+    if (!currentUser) {
+        alert("You must login first.");
+        setTimeout(() => {
+            window.location.href = "/index.html";
+        });
+        return;
+    }
+
+    if (currentUser.user_role !== "admin") {
+        alert("Access denied. Admins only.");
+        setTimeout(() => {
+            window.location.href = "/simulator/index.html";
+        });
+        return;
+    }
+}
+
 // ========== OTHER FUNCTIONS ==========
 // Clear Field
 function clearField() {
@@ -632,29 +653,4 @@ function ResetRequirementsCheck() {
             req4TR.style.color = '#ce1e1e';
         }
     }
-}
-
-// ========== ADMIN PANEL ==========
-function checkAdminAccess() {
-    const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-
-    setTimeout(() => {
-        if (!currentUser) {
-            alert("You must login first.");
-            setTimeout(() => {
-                window.location.href = "/index.html";
-            }, 500);
-            return;
-        }
-
-        if (currentUser.user_role !== "admin") {
-            alert("Access denied. Admins only.");
-            setTimeout(() => {
-                window.location.href = "/simulator/index.html";
-            }, 500);
-            return;
-        }
-
-        console.log("Admin access granted.");
-    }, 10);
 }

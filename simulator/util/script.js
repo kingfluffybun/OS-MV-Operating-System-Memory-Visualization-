@@ -1568,4 +1568,5 @@ function loadDefaultScript(selectedAlgo, selectedPartition) {
 function hub() {
   sessionStorage.removeItem('selectedAlgo');
   sessionStorage.removeItem('selectedPartition');
+  sessionStorage.removeItem('loaderLoaded');
 }

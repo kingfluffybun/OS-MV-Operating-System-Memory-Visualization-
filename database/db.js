@@ -406,26 +406,54 @@ function logout(event) {
     }
 
     sessionStorage.removeItem('currentUser');
+    sessionStorage.removeItem('loaderloaded');
 }
 
 // ========== Admin Panel ==========
 async function initAdminDashboard() {
+    setTimeout(() => {
         checkAdminAccess();
+    }, 300);
+}
+
+(function checkLoader() {
+    const loaderWrapper = document.getElementById("loader-wrapper");
+    
+    if (!loaderWrapper) return;
+    
+    if (sessionStorage.getItem("loaderLoaded") === "true") {
+        loaderWrapper.style.display = "none";
+        console.log("Loader skipped.");
+    }
+})();
+
+if (document.getElementById("adminPage")) {
+    window.addEventListener("load", doAnimation);
+}
+
+if (document.getElementById("loginPage")) {
+    window.addEventListener("load", doAnimation);
+}
+
+async function doAnimation() {
+    const loaderWrapper = document.getElementById("loader-wrapper");
+
+    if (!loaderWrapper || loaderWrapper.style.display === "none") {
+        await loadUsers();
+        return;
     }
 
-    window.addEventListener("load", async function() {
-        const loaderWrapper = document.getElementById("loader-wrapper");
+    setTimeout(() => {
+        loaderWrapper.classList.add("loaded");
+        sessionStorage.setItem("loaderLoaded", "true");
         
         setTimeout(() => {
-            loaderWrapper.classList.add("loaded");
-            
-            setTimeout(() => {
-                loaderWrapper.style.display = "none";
-            }, 600);
-        }, 1500);
-        
-        await loadUsers();
-    });
+            loaderWrapper.style.display = "none";
+        }, 600);
+    }, 1000);
+
+    await loadUsers();
+}
 
 // Load users
 async function loadUsers() {
@@ -551,18 +579,6 @@ function deleteUser(userId) {
     }
 }
 
-function updateUserActivity(userId) {
-    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
-    let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
-
-    activeSession[currentUser.user_id] = {
-        username: currentUser.username,
-        lastActivity: Date.now()
-    };
-
-    localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
-}
-
 function changeRole(userId, newRole) {
     let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     if (currentUser && currentUser.user_id === userId) {
@@ -587,11 +603,16 @@ function changeRole(userId, newRole) {
     }
 }
 
-function resetPassword(userId) {
-    if (!confirm('Are you sure you want to reset this user\'s password?')) return;
+function updateUserActivity(userId) {
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+    let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
 
-    const resetModal = document.getElementById('reset-password-modal');
-    resetModal.style.display = 'block';
+    activeSession[currentUser.user_id] = {
+        username: currentUser.username,
+        lastActivity: Date.now()
+    };
+
+    localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
 }
 
 function cleanupSessions() {
