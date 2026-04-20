@@ -163,6 +163,8 @@ const insertDynamicFreeSplitAfter = (
   const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
     isSplitFree: true,
   });
+  freeEl.id = `block-split-${freeNodeId}`;
+
 
   freeEl.style.borderRadius = "0px 12px 12px 0px";
   freeEl.style.marginLeft = "-10px";

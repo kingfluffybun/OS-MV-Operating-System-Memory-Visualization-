@@ -176,7 +176,7 @@ const memorySimulator = {
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
         const leftover = block.size - processSize;
-        const displayBlockId = block.id;
+        const displayBlockId = block.parentId || block.id;
         block.size = processSize;
         block.status = "Occupied";
 

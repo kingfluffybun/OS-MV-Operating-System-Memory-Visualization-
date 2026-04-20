@@ -609,7 +609,7 @@ const applyBlockGrouping = () => {
   if (!simulationContainer) return;
   
   const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
-    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
+    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste") && !b.id.startsWith("block-split-")
   );
   
   // Classify block positions in groups
@@ -1025,7 +1025,10 @@ const runStep = () => {
   }
 
   if (!stepResult.ifCompacted && stepResult.result.status === "Allocated") {
-    const blockEl = document.getElementById(`block-${stepResult.result.block}`);
+    let blockEl = document.getElementById(`block-split-${stepResult.result.block}`);
+    if (!blockEl) {
+        blockEl = document.getElementById(`block-${stepResult.result.block}`);
+    }
     const leftover = stepResult.result.fragmentation || 0;
 
     if (leftover > 0 && blockEl) {
@@ -1053,11 +1056,13 @@ const runStep = () => {
     }
 
     if (blockEl) {
+      const isSplitBlock = blockEl.classList.contains("block--split-free");
       const displayBlockId = stepResult.result.displayBlock || simulationState.results[processId]?.displayBlock;
       if (displayBlockId) {
         const titleEl = blockEl.querySelector("p");
-        if (titleEl) titleEl.textContent = `Block ${displayBlockId}`;
+        if (titleEl) titleEl.textContent = isSplitBlock ? "" : `Block ${displayBlockId}`;
         blockEl.dataset.parentPartitionLabel = String(displayBlockId);
+        blockEl.dataset.partitionLabel = String(displayBlockId);
       }
       blockEl.classList.remove("block--split-free");
       const label = blockEl.querySelector(".block-status");

@@ -107,7 +107,7 @@ const updateBlockVisuals = (results) => {
     
     if (!currentAllocation) {
       const blockPos = Array.from(simulationContainer.querySelectorAll(".block"))
-        .filter((b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste"))
+        .filter((b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste") && !b.id.startsWith("block-split-"))
         .indexOf(block) + 1;
       
       currentAllocation = Object.entries(results).find(
@@ -146,10 +146,11 @@ const updateBlockVisuals = (results) => {
         block.dataset.partitionLabel = String(result.displayBlock);
         const titleEl = block.querySelector("p");
         if (titleEl) {
-          if (!block.classList.contains("block-group-middle") && !block.classList.contains("block-group-last")) {
-            titleEl.textContent = `Block ${result.displayBlock}`;
-          } else {
+          const isSplit = block.id.startsWith("block-split-");
+          if (isSplit || block.classList.contains("block-group-middle") || block.classList.contains("block-group-last")) {
             titleEl.textContent = "";
+          } else {
+            titleEl.textContent = `Block ${result.displayBlock}`;
           }
         }
       }
