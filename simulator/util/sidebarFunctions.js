@@ -71,11 +71,6 @@ function initSidebarFunctions() {
   const logo = document.getElementById("logo");
   const logoH1 = document.getElementById("h1");
 
-  if (!sidebar) {
-    console.error("Sidebar not found");
-    return;
-  }
-
   window.sidebar = sidebar;
   window.toggleButton = toggleButton;
   window.logo = logo;
@@ -99,17 +94,18 @@ const toggleSideBar = () => {
   const homeView = document.getElementById('home-view');
   const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : (homeView || standardView);
 
-  const sidebar = window.sidebar || activeView.getElementById("sidebar");
-  const toggleButton = activeView ? activeView.querySelector('#toggle-btn') : null;
-  const logo = window.logo || activeView.getElementById("logo");
-  const logoH1 = window.logoH1 || activeView.getElementById("h1");
+  // Fallback to window references or direct DOM query for admin-dashboard pages
+  const sidebar = window.sidebar || (activeView && activeView.getElementById("sidebar")) || document.getElementById("sidebar");
+  const toggleButton = window.toggleButton || (activeView && activeView.querySelector('#toggle-btn')) || document.getElementById("toggle-btn");
+  const logo = window.logo || (activeView && activeView.getElementById("logo")) || document.getElementById("logo");
+  const logoH1 = window.logoH1 || (activeView && activeView.getElementById("h1")) || document.getElementById("h1");
 
-  sidebar.classList.toggle("close");
-  toggleButton.classList.toggle("rotate");
-  logo.classList.toggle("hidden");
-  logoH1.classList.toggle("hidden");
+  if (sidebar) sidebar.classList.toggle("close");
+  if (toggleButton) toggleButton.classList.toggle("rotate");
+  if (logo) logo.classList.toggle("hidden");
+  if (logoH1) logoH1.classList.toggle("hidden");
 
-  if (toggleButton.classList.contains("rotate")) {
+  if (toggleButton && toggleButton.classList.contains("rotate")) {
     console.log("Sidebar is now closed");
   }
 };
