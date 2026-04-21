@@ -265,7 +265,19 @@ if (pagingProcessContainer) {
 
     if (target.classList.contains("delete-process-btn")) {
       removeElement(target, ".process");
-      renumberProcesses();
+      const processes = pagingProcessContainer.querySelectorAll(".process");
+      processes.forEach((process, index) => {
+        const label = process.querySelector(".process-content p:first-child");
+        const newId = index + 1;
+        if (label) label.textContent = `Process ${newId}`;
+        process.id = `process-${newId}`;
+        const colorIndex = index % processColors.length;
+        const colorPair = processColors[colorIndex];
+        process.setAttribute("data-bg", colorPair.bg);
+        process.setAttribute("data-border", colorPair.border);
+        process.style.backgroundColor = colorPair.bg;
+        process.style.borderBottomColor = colorPair.border;
+      });
       return;
     }
 
