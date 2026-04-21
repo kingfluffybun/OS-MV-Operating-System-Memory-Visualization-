@@ -48,6 +48,14 @@ body {
     letter-spacing: -1.5px;
 }
 
+.logo h1.hidden {
+    color: white;
+}
+
+.logo p.hidden {
+    color: white;
+}
+
 .logo p {
     font-size: 16px;
     color: #1a1a1a;
