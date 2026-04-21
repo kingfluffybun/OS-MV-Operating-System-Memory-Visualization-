@@ -124,6 +124,8 @@ body {
     border: none;
     font: inherit;
     margin-bottom: 12px;
+    transition: all ease 250ms;
+    border-radius: 8px;
 }
 .dropdown-btn svg {
     transition: transform 200ms ease-in-out;
@@ -187,6 +189,12 @@ body {
     display: flex;
     gap: 8px;
     padding: 12px;
+    border-radius: 8px;
+    transition: all ease 250ms;
+}
+
+.sidebar-options div a:hover, .sidebar-options button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-profile {

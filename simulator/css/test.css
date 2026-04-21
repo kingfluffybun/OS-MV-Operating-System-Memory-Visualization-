@@ -54,6 +54,10 @@
             gap: 1em;
             font-size: 16px;
             cursor: pointer;
+            transition: all ease 250ms;
+        }
+        button:hover {
+            background-color: #e0e0e0;
         }
     } div:last-child {
         margin-left: auto;
