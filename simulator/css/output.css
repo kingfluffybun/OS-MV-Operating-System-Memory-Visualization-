@@ -130,7 +130,8 @@ body {
 .dropdown-btn svg {
     transition: transform 200ms ease-in-out;
 }
-.rotate svg:last-child {
+
+#toggle-btn.rotate svg {
     transform: rotate(180deg);
 }
 
