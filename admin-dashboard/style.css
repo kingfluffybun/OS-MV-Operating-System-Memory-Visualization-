@@ -17,9 +17,29 @@
 body {
     display: grid;
     height: 100vh;
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: auto 1fr;
     background-color: var(--bg-light);
     overflow: hidden;
+    transition: grid-template-columns 300ms ease-in-out;
+}
+
+#sidebar {
+    box-sizing: border-box;
+    height: 100vh;
+    width: 280px;
+    position: sticky;
+    top: 0;
+    align-self: start;
+    text-wrap: nowrap;
+    transition: 300ms ease-in-out;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+#sidebar.close {
+    padding: 6vh 5px;
+    width: 60px;
 }
 
 .sidebar {
@@ -30,6 +50,10 @@ body {
     border-right: 1px solid var(--border-color);
     height: 100vh;
     user-select: none;
+}
+
+#sidebar.close .sidebar {
+    padding: 6vh 5px;
 }
 
 .logo {
@@ -46,6 +70,14 @@ body {
     font-weight: 700;
     line-height: 1; 
     letter-spacing: -1.5px;
+}
+
+.logo h1.hidden {
+    color: white;
+}
+
+.logo p.hidden {
+    color: white;
 }
 
 .logo p {
@@ -94,11 +126,8 @@ body {
 .main-container {
     background-color: white;
     width: 100%;
-    max-width: 1400px;
     border-radius: 20px;
     padding: 50px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.04);
-    border: 1px solid var(--border-color);
     min-height: 80vh;
     user-select: none;
 }
