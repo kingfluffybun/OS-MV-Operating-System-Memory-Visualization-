@@ -270,7 +270,7 @@ const followAllocatedFrame = (frameId) => {
     contentEl.classList.add("current");
     contentEl.scrollIntoView({
       behavior: "smooth",
-      block: "nearest",
+      block: "center",
       inline: "center",
     });
   }
@@ -289,7 +289,7 @@ const followAllocatedFrame = (frameId) => {
         pageContent.classList.add("current");
         pageEl.scrollIntoView({
           behavior: "smooth",
-          block: "nearest",
+          block: "center",
           inline: "center",
         });
       }
@@ -297,8 +297,20 @@ const followAllocatedFrame = (frameId) => {
   } else if (frameEl.scrollIntoView) {
     frameEl.scrollIntoView({
       behavior: "smooth",
-      block: "nearest",
+      block: "center",
       inline: "center",
     });
   }
 };
+
+// Synchronous scrolling
+// const pagesContainer = document.querySelector('.pages-container');
+// const framesContainer = document.querySelector('.frames-container');
+
+// pagesContainer.addEventListener('scroll', () => {
+//     framesContainer.scrollTop = pagesContainer.scrollTop;
+// });
+
+// framesContainer.addEventListener('scroll', () => {
+//     pagesContainer.scrollTop = framesContainer.scrollTop;
+// });
