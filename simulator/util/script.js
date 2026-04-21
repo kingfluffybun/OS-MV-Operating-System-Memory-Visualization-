@@ -894,6 +894,43 @@ const runStep = () => {
       simulationState.pageAllocationIndex,
     );
 
+    // Check if allocation failed (no free frames)
+    if (stepResult.result.status === "Unallocated") {
+      // Store failed result
+      if (!simulationState.results[processId]) {
+        simulationState.results[processId] = {
+          size,
+          pagesNeeded,
+          frameIds: {},
+          status: "Unallocated",
+          pagesAllocated: simulationState.pageAllocationIndex,
+          internalFragmentation: 0,
+        };
+      } else {
+        simulationState.results[processId].status = "Unallocated";
+      }
+
+      appendConsoleMessage(
+        `${processId} Page ${simulationState.pageAllocationIndex} - No free frames available`,
+      );
+
+      // Move to next process since current one can't be allocated
+      simulationState.pageAllocationIndex = 0;
+      simulationState.currentIndex += 1;
+      
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        reEnableSimulationButtons();
+        return false;
+      }
+      return true;
+    }
+
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
     
     // Store result with process ID
@@ -952,7 +989,9 @@ const runStep = () => {
     updatePagingUI(simulationState.memoryFrames);
 
     const allocatedFrameId = Object.keys(stepResult.result.frameIds)[0];
-    followAllocatedFrame(allocatedFrameId);
+    if (allocatedFrameId) {
+      followAllocatedFrame(allocatedFrameId);
+    }
 
     appendConsoleMessage(
       `${processId} Page ${simulationState.pageAllocationIndex} allocated`,
