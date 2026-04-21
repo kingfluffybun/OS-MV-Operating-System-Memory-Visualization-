@@ -57,7 +57,7 @@ const initializePagingUI = (memoryFrames, processes = []) => {
         <p id="frame-number">F${frame.id}</p>
         <div class="frame-content">
           <p>${statusLabel}</p>
-          <p>${usageInfo}</p>
+          ${usageInfo}
         </div>
       `;
       framesContainer.appendChild(frameEl);
@@ -89,12 +89,12 @@ const initializePagingUI = (memoryFrames, processes = []) => {
 
         pageEl.innerHTML = `
           <p id="page-number">P${i}</p>
-          <div class="frame-content">
+          <div class="page-content">
             <p>${processId}</p>
             <p>&nbsp;(Waiting for allocation)</p>
           </div>
         `;
-        const contentDiv = pageEl.querySelector(".frame-content");
+        const contentDiv = pageEl.querySelector(".page-content");
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
@@ -145,14 +145,16 @@ const updatePagingUI = (memoryFrames) => {
 
       if (frame.status === "Occupied") {
         const pageIndex = Number.isFinite(frame.page) ? frame.page - 1 : "";
-        statusLabel = `${frame.process} - Page ${pageIndex}`;
+        statusLabel = `${frame.process}`;
         const colors = getProcessColor(frame.process);
         // usageInfo = `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`;
         
         frameEl.innerHTML = `
           <p id="frame-number">F${frame.id}</p>
-          <div class="frame-content">
+          <div class="frame-content" style="grid-template-columns: repeat(3, 1fr);">
             <p>${statusLabel}</p>
+            <p>Page ${pageIndex}</p>
+            ${usageInfo}
           </div>
         `;
         
@@ -166,7 +168,7 @@ const updatePagingUI = (memoryFrames) => {
           <p id="frame-number">F${frame.id}</p>
           <div class="frame-content">
             <p>${statusLabel}</p>
-            <p>${usageInfo}</p>
+            ${usageInfo}
           </div>
         `;
       }
@@ -202,14 +204,14 @@ const updatePagingUI = (memoryFrames) => {
         
         pageEl.innerHTML = `
           <p id="page-number">P${pageNum}</p>
-          <div class="frame-content">
+          <div class="page-content">
             <p>${procName}</p>
-            <p>(${allocatedFrame.used}/${pageSize} KB)</p>
+            <p>${allocatedFrame.used}KB</p>
           </div>
         `;
         
         const colors = getProcessColor(procName);
-        const contentDiv = pageEl.querySelector(".frame-content");
+        const contentDiv = pageEl.querySelector(".page-content");
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
