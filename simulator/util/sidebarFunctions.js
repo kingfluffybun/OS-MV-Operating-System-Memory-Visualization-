@@ -99,11 +99,13 @@ const toggleSideBar = () => {
   const toggleButton = window.toggleButton || (activeView && activeView.querySelector('#toggle-btn')) || document.getElementById("toggle-btn");
   const logo = window.logo || (activeView && activeView.getElementById("logo")) || document.getElementById("logo");
   const logoH1 = window.logoH1 || (activeView && activeView.getElementById("h1")) || document.getElementById("h1");
+  const logoP = logo && logo.querySelector("p");
 
   if (sidebar) sidebar.classList.toggle("close");
   if (toggleButton) toggleButton.classList.toggle("rotate");
   if (logo) logo.classList.toggle("hidden");
   if (logoH1) logoH1.classList.toggle("hidden");
+  if (logoP) logoP.classList.toggle("hidden");
 
   if (toggleButton && toggleButton.classList.contains("rotate")) {
     console.log("Sidebar is now closed");
