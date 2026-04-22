@@ -156,23 +156,23 @@ body {
     gap: 12px;
     margin: 80px;
 }
-.logo h1.hidden{
+
+.logo h1.hidden, .logo p.hidden{
     color: white;
+    transition: 150ms ease-in-out;
 }
-.hidden{
-    color: white;
-}
+
 .logo h1 {
     font-size: 48px;
     color: var(--primary-color);
     text-wrap: nowrap;
-    transition: 300ms ease-in-out;
+    transition: 1000ms ease-in-out;
 }
 
 .logo p {
     text-align: center;
     text-wrap: nowrap;
-    transition: 300ms ease-in-out;
+    transition: 1200ms ease-in-out;
 }
 
 .sidebar-options {
@@ -247,7 +247,7 @@ form {
         justify-content: space-between;
         align-items: center;
         > div {
-            p {font-weight: 300;}
+            p {font-weight: 300;color: #666;}
         }
     }
 }
@@ -281,7 +281,7 @@ form {
                 transition: all 250ms ease;
             }
             > h3 {font-size: 1rem; font-weight: 600;}
-            > p {max-width: 220px; font-size: 0.75rem;}
+            > p {max-width: 220px; font-size: 0.75rem;color: #666;}
         }
     }
 }

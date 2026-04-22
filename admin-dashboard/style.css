@@ -47,7 +47,6 @@ body {
     flex-direction: column;
     padding: 6vh 20px; 
     background-color: white;
-    border-right: 1px solid var(--border-color);
     height: 100vh;
     user-select: none;
 }
@@ -58,33 +57,28 @@ body {
 
 .logo {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    text-align: center;
-    margin-bottom: 50px; 
+    flex-direction: column;
+    gap: 12px;
+    margin: 80px;
+}
+
+.logo h1.hidden, .logo p.hidden{
+    color: white;
+    transition: 150ms ease-in-out;
 }
 
 .logo h1 {
-    font-size: 50px; 
+    font-size: 48px;
     color: var(--primary-color);
-    font-weight: 700;
-    line-height: 1; 
-    letter-spacing: -1.5px;
-}
-
-.logo h1.hidden {
-    color: white;
-}
-
-.logo p.hidden {
-    color: white;
+    text-wrap: nowrap;
+    transition: 1000ms ease-in-out;
 }
 
 .logo p {
-    font-size: 16px;
-    color: #1a1a1a;
-    line-height: 1.2;
-    margin-top: 10px;
+    text-align: center;
+    text-wrap: nowrap;
+    transition: 1200ms ease-in-out;
 }
 
 .sidebar-options {
@@ -133,7 +127,7 @@ body {
 }
 
 .admin-header h2 {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
     color: #000;
 }
