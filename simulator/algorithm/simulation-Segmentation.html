@@ -322,38 +322,5 @@
             </div>
         </div>
     </section>
-
-    <script>
-        // Initialize Segmentation simulation on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Segmentation page loaded');
-            
-            // Set session storage to indicate Segmentation mode
-            sessionStorage.setItem('selectedAlgo', 'Segmentation');
-            sessionStorage.setItem('selectedPartition', 'segmentation');
-            
-            // Wait for script.js to be fully loaded before initializing
-            const checkAndInit = () => {
-                if (typeof attachSimulationListeners === 'function' && 
-                    typeof getProcessSizes === 'function' &&
-                    typeof appendConsoleMessage === 'function') {
-                    console.log('All functions loaded, initializing...');
-                    
-                    // Initialize listeners
-                    attachSimulationListeners();
-                    
-                    // Append initial message
-                    appendConsoleMessage("System Ready. Add processes or click Start.");
-                    
-                    console.log('Segmentation simulation initialized');
-                } else {
-                    // Retry after a short delay
-                    setTimeout(checkAndInit, 100);
-                }
-            };
-            
-            checkAndInit();
-        });
-    </script>
 </body>
 </html>
