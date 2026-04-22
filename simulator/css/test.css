@@ -244,18 +244,18 @@ button:disabled svg {
         /* Remove gaps between consecutive blocks in same partition group */
         .block-group-first {
             border-radius: 12px 0 0 12px;
-            margin-right: -10px;
+            /* margin-right: -10px; */
             z-index: 2;
         }
         .block-group-middle {
             border-radius: 0;
-            margin-right: -10px;
-            margin-left: -10px;
+            /* margin-right: -10px;
+            margin-left: -10px; */
             z-index: 1;
         }
         .block-group-last {
             border-radius: 0 12px 12px 0;
-            margin-left: -10px;
+            /* margin-left: -10px; */
             z-index: 1;
         }
         .process-action {
