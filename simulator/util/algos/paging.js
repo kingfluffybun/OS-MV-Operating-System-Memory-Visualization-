@@ -63,33 +63,15 @@ paging(memoryFrames, pageSize, processes) {
             continue;
         }
 
-        // First pass: collect which frames we'll allocate WITHOUT modifying them
         let remaining = size;
         let allocatedCount = 0;
-        const framesToAllocate = [];
+        const allocatedFrames = {};
 
         for (const key in frames.frames) {
             if (allocatedCount >= pagesNeeded) break;
             const frame = frames.frames[key];
             if (frame.status !== "Free") continue;
-            
-            framesToAllocate.push(key);
-            allocatedCount++;
-        }
 
-        // Only allocate if we got all the pages we need
-        if (framesToAllocate.length < pagesNeeded) {
-            results[pId] = { size, pagesNeeded, frameIds: {}, status: "Unallocated" };
-            continue;
-        }
-
-        // Second pass: actually allocate the frames
-        remaining = size;
-        allocatedCount = 0;
-        const allocatedFrames = {};
-
-        for (const key of framesToAllocate) {
-            const frame = frames.frames[key];
             const used = remaining > pSize ? pSize : remaining;
             frame.status = "Occupied";
             frame.process = pId;
@@ -147,6 +129,10 @@ pagingStep(memoryFrames, processSize, pageSize, processId) {
         [freeFrameKeys[i], freeFrameKeys[j]] = [freeFrameKeys[j], freeFrameKeys[i]];
     }
 
+    const allocatedFrames = {};
+    let remaining = pSizeActual;
+    let allocatedCount = 0;
+
     // Use underscore split for IDs like "process_1"
     const processNum = parseInt(processId.split('_')[1]) || 1;
 
@@ -154,37 +140,19 @@ pagingStep(memoryFrames, processSize, pageSize, processId) {
     const step = (processNum % 2 === 0) ? 2 : 1;
     const limit = (processNum % 2 === 0) ? pagesNeeded * 2 : pagesNeeded;
 
-    // First pass: collect which frames we'll allocate WITHOUT modifying them
-    const framesToAllocate = [];
-    let allocatedCount = 0;
     for (let i = 0; i < limit && allocatedCount < pagesNeeded; i += step) {
         if (i >= freeFrameKeys.length) break;
-        framesToAllocate.push(freeFrameKeys[i]);
-        allocatedCount++;
-    }
-
-    // Only allocate if we got all the pages we need
-    if (framesToAllocate.length < pagesNeeded) {
-        return {
-            result: { size: pSizeActual, pagesNeeded, frameIds: {}, status: "Unallocated" },
-            frames
-        };
-    }
-
-    // Second pass: actually allocate the frames
-    const allocatedFrames = {};
-    let remaining = pSizeActual;
-    for (let idx = 0; idx < framesToAllocate.length; idx++) {
-        const key = framesToAllocate[idx];
+        const key = freeFrameKeys[i];
         const frame = frames.frames[key];
 
         const used = remaining > pSize ? pSize : remaining;
         frame.status = "Occupied";
         frame.process = processId;
-        frame.page = idx + 1;
+        frame.page = allocatedCount + 1;
         frame.used = Number(used); // Fixes UI display bugs
         
         allocatedFrames[key] = true;
+        allocatedCount++;
         remaining -= used;
     }
 

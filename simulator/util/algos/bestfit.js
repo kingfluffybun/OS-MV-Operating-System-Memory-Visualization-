@@ -150,7 +150,6 @@ const memorySimulator = {
       }
 
       if (bestBlock) {
-        const originalLabel = bestBlock.originalLabel ?? bestBlock.id;
         const leftover = bestBlock.size - size;
 
         // Allocate the block
@@ -160,24 +159,18 @@ const memorySimulator = {
         stats.allocatedSize += size;
         stats.successfulAllocations++;
 
-        // Split leftover into a new free block (carries original label forward)
+        // Split leftover into a new free block
         if (leftover > 0) {
           const newNode = {
             id: splitId++,
             size: leftover,
             status: "Free",
             next: bestBlock.next,
-            originalLabel, // future allocations from this fragment inherit the label
           };
           bestBlock.next = newNode;
         }
 
-        results[pId] = {
-          size,
-          block: bestBlock.id,
-          status: "Allocated",
-          displayBlock: originalLabel,
-        };
+        results[pId] = { size, block: bestBlock.id, status: "Allocated" };
       } else {
         results[pId] = { size, block: "None", status: "Unallocated" };
       }
@@ -311,9 +304,6 @@ const memorySimulator = {
       };
     }
 
-    // Preserve the user-visible partition label before any modification
-    const originalLabel = bestBlock.originalLabel ?? bestBlock.id;
-
     const leftover = bestBlock.size - processSize;
     bestBlock.size = processSize;
     bestBlock.status = "Occupied";
@@ -327,11 +317,14 @@ const memorySimulator = {
         size: leftover,
         status: "Free",
         next: bestBlock.next,
+<<<<<<< HEAD
         // Pre-compaction: inherit originalLabel so the remainder stays tied to
         // the same original partition. Post-compaction: don't inherit — the
         // merged free space has no original partition, so each new split gets
         // labeled by its own sequential position (node.id).
         ...(compactedHead ? {} : { originalLabel }),
+=======
+>>>>>>> parent of 47c97b3 (Merge branch 'main' of https://github.com/kingfluffybun/OS-MV-Operating-System-Memory-Visualization-)
       };
     }
 
@@ -341,7 +334,6 @@ const memorySimulator = {
         block: bestBlock.id,
         status: "Allocated",
         fragmentation: leftover,
-        displayBlock: originalLabel, // script.js uses this for console output
       },
       allocatedSize: processSize,
       successfulAllocations: 1,

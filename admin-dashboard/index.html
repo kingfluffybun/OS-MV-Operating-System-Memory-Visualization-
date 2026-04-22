@@ -27,6 +27,7 @@
     <div id="sidebar-container"></div>
 
     <section class="main">
+<<<<<<< HEAD
       <button id="toggle-btn">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -48,6 +49,46 @@
         <div class="admin-header">
           <h2>User Accounts Overview</h2>
           <p class="subtitle">List of all registered users in the system.</p>
+=======
+        <div class="main-container">
+            <div class="admin-header">
+                <h2>User Accounts Overview</h2>
+                <p class="subtitle">List of all registered users in the system.</p>
+            </div>
+            
+            <!-- table -->
+            <div class="table-wrapper">
+                <table class="user-table">
+                    <thead>
+                        <tr>
+                            <th>USERNAME</th>
+                            <th>STATUS</th>
+                            <th>CREATED DATE</th>
+                            <th>LAST SESSION</th>
+                            <th style="text-align: center;">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-table-body"></tbody>
+                </table>
+            </div>
+
+            <!-- Popup Overlay -->
+            <div id="popup-overlay" class="popup-overlay" style="display: none;">
+                <div class="popup-box">
+                    <div class="popup-header">
+                        <h3 id="popup-title">Title</h3>
+                        <button id="popup-close" class="popup-close-btn">&times;</button>
+                    </div>
+                    <div class="popup-body">
+                        <p id="popup-message">Message</p>
+                    </div>
+                    <div class="popup-footer">
+                        <button id="popup-cancel" class="popup-btn popup-btn-cancel">Cancel</button>
+                        <button id="popup-confirm" class="popup-btn popup-btn-confirm">Confirm</button>
+                    </div>
+                </div>
+            </div>
+>>>>>>> parent of 47c97b3 (Merge branch 'main' of https://github.com/kingfluffybun/OS-MV-Operating-System-Memory-Visualization-)
         </div>
 
         <!-- table -->
