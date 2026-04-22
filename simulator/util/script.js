@@ -1536,9 +1536,8 @@ function startSimulation(event) {
   let algoWhat = algo.value;
   sessionStorage.setItem("selectedAlgo", algo.value);
 
-  // Check if dynamic selected
-  const isDynamic = document.querySelector(".toggle-partition input").checked;
-  sessionStorage.setItem("selectedPartition", isDynamic ? "dynamic" : "fixed");
+  const isDynamic = document.querySelector('.toggle-partition input').checked;
+  sessionStorage.setItem('selectedPartition', isDynamic ? "dynamic" : "fixed");
 
   if (algoWhat === "Paging") {
     sessionStorage.setItem("selectedPartition", "paging");
@@ -1547,6 +1546,11 @@ function startSimulation(event) {
   const toggle = document.querySelector(
     '.toggle-partition input[type="checkbox"]',
   );
+  if (algoWhat === "Segmentation") {
+    sessionStorage.setItem('selectedPartition', "segmentation");
+  }
+  
+  const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
 
@@ -1558,9 +1562,10 @@ function startSimulation(event) {
     window.location.href = `algorithm/index.html?algorithm=${algoParam}`;
   } else {
     switch (algoWhat) {
-      case "Paging":
-        window.location.href = `algorithm/index.html?algorithm=paging`;
-        break;
+      case "Paging": window.location.href = `algorithm/index.html?algorithm=paging`;
+      break;
+      case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html?algorithm=segmentation`;
+      break;  
     }
   }
 }
