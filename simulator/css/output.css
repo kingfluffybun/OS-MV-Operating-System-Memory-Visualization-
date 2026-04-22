@@ -158,21 +158,24 @@ body {
 }
 .logo h1.hidden{
     color: white;
+    transition: 150ms ease-in-out;
 }
-.hidden{
-    color: white;
-}
+
 .logo h1 {
     font-size: 48px;
     color: var(--primary-color);
     text-wrap: nowrap;
-    transition: 300ms ease-in-out;
+    transition: 1000ms ease-in-out;
 }
 
 .logo p {
     text-align: center;
     text-wrap: nowrap;
-    transition: 300ms ease-in-out;
+    transition: 1200ms ease-in-out;
+}
+.logo p.hidden{
+    color: white;
+    transition: 150ms ease-in-out;
 }
 
 .sidebar-options {
