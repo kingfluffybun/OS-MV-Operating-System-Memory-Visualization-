@@ -175,8 +175,8 @@ const memorySimulator = {
   firstFitDynamicStep(memoryHead, processSize) {
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
+        const originalLabel = block.originalLabel ?? block.id;
         const leftover = block.size - processSize;
-        const displayBlockId = block.parentId || block.id;
         block.size = processSize;
         block.status = "Occupied";
 
@@ -188,7 +188,7 @@ const memorySimulator = {
             size: leftover,
             status: "Free",
             next: block.next,
-            parentId: block.id,
+            originalLabel, // pre-compaction: inherit so remainder stays tied to same partition
           };
         }
 
@@ -196,7 +196,7 @@ const memorySimulator = {
           result: {
             size: processSize,
             block: block.id,
-            displayBlock: displayBlockId,
+            displayBlock: originalLabel,
             status: "Allocated",
             fragmentation: leftover,
           },
@@ -214,20 +214,21 @@ const memorySimulator = {
       const { head: compactedHead, idMapping } = compacted;
       for (let block = compactedHead; block; block = block.next) {
         if (block.status === "Free" && processSize <= block.size) {
+          const originalLabel = block.originalLabel ?? block.id;
           const leftover = block.size - processSize;
-          const displayBlockId = block.id;
           block.size = processSize;
           block.status = "Occupied";
 
           let newFreeId = null;
           if (leftover > 0) {
-            newFreeId = block.id + 1;
+            newFreeId = Math.max(...this._collectIds(compactedHead)) + 1;
             block.next = {
               id: newFreeId,
               size: leftover,
               status: "Free",
               next: block.next,
-              parentId: block.id,
+              // Post-compaction: don't inherit originalLabel — each new split from
+              // the merged free space gets labeled by its own sequential position.
             };
           }
 
@@ -235,7 +236,7 @@ const memorySimulator = {
             result: {
               size: processSize,
               block: block.id,
-              displayBlock: displayBlockId,
+              displayBlock: originalLabel,
               status: "Allocated",
               fragmentation: leftover,
             },
