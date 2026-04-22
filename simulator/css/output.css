@@ -546,3 +546,35 @@ button[type="submit"] {
 .popup-btn-danger:hover {
     background: #da190b;
 }
+
+
+.allocated-segments {
+  position: relative;
+  min-height: 40px;
+}
+
+.segment-base-limit {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: absolute;
+  left: -45px;
+  top: 0;
+  bottom: 0;
+}
+
+.segment-base, .segment-limit {
+  line-height: 1;
+  margin: 0;
+  font-size: 12px;
+}
+
+.segment-base {
+  position: absolute;
+  top: -8px; 
+}
+
+.segment-limit {
+  position: absolute;
+  bottom: -8px; 
+}
