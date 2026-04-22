@@ -327,7 +327,11 @@ const memorySimulator = {
         size: leftover,
         status: "Free",
         next: bestBlock.next,
-        originalLabel, // carry forward so future allocations from this fragment show the same block label
+        // Pre-compaction: inherit originalLabel so the remainder stays tied to
+        // the same original partition. Post-compaction: don't inherit — the
+        // merged free space has no original partition, so each new split gets
+        // labeled by its own sequential position (node.id).
+        ...(compactedHead ? {} : { originalLabel }),
       };
     }
 

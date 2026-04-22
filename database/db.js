@@ -527,7 +527,9 @@ async function loadUsers() {
             if (isCurrentUser) {
                 actionButtons = `<span class="badge online" style="font-style: italic;">Current Admin</span>`
             } else {
-                const roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + (isAdmin ? 'user' : 'admin') + '\')" class="ui-btn role">' + (isAdmin ? 'Demote' : 'Promote') + '</button>';
+                let roleText = isAdmin ? 'Demote' : 'Promote';
+                let newRole = isAdmin ? 'user' : 'admin';
+                let roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + newRole + '\')" class="ui-btn role">' + roleText +'</button>';
                 const resetBtn = '<button onclick="resetPassword(' + user.user_id + ')" class="ui-btn reset">Reset Password</button>';
                 const deleteBtn = '<button onclick="deleteUser(' + user.user_id + ')" class="ui-btn delete">Delete</button>';
                 actionButtons = roleBtn + resetBtn + deleteBtn;
@@ -601,12 +603,12 @@ function executeDelete(userId) {
 
 // Change user role
 function changeRole(userId, newRole) {
-    let action = newRole === 'admin' ? 'promote' : 'demote';
-    
+    let isPromote = newRole === 'admin';
     showPopup({
         title: 'Change Role',
-        message: 'Are you sure you want to ' + action + ' this user?',
-        confirmText: 'Yes, ' + action,
+        message: 'Are you sure you want to ' + (isPromote ? 'promote' : 'demote') + ' this user?',
+        confirmText: isPromote ? 'Yes, Promote' : 'Yes, Demote',
+        confirmClass: isPromote ? 'popup-btn-promote' : 'popup-btn-danger',
         onConfirm: function() {
             executeRoleChange(userId, newRole);
         }

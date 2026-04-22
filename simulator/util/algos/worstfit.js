@@ -221,6 +221,7 @@ const memorySimulator = {
       };
     }
 
+    const originalLabel = worstBlock.originalLabel ?? worstBlock.id;
     const leftover = worstBlock.size - processSize;
     worstBlock.size = processSize;
     worstBlock.status = "Occupied";
@@ -234,6 +235,10 @@ const memorySimulator = {
         size: leftover,
         status: "Free",
         next: worstBlock.next,
+        // Pre-compaction: inherit originalLabel so the remainder stays tied to the
+        // same original partition. Post-compaction: don't inherit — each new split
+        // from the merged free space gets labeled by its own sequential position.
+        ...(compactedHead ? {} : { originalLabel }),
       };
     }
 
@@ -241,6 +246,7 @@ const memorySimulator = {
       result: {
         size: processSize,
         block: worstBlock.id,
+        displayBlock: originalLabel,
         status: "Allocated",
         fragmentation: leftover,
       },

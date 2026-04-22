@@ -5,12 +5,12 @@
   }
 
   const scriptSrc = currentScript.src;
-  const scriptDir = scriptSrc.substring(0, scriptSrc.lastIndexOf('/') + 1);
+  const scriptDir = scriptSrc.substring(0, scriptSrc.lastIndexOf("/") + 1);
   const utilityScripts = [
-    'sidebarFunctions.js',
-    'blockFunctions.js',
-    'processFunctions.js',
-    'uiFunctions.js',
+    "sidebarFunctions.js",
+    "blockFunctions.js",
+    "processFunctions.js",
+    "uiFunctions.js",
   ];
 
   utilityScripts.forEach((fileName) => {
@@ -19,7 +19,7 @@
       return;
     }
 
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = scriptUrl;
     script.defer = true;
     script.async = false;
@@ -30,55 +30,57 @@
 // Show correct menu
 function showMenu() {
   const currentPath = window.location.pathname;
-  const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+  const currentUser = JSON.parse(sessionStorage.getItem("currentUser"));
 
-  const isAdminUser = currentUser && currentUser.user_role === 'admin';
+  const isAdminUser = currentUser && currentUser.user_role === "admin";
 
   const Menus = [
-    'menu-dashboard',
-    'menu-simulation',
-    'menu-usermanagement',
-    'menu-back-simulator',
-    'menu-admin-dashboard'
+    "menu-dashboard",
+    "menu-simulation",
+    "menu-usermanagement",
+    "menu-back-simulator",
+    "menu-admin-dashboard",
   ];
 
   // Hide all menus for now
-  Menus.forEach(id => {
+  Menus.forEach((id) => {
     const el = document.getElementById(id);
     if (el) {
-      el.style.display = 'none';
-      el.classList.remove('active');
+      el.style.display = "none";
+      el.classList.remove("active");
     }
   });
 
   // Check which page is user on
-  const isAdminPage = currentPath.includes('/admin-dashboard/');
-  const isSimulator = currentPath.includes('/simulator/algorithm/');
-  const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
+  const isAdminPage = currentPath.includes("/admin-dashboard/");
+  const isSimulator = currentPath.includes("/simulator/algorithm/");
+  const isFrontPage =
+    currentPath.includes("/simulator/index.html") ||
+    currentPath.endsWith("/simulator/");
 
   // Admin Menu
   if (isAdminUser) {
-    const adminMenu = document.getElementById('menu-admin-dashboard');
-    if (!isAdminPage) adminMenu.style.display = '';
+    const adminMenu = document.getElementById("menu-admin-dashboard");
+    if (!isAdminPage) adminMenu.style.display = "";
 
     if (isAdminPage) {
-      document.getElementById('menu-usermanagement').style.display = '';
-      document.getElementById('menu-usermanagement').classList.add('active');
-      document.getElementById('menu-back-simulator').style.display = '';
+      document.getElementById("menu-usermanagement").style.display = "";
+      document.getElementById("menu-usermanagement").classList.add("active");
+      document.getElementById("menu-back-simulator").style.display = "";
     }
   }
 
   // If on simulator page
   if (!isAdminPage) {
-    document.getElementById('menu-dashboard').style.display = '';
-    document.getElementById('menu-simulation').style.display = '';
+    document.getElementById("menu-dashboard").style.display = "";
+    document.getElementById("menu-simulation").style.display = "";
 
     if (isFrontPage) {
-      document.getElementById('menu-dashboard').classList.add('active');
+      document.getElementById("menu-dashboard").classList.add("active");
     }
 
     if (isSimulator) {
-      document.getElementById('single-mode').classList.add('active');
+      document.getElementById("single-mode").classList.add("active");
     }
   }
 }
@@ -122,7 +124,10 @@ function isPagingMode() {
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
 
   if (!activeView) return;
 
@@ -135,15 +140,20 @@ function attachProcessListeners() {
     addProcessBtn.parentNode.replaceChild(newAddBtn, addProcessBtn);
 
     newAddBtn.addEventListener("click", () => {
-      const size = parseInt(activeView.querySelector("#process-size").value, 10);
+      const size = parseInt(
+        activeView.querySelector("#process-size").value,
+        10,
+      );
       if (!size || size <= 0) return;
 
       if (isPagingMode()) {
-        const pagingprocessContainer = activeView.querySelector(".process-container");
-        const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
+        const pagingprocessContainer =
+          activeView.querySelector(".process-container");
+        const nextId =
+          pagingprocessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
         pagingprocessContainer.appendChild(newProcess);
-        activeView.querySelector("#process-size").value = '';
+        activeView.querySelector("#process-size").value = "";
 
         if (pagingprocessContainer) {
           pagingprocessContainer.scrollTo({
@@ -156,7 +166,7 @@ function attachProcessListeners() {
         const nextId = processContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
         processContainer.appendChild(newProcess);
-        if (processSizeInput) processSizeInput.value = '';
+        if (processSizeInput) processSizeInput.value = "";
         scrollDown();
       }
     });
@@ -166,7 +176,7 @@ function attachProcessListeners() {
     const newRandomizeBtn = randomizeBtn.cloneNode(true);
     randomizeBtn.parentNode.replaceChild(newRandomizeBtn, randomizeBtn);
 
-    newRandomizeBtn.addEventListener("click", function() {
+    newRandomizeBtn.addEventListener("click", function () {
       let min, max;
 
       if (isPagingMode()) {
@@ -177,11 +187,16 @@ function attachProcessListeners() {
         max = 8;
       }
 
-      const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
+      const size = Math.pow(
+        2,
+        Math.floor(Math.random() * (max - min + 1)) + min,
+      );
 
       if (isPagingMode()) {
-        const pagingProcessContainer = activeView.querySelector(".process-container");
-        const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
+        const pagingProcessContainer =
+          activeView.querySelector(".process-container");
+        const nextId =
+          pagingProcessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
         pagingProcessContainer.appendChild(newProcess);
         if (pagingProcessContainer) {
@@ -255,7 +270,9 @@ if (processContainer) {
   });
 }
 
-const pagingProcessContainer = document.querySelector("#paging-view .process-container");
+const pagingProcessContainer = document.querySelector(
+  "#paging-view .process-container",
+);
 if (pagingProcessContainer) {
   pagingProcessContainer.addEventListener("click", (event) => {
     const target = event.target.closest("button");
@@ -443,7 +460,6 @@ const prepareSimulation = () => {
       },
     };
     initializePagingUI(simulationState.memoryFrames, processes);
-
   } else {
     if (isDynamicPartitionMode()) {
       preSimBlockState = getBlockSizes().slice();
@@ -454,7 +470,11 @@ const prepareSimulation = () => {
       memoryHead: memorySimulator.createLinkedMemory(blocks),
       currentIndex: 0,
       results: {},
-      stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+      stats: {
+        allocatedSize: 0,
+        successfulAllocations: 0,
+        intFragmentation: 0,
+      },
     };
   }
 
@@ -510,13 +530,15 @@ const prepareSimulation = () => {
   highlightCurrentProcess();
 
   if (!isPaging) {
-    const addBtn = document.getElementById('add-block-btn');
-    if (addBtn) addBtn.style.display = 'none';
+    const addBtn = document.getElementById("add-block-btn");
+    if (addBtn) addBtn.style.display = "none";
 
-    const randomizeBtn = document.getElementById('randomize-value');
+    const randomizeBtn = document.getElementById("randomize-value");
     if (randomizeBtn) randomizeBtn.disabled = true;
 
-    document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
+    document
+      .querySelectorAll(".process-action")
+      .forEach((action) => (action.style.display = "none"));
     disableMemoryBlockControls();
   }
   return true;
@@ -587,11 +609,15 @@ const insertFixedWasteSplitAfter = (
  */
 const ensureBlockLabelsMatchDOM = () => {
   if (!simulationContainer) return;
-  
-  const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
-    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
+
+  const blocks = Array.from(
+    simulationContainer.querySelectorAll(".block"),
+  ).filter(
+    (b) =>
+      !b.classList.contains("block--split-free") &&
+      !b.classList.contains("block--fixed-waste"),
   );
-  
+
   blocks.forEach((block, index) => {
     const newBlockId = index + 1;
     // Update the block's id attribute
@@ -619,19 +645,33 @@ const ensureBlockLabelsMatchDOM = () => {
  */
 const applyBlockGrouping = () => {
   if (!simulationContainer) return;
-  
-  const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
-    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste") && !b.id.startsWith("block-split-")
+
+  const blocks = Array.from(
+    simulationContainer.querySelectorAll(".block"),
+  ).filter(
+    (b) =>
+      !b.classList.contains("block--split-free") &&
+      !b.classList.contains("block--fixed-waste") &&
+      !b.id.startsWith("block-split-"),
   );
-  
+
   // Classify block positions in groups
   blocks.forEach((block, index) => {
-    block.classList.remove("block-group-first", "block-group-middle", "block-group-last", "block-group-single");
-    
+    block.classList.remove(
+      "block-group-first",
+      "block-group-middle",
+      "block-group-last",
+      "block-group-single",
+    );
+
     const currentLabel = block.dataset.partitionLabel;
-    const prevLabel = index > 0 ? blocks[index - 1].dataset.partitionLabel : null;
-    const nextLabel = index < blocks.length - 1 ? blocks[index + 1].dataset.partitionLabel : null;
-    
+    const prevLabel =
+      index > 0 ? blocks[index - 1].dataset.partitionLabel : null;
+    const nextLabel =
+      index < blocks.length - 1
+        ? blocks[index + 1].dataset.partitionLabel
+        : null;
+
     // Categorize block position in group
     if (currentLabel === prevLabel) {
       // Block follows another with same label - not first
@@ -648,13 +688,16 @@ const applyBlockGrouping = () => {
       block.classList.add("block-group-single");
     }
   });
-  
+
   // Hide labels for non-first blocks in groups
   blocks.forEach((block) => {
     const titleEl = block.querySelector("p");
     if (titleEl) {
       // Only show label if this is the first or only block in its group
-      if (block.classList.contains("block-group-middle") || block.classList.contains("block-group-last")) {
+      if (
+        block.classList.contains("block-group-middle") ||
+        block.classList.contains("block-group-last")
+      ) {
         titleEl.textContent = ""; // Hide label for split blocks
       }
     }
@@ -663,7 +706,7 @@ const applyBlockGrouping = () => {
 
 const updateResultBlockIds = (blockIdMapping) => {
   if (!simulationState) return;
-  
+
   // Count actual blocks in the simulation
   let actualBlockCount = 0;
   let node = simulationState.memoryHead;
@@ -671,24 +714,30 @@ const updateResultBlockIds = (blockIdMapping) => {
     actualBlockCount++;
     node = node.next;
   }
-  
+
   // Update all results to use the new sequential block IDs
   Object.entries(simulationState.results).forEach(([processKey, result]) => {
     if (result.status === "Allocated" && result.block !== "None") {
       const oldBlockId = parseInt(result.block, 10);
       let newBlockId = oldBlockId;
-      
+
       // Use the mapping if available
-      if (!Number.isNaN(oldBlockId) && blockIdMapping && blockIdMapping[oldBlockId]) {
+      if (
+        !Number.isNaN(oldBlockId) &&
+        blockIdMapping &&
+        blockIdMapping[oldBlockId]
+      ) {
         newBlockId = blockIdMapping[oldBlockId];
       }
-      
+
       // CRITICAL SAFETY CHECK: Ensure block ID doesn't exceed actual block count
       if (newBlockId > actualBlockCount) {
-        console.warn(`Block ID ${newBlockId} exceeds actual block count ${actualBlockCount}, clamping to ${actualBlockCount}`);
+        console.warn(
+          `Block ID ${newBlockId} exceeds actual block count ${actualBlockCount}, clamping to ${actualBlockCount}`,
+        );
         newBlockId = actualBlockCount;
       }
-      
+
       result.block = String(newBlockId);
     }
   });
@@ -704,18 +753,18 @@ const updateResultBlockIds = (blockIdMapping) => {
 const recreateBlocksFromMemory = () => {
   const container = simulationContainer;
   container.querySelectorAll(".block").forEach((b) => b.remove());
-  
+
   // Note: After compaction, linked list nodes already have sequential IDs (1, 2, 3...)
   // Do NOT renumber them here - that would break the result.block mapping
-  
+
   // FLATTEN: Extract all nodes from linked list
   let node = simulationState.memoryHead;
   let blockIndex = 0;
-  
+
   while (node) {
     // Create block with the node's current ID (already sequential after compaction)
     const blockEl = createBlockElement(node.id, node.size);
-    
+
     if (node.status === "Occupied") {
       const statusLabel = blockEl.querySelector(".block-status");
       if (statusLabel) statusLabel.textContent = "Allocated";
@@ -728,40 +777,51 @@ const recreateBlocksFromMemory = () => {
     blockIndex++;
     node = node.next;
   }
-  
+
   // CONSOLIDATE & RE-INDEX: Force DOM positions to be the source of truth
   ensureBlockLabelsMatchDOM();
-  
+
   // SYNC LOGS: Update results to use final block IDs
   // Note: blockIdMapping was already applied in runStep() before this is called
   // REMOVED: updateResultBlockIds(blockIdMapping);
-  
+
   // CRITICAL: Apply displayBlock values from results to UI block labels
   // This ensures UI shows the logical parent block even if it's a split allocation
   const blocks = Array.from(container.querySelectorAll(".block")).filter(
-    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
+    (b) =>
+      !b.classList.contains("block--split-free") &&
+      !b.classList.contains("block--fixed-waste"),
   );
-  
+
   blocks.forEach((block, index) => {
     const blockPosition = index + 1;
     const linkedListNodeId = parseInt(block.dataset.linkedListNodeId, 10);
-    
-    // Find which result owns this node by matching the internal node ID
-    // Results should have their block field set to this node's ID
-    const matchingResult = Object.values(simulationState.results).find(
-      (r) => r.status === "Allocated" && parseInt(r.block, 10) === linkedListNodeId
+
+    // Use entries so we get both the process key ("Process 2") and the result object.
+    // This lets us stamp the correct process name onto the status label so that
+    // updateBlockVisuals can look it up and apply the right color.
+    const matchingEntry = Object.entries(simulationState.results).find(
+      ([key, r]) =>
+        r.status === "Allocated" && parseInt(r.block, 10) === linkedListNodeId,
     );
-    
-    if (matchingResult && matchingResult.displayBlock) {
-      // Store displayBlock but don't set label yet - we'll do it after grouping
-      block.dataset.partitionLabel = String(matchingResult.displayBlock);
-      block.dataset.displayBlock = String(matchingResult.displayBlock);
+
+    if (matchingEntry) {
+      const [processKey, matchingResult] = matchingEntry;
+      // Stamp the process name so updateBlockVisuals can apply the correct color
+      const statusLabel = block.querySelector(".block-status");
+      if (statusLabel) statusLabel.textContent = processKey;
+
+      if (matchingResult.displayBlock) {
+        // Store displayBlock but don't set label yet - we'll do it after grouping
+        block.dataset.partitionLabel = String(matchingResult.displayBlock);
+        block.dataset.displayBlock = String(matchingResult.displayBlock);
+      }
     }
   });
-  
+
   // Apply grouping to hide labels on non-first blocks
   applyBlockGrouping();
-  
+
   resizeBlocks();
   disableMemoryBlockControls();
 };
@@ -794,24 +854,33 @@ const getAccurateBlockIdFromDOM = (processId, result) => {
   }
 
   // Get all actual blocks in the DOM (in order)
-  const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
-    (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
+  const blocks = Array.from(
+    simulationContainer.querySelectorAll(".block"),
+  ).filter(
+    (b) =>
+      !b.classList.contains("block--split-free") &&
+      !b.classList.contains("block--fixed-waste"),
   );
 
   // After recreation, blocks are numbered 1, 2, 3, ... sequentially
   // Find which block index contains an allocated process (any process, not just this one yet)
   // Then sync back to the result
-  
+
   // Get the actual block label from the DOM (which should be sequential 1, 2, 3...)
   if (blocks.length > 0) {
     // Check the first block's label to see if block IDs are already set correctly
-    const firstBlockLabel = blocks[0].dataset.partitionLabel || blocks[0].id.replace("block-", "");
-    
+    const firstBlockLabel =
+      blocks[0].dataset.partitionLabel || blocks[0].id.replace("block-", "");
+
     // If blocks are properly numbered, just verify result.block is in valid range
     const maxBlockId = blocks.length;
     const resultBlockId = parseInt(result.block, 10);
-    
-    if (!Number.isNaN(resultBlockId) && resultBlockId >= 1 && resultBlockId <= maxBlockId) {
+
+    if (
+      !Number.isNaN(resultBlockId) &&
+      resultBlockId >= 1 &&
+      resultBlockId <= maxBlockId
+    ) {
       // The block ID is valid, return it
       return String(resultBlockId);
     }
@@ -865,7 +934,7 @@ const runStep = () => {
 
     // Calculate pages needed for this process
     const pagesNeeded = Math.ceil(size / pageSize);
-    
+
     // Check if we've already allocated all pages for this process
     if (simulationState.pageAllocationIndex >= pagesNeeded) {
       // Move to next process
@@ -894,45 +963,8 @@ const runStep = () => {
       simulationState.pageAllocationIndex,
     );
 
-    // Check if allocation failed (no free frames)
-    if (stepResult.result.status === "Unallocated") {
-      // Store failed result
-      if (!simulationState.results[processId]) {
-        simulationState.results[processId] = {
-          size,
-          pagesNeeded,
-          frameIds: {},
-          status: "Unallocated",
-          pagesAllocated: simulationState.pageAllocationIndex,
-          internalFragmentation: 0,
-        };
-      } else {
-        simulationState.results[processId].status = "Unallocated";
-      }
-
-      appendConsoleMessage(
-        `${processId} Page ${simulationState.pageAllocationIndex} - No free frames available`,
-      );
-
-      // Move to next process since current one can't be allocated
-      simulationState.pageAllocationIndex = 0;
-      simulationState.currentIndex += 1;
-      
-      if (simulationState.currentIndex >= simulationState.processes.length) {
-        appendConsoleMessage("Simulation complete");
-        if (playInterval) {
-          clearInterval(playInterval);
-          playInterval = null;
-          togglePlayStop();
-        }
-        reEnableSimulationButtons();
-        return false;
-      }
-      return true;
-    }
-
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
-    
+
     // Store result with process ID
     if (!simulationState.results[processId]) {
       simulationState.results[processId] = {
@@ -950,13 +982,15 @@ const runStep = () => {
       ...simulationState.results[processId].frameIds,
       ...stepResult.result.frameIds,
     };
-    simulationState.results[processId].pagesAllocated = simulationState.pageAllocationIndex + 1;
+    simulationState.results[processId].pagesAllocated =
+      simulationState.pageAllocationIndex + 1;
 
     // Update stats on first allocation
     if (simulationState.pageAllocationIndex === 0) {
       simulationState.stats.allocatedSize += size;
       simulationState.stats.successfulAllocations += 1;
-      simulationState.stats.intFragmentation += stepResult.result.internalFragmentation || 0;
+      simulationState.stats.intFragmentation +=
+        stepResult.result.internalFragmentation || 0;
     }
 
     const totalMemory =
@@ -989,9 +1023,7 @@ const runStep = () => {
     updatePagingUI(simulationState.memoryFrames);
 
     const allocatedFrameId = Object.keys(stepResult.result.frameIds)[0];
-    if (allocatedFrameId) {
-      followAllocatedFrame(allocatedFrameId);
-    }
+    followAllocatedFrame(allocatedFrameId);
 
     appendConsoleMessage(
       `${processId} Page ${simulationState.pageAllocationIndex} allocated`,
@@ -1005,7 +1037,7 @@ const runStep = () => {
       appendConsoleMessage(`${processId} fully allocated`);
       simulationState.pageAllocationIndex = 0;
       simulationState.currentIndex += 1;
-      
+
       if (simulationState.currentIndex >= simulationState.processes.length) {
         appendConsoleMessage("Simulation complete");
         if (playInterval) {
@@ -1044,7 +1076,7 @@ const runStep = () => {
   // CRITICAL: Apply idMapping to BOTH previous AND current results
   if (stepResult.idMapping) {
     remapCompactedResults(stepResult.idMapping);
-    
+
     // Also apply mapping to the current result if it needs it
     const oldBlockId = parseInt(stepResult.result.block, 10);
     if (!Number.isNaN(oldBlockId) && stepResult.idMapping[oldBlockId]) {
@@ -1076,9 +1108,11 @@ const runStep = () => {
   }
 
   if (!stepResult.ifCompacted && stepResult.result.status === "Allocated") {
-    let blockEl = document.getElementById(`block-split-${stepResult.result.block}`);
+    let blockEl = document.getElementById(
+      `block-split-${stepResult.result.block}`,
+    );
     if (!blockEl) {
-        blockEl = document.getElementById(`block-${stepResult.result.block}`);
+      blockEl = document.getElementById(`block-${stepResult.result.block}`);
     }
     const leftover = stepResult.result.fragmentation || 0;
 
@@ -1108,10 +1142,13 @@ const runStep = () => {
 
     if (blockEl) {
       const isSplitBlock = blockEl.classList.contains("block--split-free");
-      const displayBlockId = stepResult.result.displayBlock || simulationState.results[processId]?.displayBlock;
+      const displayBlockId =
+        stepResult.result.displayBlock ||
+        simulationState.results[processId]?.displayBlock;
       if (displayBlockId) {
         const titleEl = blockEl.querySelector("p");
-        if (titleEl) titleEl.textContent = isSplitBlock ? "" : `Block ${displayBlockId}`;
+        if (titleEl)
+          titleEl.textContent = isSplitBlock ? "" : `Block ${displayBlockId}`;
         blockEl.dataset.parentPartitionLabel = String(displayBlockId);
         blockEl.dataset.partitionLabel = String(displayBlockId);
       }
@@ -1126,22 +1163,26 @@ const runStep = () => {
 
   // Refresh all visuals
   updateBlockVisuals(simulationState.results);
-  
+
   // Apply block grouping to hide labels on non-first blocks (works before and after compaction)
   applyBlockGrouping();
 
   // CRITICAL: After updateBlockVisuals, if compaction occurred, sync results with DOM labels
   if (stepResult.ifCompacted) {
-    const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
-      (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
+    const blocks = Array.from(
+      simulationContainer.querySelectorAll(".block"),
+    ).filter(
+      (b) =>
+        !b.classList.contains("block--split-free") &&
+        !b.classList.contains("block--fixed-waste"),
     );
-    
+
     // For each DOM block, check what process it's allocated to (if any)
     // and update that process result to have the correct block ID
     blocks.forEach((block, index) => {
       const blockId = index + 1; // Sequential block ID (1, 2, 3...)
       const statusLabel = block.querySelector(".block-status");
-      
+
       if (statusLabel && statusLabel.textContent.includes("Process")) {
         // This block has a process allocated to it
         const processKey = statusLabel.textContent.trim();
@@ -1154,7 +1195,9 @@ const runStep = () => {
 
   // Console logging with FINAL result block ID (from simulationState, now using displayBlock if present)
   const finalResult = simulationState.results[processId];
-  const displayBlockId = finalResult?.displayBlock || (finalResult && finalResult.block !== "None" ? finalResult.block : "None");
+  const displayBlockId =
+    finalResult?.displayBlock ||
+    (finalResult && finalResult.block !== "None" ? finalResult.block : "None");
   appendConsoleMessage(
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
@@ -1387,9 +1430,12 @@ prepareSimulation = function() {
 // =====================================================
 
 const getStepDelay = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
 
   const slider = activeView ? activeView.querySelector("#slider") : null;
   const value = parseFloat(slider ? slider.value : 1) || 1;
@@ -1400,9 +1446,12 @@ const getStepDelay = () => {
 };
 
 const togglePlayStop = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
   if (!activeView) return;
 
   const playBtn = activeView.querySelector("#play-btn");
@@ -1415,7 +1464,7 @@ const togglePlayStop = () => {
     if (playBtn) playBtn.style.display = `flex`;
     if (stopBtn) stopBtn.style.display = `none`;
   }
-}
+};
 
 const runPlay = () => {
   try {
@@ -1430,9 +1479,12 @@ const runPlay = () => {
       playInterval = null;
     }
 
-    const standardView = document.getElementById('standard-view');
-    const pagingView = document.getElementById('paging-view');
-    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+    const standardView = document.getElementById("standard-view");
+    const pagingView = document.getElementById("paging-view");
+    const activeView =
+      pagingView && pagingView.style.display === "grid"
+        ? pagingView
+        : standardView;
 
     const playBtn = document.querySelector("#play-btn");
     const stopBtn = document.querySelector("#stop-btn");
@@ -1526,12 +1578,17 @@ const runReset = () => {
   togglePlayStop();
   appendConsoleMessage("Simulation reset.");
 
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
 
   if (activeView) {
-    activeView.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
+    activeView
+      .querySelectorAll(".process")
+      .forEach((p) => p.classList.remove("current"));
 
     const addBtn = activeView.querySelector("#add-block-btn");
     if (addBtn) {
@@ -1544,7 +1601,9 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
-    activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
+    activeView
+      .querySelectorAll(".process-action")
+      .forEach((action) => (action.style.display = ""));
   }
 
   document
@@ -1558,71 +1617,81 @@ const runReset = () => {
     .forEach((btn) => (btn.disabled = false));
 
   attachSimulationListeners();
-
 };
 
-
-
 function reEnableSimulationButtons() {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
-  
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
+
   if (!activeView) return;
-  
+
   // Re-enable randomize button
-  const randomizeBtn = activeView.querySelector('#randomize-value');
+  const randomizeBtn = activeView.querySelector("#randomize-value");
   if (randomizeBtn) {
     randomizeBtn.disabled = false;
     randomizeBtn.style.opacity = "1";
     randomizeBtn.style.cursor = "pointer";
   }
-  
+
   // Re-enable add block button (standard view only)
-  const addBlockBtn = activeView.querySelector('#add-block-btn');
+  const addBlockBtn = activeView.querySelector("#add-block-btn");
   if (addBlockBtn) {
     addBlockBtn.style.display = "flex";
     addBlockBtn.disabled = false;
     addBlockBtn.style.opacity = "1";
     addBlockBtn.style.cursor = "pointer";
   }
-  
+
   // Re-enable process action buttons
-  activeView.querySelectorAll('.process-action').forEach(btn => {
+  activeView.querySelectorAll(".process-action").forEach((btn) => {
     btn.style.display = "";
     btn.disabled = false;
   });
-  
+
   // Re-enable edit/delete buttons
-  activeView.querySelectorAll('.edit-block-btn, .delete-block-btn').forEach(btn => {
-    btn.disabled = false;
-    btn.style.opacity = "1";
-    btn.style.cursor = "pointer";
-  });
-  
+  activeView
+    .querySelectorAll(".edit-block-btn, .delete-block-btn")
+    .forEach((btn) => {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+      btn.style.cursor = "pointer";
+    });
+
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
 }
 
 function attachSimulationListeners(viewType) {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : standardView;
 
   if (!activeView) {
-    console.error('No active view found.');
+    console.error("No active view found.");
     return;
   }
 
-  console.log('Attaching listeners to:', activeView.id || 'unknown view'); 
+  console.log("Attaching listeners to:", activeView.id || "unknown view");
 
-  const playBtn = activeView.querySelector('#play-btn');
-  const stopBtn = activeView.querySelector('#stop-btn');
-  const nextBtn = activeView.querySelector('#next-btn');
-  const resetBtn = activeView.querySelector('#reset-btn');
-  const slider = activeView.querySelector('#slider');
+  const playBtn = activeView.querySelector("#play-btn");
+  const stopBtn = activeView.querySelector("#stop-btn");
+  const nextBtn = activeView.querySelector("#next-btn");
+  const resetBtn = activeView.querySelector("#reset-btn");
+  const slider = activeView.querySelector("#slider");
 
-  console.log('Buttons found:', { playBtn: !!playBtn, stopBtn: !!stopBtn, nextBtn: !!nextBtn, resetBtn: !!resetBtn });
+  console.log("Buttons found:", {
+    playBtn: !!playBtn,
+    stopBtn: !!stopBtn,
+    nextBtn: !!nextBtn,
+    resetBtn: !!resetBtn,
+  });
 
   if (playBtn) {
     const newPlayBtn = playBtn.cloneNode(true);
@@ -1649,21 +1718,20 @@ function attachSimulationListeners(viewType) {
   }
 
   if (slider) {
-    slider.addEventListener("input", function() {
+    slider.addEventListener("input", function () {
       speed = parseFloat(this.value);
     });
   }
 
   const toggleBtn = activeView.querySelector("#toggle-btn");
   if (toggleBtn) {
-
-    console.log('Attaching toggle listener to:', toggleBtn);
-    toggleBtn.removeAttribute('onclick');
+    console.log("Attaching toggle listener to:", toggleBtn);
+    toggleBtn.removeAttribute("onclick");
 
     const newToggleBtn = toggleBtn.cloneNode(true);
     toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
 
-    newToggleBtn.addEventListener('click', function(e) {
+    newToggleBtn.addEventListener("click", function (e) {
       e.preventDefault();
       e.stopPropagation();
       toggleSideBar();
@@ -1687,15 +1755,18 @@ function startSimulation(event) {
   }
 
   let algoWhat = algo.value;
-  sessionStorage.setItem('selectedAlgo', algo.value);
+  sessionStorage.setItem("selectedAlgo", algo.value);
 
   const isDynamic = document.querySelector('.toggle-partition input').checked;
   sessionStorage.setItem('selectedPartition', isDynamic ? "dynamic" : "fixed");
 
   if (algoWhat === "Paging") {
-    sessionStorage.setItem('selectedPartition', "paging");
+    sessionStorage.setItem("selectedPartition", "paging");
   }
 
+  const toggle = document.querySelector(
+    '.toggle-partition input[type="checkbox"]',
+  );
   if (algoWhat === "Segmentation") {
     sessionStorage.setItem('selectedPartition', "segmentation");
   }
@@ -1704,7 +1775,11 @@ function startSimulation(event) {
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
 
-  if (["first-fit", "next-fit", "best-fit", "worst-fit"].includes(algoWhat.toLowerCase())) {
+  if (
+    ["first-fit", "next-fit", "best-fit", "worst-fit"].includes(
+      algoWhat.toLowerCase(),
+    )
+  ) {
     window.location.href = `algorithm/index.html?algorithm=${algoParam}`;
   } else {
     switch (algoWhat) {
@@ -1718,31 +1793,31 @@ function startSimulation(event) {
 
 function simulatorLoad() {
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get('algo');
-  const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
-  const selectedPartition = sessionStorage.getItem('selectedPartition');
+  const urlAlgo = urlParams.get("algo");
+  const selectedAlgo = urlAlgo || sessionStorage.getItem("selectedAlgo");
+  const selectedPartition = sessionStorage.getItem("selectedPartition");
 
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
 
-  if (standardView) standardView.style.display = 'none';
-  if (pagingView) pagingView.style.display = 'none';
+  if (standardView) standardView.style.display = "none";
+  if (pagingView) pagingView.style.display = "none";
 
   if (selectedAlgo === "Paging") {
     if (pagingView) {
-      pagingView.style.display = 'grid';
+      pagingView.style.display = "grid";
 
-      loadPagingScript(function() {
+      loadPagingScript(function () {
         attachSimulationListeners();
         initPagingConsole();
-        if (typeof initializePagingUI === 'function') {
+        if (typeof initializePagingUI === "function") {
           initializePagingUI();
         }
       });
     }
   } else {
     if (standardView) {
-      standardView.style.display = 'grid';
+      standardView.style.display = "grid";
       attachSimulationListeners();
     }
     loadDefaultScript(selectedAlgo, selectedPartition);
@@ -1759,9 +1834,9 @@ function loadPagingScript(callback) {
   let loadedCount = 0;
   const totalScripts = 2;
 
-  const checkLoaded = function() {
+  const checkLoaded = function () {
     loadedCount++;
-    console.log('Script loaded:', loadedCount, 'of', totalScripts); 
+    console.log("Script loaded:", loadedCount, "of", totalScripts);
     if (loadedCount === totalScripts) {
       window.pagingScriptLoaded = true;
       attachSimulationListeners();
@@ -1769,18 +1844,18 @@ function loadPagingScript(callback) {
     }
   };
 
-  const script1 = document.createElement('script');
+  const script1 = document.createElement("script");
   script1.src = "../util/algos/paging.js";
   script1.onload = checkLoaded;
-  script1.onerror = function() {
+  script1.onerror = function () {
     console.error("Failed to load paging.js");
     checkLoaded();
   };
 
-  const script2 = document.createElement('script');
+  const script2 = document.createElement("script");
   script2.src = "../util/pagingUI.js";
   script2.onload = checkLoaded;
-  script2.onerror = function() {
+  script2.onerror = function () {
     console.error("Failed to load pagingUI.js");
     checkLoaded();
   };
@@ -1790,13 +1865,13 @@ function loadPagingScript(callback) {
 }
 
 function loadDefaultScript(selectedAlgo, selectedPartition) {
-  const algoDescription = document.getElementById('algo-description');
+  const algoDescription = document.getElementById("algo-description");
   let scriptSrc = "";
 
   if (selectedPartition === "dynamic") {
-    document.body.setAttribute('data-partition-mode', 'dynamic');
+    document.body.setAttribute("data-partition-mode", "dynamic");
   } else {
-    document.body.removeAttribute('data-partition-mode');
+    document.body.removeAttribute("data-partition-mode");
   }
 
   switch (selectedAlgo.toLowerCase()) {
@@ -1805,7 +1880,7 @@ function loadDefaultScript(selectedAlgo, selectedPartition) {
       if (selectedPartition === "dynamic") {
         algoDescription.textContent = "First Fit Algorithm - Dynamic Partition";
       }
-      scriptSrc = "../util/algos/firstfit.js"; 
+      scriptSrc = "../util/algos/firstfit.js";
       break;
     case "next-fit":
       algoDescription.textContent = "Next Fit Algorithm - Fixed Partition";
@@ -1834,7 +1909,7 @@ function loadDefaultScript(selectedAlgo, selectedPartition) {
   }
 
   if (scriptSrc && !window.defaultLoaded) {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = scriptSrc;
     script.defer = true;
     document.head.appendChild(script);
@@ -1843,7 +1918,7 @@ function loadDefaultScript(selectedAlgo, selectedPartition) {
 }
 
 function hub() {
-  sessionStorage.removeItem('selectedAlgo');
-  sessionStorage.removeItem('selectedPartition');
-  sessionStorage.removeItem('loaderLoaded');
+  sessionStorage.removeItem("selectedAlgo");
+  sessionStorage.removeItem("selectedPartition");
+  sessionStorage.removeItem("loaderLoaded");
 }
