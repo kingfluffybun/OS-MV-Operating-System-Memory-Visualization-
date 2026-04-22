@@ -105,7 +105,7 @@ const initializePagingUI = (memoryFrames, processes = []) => {
       if (processIndex < processes.length - 1) {
         const spacer = document.createElement("div");
         spacer.style.gridColumn = "1 / -1";
-        spacer.style.height = "12px";
+        spacer.style.minHeight = "12px";
         pagesContainer.appendChild(spacer);
       }
 
