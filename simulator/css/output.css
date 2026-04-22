@@ -156,7 +156,8 @@ body {
     gap: 12px;
     margin: 80px;
 }
-.logo h1.hidden{
+
+.logo h1.hidden, .logo p.hidden{
     color: white;
     transition: 150ms ease-in-out;
 }
@@ -172,10 +173,6 @@ body {
     text-align: center;
     text-wrap: nowrap;
     transition: 1200ms ease-in-out;
-}
-.logo p.hidden{
-    color: white;
-    transition: 150ms ease-in-out;
 }
 
 .sidebar-options {
