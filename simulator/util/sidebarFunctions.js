@@ -71,6 +71,11 @@ function initSidebarFunctions() {
   const logo = document.getElementById("logo");
   const logoH1 = document.getElementById("h1");
 
+  if (!sidebar) {
+    console.error("Sidebar not found");
+    return;
+  }
+
   window.sidebar = sidebar;
   window.toggleButton = toggleButton;
   window.logo = logo;
@@ -116,13 +121,12 @@ const toggleSideBar = () => {
     document.getElementById("h1");
   const logoP = logo && logo.querySelector("p");
 
-  if (sidebar) sidebar.classList.toggle("close");
-  if (toggleButton) toggleButton.classList.toggle("rotate");
-  if (logo) logo.classList.toggle("hidden");
-  if (logoH1) logoH1.classList.toggle("hidden");
-  if (logoP) logoP.classList.toggle("hidden");
+  sidebar.classList.toggle("close");
+  toggleButton.classList.toggle("rotate");
+  logo.classList.toggle("hidden");
+  logoH1.classList.toggle("hidden");
 
-  if (toggleButton && toggleButton.classList.contains("rotate")) {
+  if (toggleButton.classList.contains("rotate")) {
     console.log("Sidebar is now closed");
   }
 };
