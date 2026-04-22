@@ -55,7 +55,7 @@ body {
     justify-content: flex-start;
     flex-direction: column;
     grid-area: sidebar;
-    padding: 6vh 20px;
+    padding: 6vh 5px;
     box-sizing: border-box;
     height: 100%;
 }
