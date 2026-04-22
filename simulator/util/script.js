@@ -199,8 +199,15 @@ function attachProcessListeners() {
     randomizeBtn.parentNode.replaceChild(newRandomizeBtn, randomizeBtn);
 
     newRandomizeBtn.addEventListener("click", function() {
-      let min = 4;
-      let max = 8;
+        let min, max;
+
+        if (isPagingMode()) {
+            min = 3;
+            max = 6;
+        } else {
+            min = 4;
+            max = 8;
+        }
 
       const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
 
