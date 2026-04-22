@@ -39,9 +39,19 @@ function initPagingConsole() {
 const getProcessSizes = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
-
-  const activeProcessContainer = activeView ? activeView.querySelector(".process-container") : processContainer;
+  const mainGrid = document.querySelector('.main-grid');
+  
+  let activeProcessContainer = null;
+  
+  // Check which view is active - Segmentation, Paging, or Standard
+  if (mainGrid && mainGrid.classList.contains('paging') && !standardView && !pagingView) {
+    // Segmentation view (main-grid.paging in simulation-Segmentation.html)
+    activeProcessContainer = mainGrid.querySelector('.process-container');
+  } else if (pagingView && pagingView.style.display === 'grid') {
+    activeProcessContainer = pagingView.querySelector('.process-container');
+  } else {
+    activeProcessContainer = standardView ? standardView.querySelector('.process-container') : processContainer;
+  }
 
   if (!activeProcessContainer) return [];
 
