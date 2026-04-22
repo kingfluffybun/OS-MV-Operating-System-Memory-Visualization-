@@ -1220,60 +1220,58 @@ const runStep = () => {
 // =====================================================
 
 function isSegmentationMode() {
-  const selectedPartition = sessionStorage.getItem("selectedPartition");
+  const selectedPartition = sessionStorage.getItem('selectedPartition');
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algorithm");
-  return selectedPartition === "segmentation" || urlAlgo === "segmentation";
+  const urlAlgo = urlParams.get('algorithm');
+  return selectedPartition === 'segmentation' || urlAlgo === 'segmentation';
 }
 
 let segmentationMemory = null;
 
 const initializeSegmentation = () => {
-  if (typeof SegmentationMemory === "undefined") {
-    console.error("SegmentationMemory class not loaded from segmentation.js");
+  if (typeof SegmentationMemory === 'undefined') {
+    console.error('SegmentationMemory class not loaded from segmentation.js');
     return false;
   }
-
+  
   // Get total memory from input or use default
-  const memorySizeInput = document.getElementById("memory-size");
+  const memorySizeInput = document.getElementById('memory-size');
   let totalMemory = 1024; // Default 1024 KB
-
+  
   if (memorySizeInput && memorySizeInput.value) {
     const inputValue = parseInt(memorySizeInput.value, 10);
     if (!Number.isNaN(inputValue) && inputValue > 0) {
       totalMemory = inputValue;
     }
   }
-
+  
   segmentationMemory = new SegmentationMemory(totalMemory);
-
-  appendConsoleMessage(
-    `Segmentation Memory initialized with ${totalMemory} KB total capacity.`,
-  );
+  
+  appendConsoleMessage(`Segmentation Memory initialized with ${totalMemory} KB total capacity.`);
   setTotalMemoryDisplay(totalMemory);
-
+  
   return true;
 };
 
 const prepareSegmentationSimulation = () => {
   const processes = getProcessSizes();
-
+  
   if (!processes.length) {
     appendConsoleMessage("No processes in queue to allocate.");
     return false;
   }
-
+  
   if (!isSegmentationMode()) {
     return false;
   }
-
+  
   // Initialize segmentation memory if not already done
   if (!segmentationMemory) {
     if (!initializeSegmentation()) {
       return false;
     }
   }
-
+  
   simulationState = {
     processes: processes,
     currentIndex: 0,
@@ -1284,70 +1282,67 @@ const prepareSegmentationSimulation = () => {
       intFragmentation: 0,
     },
   };
-
+  
   const sidebar2 = window.sidebar || document.getElementById("sidebar");
   if (sidebar2 && !sidebar2.classList.contains("close")) {
     toggleSideBar();
   }
-
+  
   resetConsole();
   appendConsoleMessage("Segmentation simulation ready. Use Next or Play.");
-
+  
   const memoryStatus = segmentationMemory.getStatus();
   updateSegmentationUI(memoryStatus);
   updateStatistics({
     allocatedSize: 0,
     totalFree: memoryStatus.free.reduce((sum, f) => sum + f.size, 0),
     intFragmentation: 0,
-    externalFragmentation:
-      memoryStatus.free.length > 1
-        ? memoryStatus.free.reduce((sum, f) => sum + f.size, 0)
-        : 0,
+    externalFragmentation: memoryStatus.free.length > 1 ? memoryStatus.free.reduce((sum, f) => sum + f.size, 0) : 0,
     memoryUtilization: 0,
     successRate: 0,
   });
-
+  
   currentStep = 0;
   highlightCurrentProcess();
-
+  
   return true;
 };
 
 const updateSegmentationUI = (memoryStatus) => {
   // This function updates the UI to display current segmentation state
   // The actual visualization would be implemented based on your UI structure
-  console.log("Segmentation Memory Status:", memoryStatus);
+  console.log('Segmentation Memory Status:', memoryStatus);
 };
 
 const runSegmentationStep = () => {
   if (!simulationState) {
     if (!prepareSegmentationSimulation()) return false;
   }
-
+  
   if (!isSegmentationMode()) {
     return false;
   }
-
+  
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("All processes have been allocated.");
     return false;
   }
-
+  
   if (!segmentationMemory) {
     appendConsoleMessage("Segmentation memory not initialized.");
     return false;
   }
-
+  
   currentStep = simulationState.currentIndex;
   highlightCurrentProcess();
-
+  
   const size = simulationState.processes[simulationState.currentIndex];
   const processName = `Process ${simulationState.currentIndex + 1}`;
-
+  
   try {
     // Attempt to allocate using Segmentation algorithm
     const segment = segmentationMemory.allocate(processName, size);
-
+    
     if (segment) {
       simulationState.results[processName] = {
         size,
@@ -1356,46 +1351,37 @@ const runSegmentationStep = () => {
         base: segment.base,
         breakdown: segment.breakdown,
       };
-
+      
       simulationState.stats.allocatedSize += size;
       simulationState.stats.successfulAllocations += 1;
-
-      appendConsoleMessage(
-        `${processName} (${size} KB) allocated successfully at base ${segment.base}`,
-      );
+      
+      appendConsoleMessage(`${processName} (${size} KB) allocated successfully at base ${segment.base}`);
     } else {
       simulationState.results[processName] = {
         size,
         status: "Unallocated",
       };
-
-      appendConsoleMessage(
-        `${processName} (${size} KB) failed to allocate - insufficient contiguous memory`,
-      );
+      
+      appendConsoleMessage(`${processName} (${size} KB) failed to allocate - insufficient contiguous memory`);
     }
   } catch (error) {
-    console.error("Segmentation allocation error:", error);
+    console.error('Segmentation allocation error:', error);
     simulationState.results[processName] = {
       size,
       status: "Error",
     };
     appendConsoleMessage(`${processName} allocation error: ${error.message}`);
   }
-
+  
   // Update statistics
   const memoryStatus = segmentationMemory.getStatus();
   const totalFree = memoryStatus.free.reduce((sum, f) => sum + f.size, 0);
   const totalMemory = segmentationMemory.totalSize;
-  const memoryUtilization = totalMemory
-    ? ((totalMemory - totalFree) / totalMemory) * 100
+  const memoryUtilization = totalMemory ? ((totalMemory - totalFree) / totalMemory) * 100 : 0;
+  const successRate = simulationState.processes.length > 0
+    ? (simulationState.stats.successfulAllocations / simulationState.processes.length) * 100
     : 0;
-  const successRate =
-    simulationState.processes.length > 0
-      ? (simulationState.stats.successfulAllocations /
-          simulationState.processes.length) *
-        100
-      : 0;
-
+  
   updateSegmentationUI(memoryStatus);
   updateStatistics({
     allocatedSize: simulationState.stats.allocatedSize,
@@ -1405,9 +1391,9 @@ const runSegmentationStep = () => {
     memoryUtilization,
     successRate,
   });
-
+  
   simulationState.currentIndex += 1;
-
+  
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("Simulation complete");
     if (playInterval) {
@@ -1417,13 +1403,13 @@ const runSegmentationStep = () => {
     }
     return false;
   }
-
+  
   return true;
 };
 
 // Override runStep for Segmentation mode
 const originalRunStep = runStep;
-runStep = function () {
+runStep = function() {
   if (isSegmentationMode()) {
     return runSegmentationStep();
   }
@@ -1432,7 +1418,7 @@ runStep = function () {
 
 // Override prepareSimulation for Segmentation mode
 const originalPrepareSimulation = prepareSimulation;
-prepareSimulation = function () {
+prepareSimulation = function() {
   if (isSegmentationMode()) {
     return prepareSegmentationSimulation();
   }
@@ -1558,26 +1544,19 @@ const runReset = () => {
   }
 
   const isDynamic = isDynamicPartitionMode();
-  const isSegmentation = isSegmentationMode();
 
   simulationState = null;
   currentStep = 0;
 
-  if (isSegmentation) {
-    // Reset Segmentation memory
-    segmentationMemory = null;
-    resetConsole();
-  } else {
-    resetBlocksUI();
-    resetConsole();
+  resetBlocksUI();
+  resetConsole();
 
-    if (isDynamic && preSimBlockState && preSimBlockState.length) {
-      restorePreSimulationBlocks();
-    }
+  if (isDynamic && preSimBlockState && preSimBlockState.length) {
+    restorePreSimulationBlocks();
+  }
 
-    if (isPagingMode()) {
-      resetPagingUI();
-    }
+  if (isPagingMode()) {
+    resetPagingUI();
   }
 
   updateStatistics({
