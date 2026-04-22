@@ -1,76 +1,92 @@
 <html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css"> 
-    <link rel="stylesheet" href="../simulator/css/output.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../simulator/css/output.css" />
     <title>OS-MV | Admin-Dashboard</title>
-    <script src="../script.js" defer></script>
-    <script src="../simulator/util/script.js" defer></script>
-    <script src="../database/db.js" defer></script>
-</head>
-<body onload="initAdminDashboard()" id="adminPage">
-
+    <script src="../script.js"></script>
+    <script src="../simulator/util/script.js"></script>
+    <script src="../database/db.js"></script>
+  </head>
+  <body onload="initAdminDashboard()" id="adminPage">
     <!-- Loader -->
-    <div id="loader-wrapper">   
-        <div class="loader-content">
-            <div class="logo-shimmer-container">
-                <img src="/LOGO/LOGO_4.jpg" class="loader-logo" alt="Logo">
-                <div class="logo-glow"></div>
-            </div>
-            <h1 class="loader-text">OS-MV</h1>
+    <div id="loader-wrapper">
+      <div class="loader-content">
+        <div class="logo-shimmer-container">
+          <img src="/LOGO/LOGO_4.jpg" class="loader-logo" alt="Logo" />
+          <div class="logo-glow"></div>
         </div>
-        <div class="loader-panel left"></div>
-        <div class="loader-panel right"></div>
+        <h1 class="loader-text">OS-MV</h1>
+      </div>
+      <div class="loader-panel left"></div>
+      <div class="loader-panel right"></div>
     </div>
 
     <!-- Sidebar -->
     <div id="sidebar-container"></div>
 
     <section class="main">
-        <button id="toggle-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
-        </button>
-        <div class="main-container">
-            <div class="admin-header">
-                <h2>User Accounts Overview</h2>
-                <p class="subtitle">List of all registered users in the system.</p>
-            </div>
-            
-            <!-- table -->
-            <div class="table-wrapper">
-                <table class="user-table">
-                    <thead>
-                        <tr>
-                            <th>USERNAME</th>
-                            <th>STATUS</th>
-                            <th>CREATED DATE</th>
-                            <th>LAST SESSION</th>
-                            <th style="text-align: center;">ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-table-body"></tbody>
-                </table>
-            </div>
-
-            <!-- Popup Overlay -->
-            <div id="popup-overlay" class="popup-overlay" style="display: none;">
-                <div class="popup-box">
-                    <div class="popup-header">
-                        <h3 id="popup-title">Title</h3>
-                        <button id="popup-close" class="popup-close-btn">&times;</button>
-                    </div>
-                    <div class="popup-body">
-                        <p id="popup-message">Message</p>
-                    </div>
-                    <div class="popup-footer">
-                        <button id="popup-cancel" class="popup-btn popup-btn-cancel">Cancel</button>
-                        <button id="popup-confirm" class="popup-btn popup-btn-confirm">Confirm</button>
-                    </div>
-                </div>
-            </div>
+      <button id="toggle-btn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-chevrons-left-icon lucide-chevrons-left"
+        >
+          <path d="m11 17-5-5 5-5" />
+          <path d="m18 17-5-5 5-5" />
+        </svg>
+      </button>
+      <div class="main-container">
+        <div class="admin-header">
+          <h2>User Accounts Overview</h2>
+          <p class="subtitle">List of all registered users in the system.</p>
         </div>
-    </section>
 
-</body>
+        <!-- table -->
+        <div class="table-wrapper">
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>USERNAME</th>
+                <th>STATUS</th>
+                <th>CREATED DATE</th>
+                <th>LAST SESSION</th>
+                <th style="text-align: center">ACTIONS</th>
+              </tr>
+            </thead>
+            <tbody id="user-table-body"></tbody>
+          </table>
+        </div>
+
+        <!-- Popup Overlay -->
+        <div id="popup-overlay" class="popup-overlay" style="display: none">
+          <div class="popup-box">
+            <div class="popup-header">
+              <h3 id="popup-title">Title</h3>
+              <button id="popup-close" class="popup-close-btn">&times;</button>
+            </div>
+            <div class="popup-body">
+              <p id="popup-message">Message</p>
+            </div>
+            <div class="popup-footer">
+              <button id="popup-cancel" class="popup-btn popup-btn-cancel">
+                Cancel
+              </button>
+              <button id="popup-confirm" class="popup-btn popup-btn-confirm">
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </body>
 </html>

@@ -1,266 +1,553 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/output.css">
-    <link rel="stylesheet" href="../css/test.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../css/output.css" />
+    <link rel="stylesheet" href="../css/test.css" />
     <title>OS-MV</title>
-    <script src="../util/script.js" defer></script>
-    <script src="../../database/db.js" defer></script>
-</head>
-<body onload="simulatorLoad()">
-
+    <script src="../util/script.js"></script>
+    <script src="../../database/db.js"></script>
+  </head>
+  <body onload="simulatorLoad()">
     <div id="sidebar-container"></div>
 
     <!-- Standard View -->
     <section id="standard-view" class="main-grid">
-        <button id="toggle-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
-        </button>
-        <div class="simulation-controls" style="grid-column: span 2;">
-            <div>
-                <button id="play-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
-                    <p>Play</p>
-                </button>
-                <button id="stop-btn" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause-icon lucide-pause"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>  
-                    <p>Stop</p>
-                </button>
-            </div>
-            <div>
-                <button id="reset-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    <p>Reset</p>
-                </button>
-            </div>
-            <div>
-                <button id="next-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
-                    <p>Next</p>
-                </button>
-            </div>
-            <div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-up-icon lucide-chevrons-up"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>
-                <p>Speed</p>
-                <div class="slide-container">
-                    <p>1x</p>
-                    <input type="range" min="1" max="3" step="0.5" value="1" class="slider" id="slider">
-                    <p>3x</p>
-                </div>
-            </div>
+      <button id="toggle-btn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-chevrons-left-icon lucide-chevrons-left"
+        >
+          <path d="m11 17-5-5 5-5" />
+          <path d="m18 17-5-5 5-5" />
+        </svg>
+      </button>
+      <div class="simulation-controls" style="grid-column: span 2">
+        <div>
+          <button id="play-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-play-icon lucide-play"
+            >
+              <path
+                d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
+              />
+            </svg>
+            <p>Play</p>
+          </button>
+          <button id="stop-btn" style="display: none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-pause-icon lucide-pause"
+            >
+              <rect x="14" y="3" width="5" height="18" rx="1" />
+              <rect x="5" y="3" width="5" height="18" rx="1" />
+            </svg>
+            <p>Stop</p>
+          </button>
         </div>
-        <div class="process-queue">
-            <h3>Process Queue</h3>
-            <div class="container">
-                <div class="input-prcs">
-                    <input type="number" id="process-size" placeholder="Size (KB)">
-                    <button type="button" id="add-process-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                    </button>
-                    <button type="button" id="randomize-value">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
-                    </button>
-                </div>
-                <div class="process-container">
-                    <!-- Dito papasok yung mga processes -->
-                </div>
-            </div>
+        <div>
+          <button id="reset-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"
+            >
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <p>Reset</p>
+          </button>
         </div>
-        <div class="simulation">
-            <h3>Memory Allocation Simulator</h3>
-            <p id="algo-description"></p>
-            <div class="container">
-                <div class="simulation-scroll-track">
-                    <!-- Dito papasok yung mga blocks -->
-                <button class="add-block" id="add-block-btn">
-                    <div><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg></div>
-                </button>
-                </div>
-            </div>
+        <div>
+          <button id="next-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-step-forward-icon lucide-step-forward"
+            >
+              <path
+                d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"
+              />
+              <path d="M3 4v16" />
+            </svg>
+            <p>Next</p>
+          </button>
         </div>
-        <div style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px;">
-            <div class="console">
-                <h3>Console</h3>
-                <div class="container">
-                    <!-- <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p> -->
-                    <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
+        <div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-chevrons-up-icon lucide-chevrons-up"
+          >
+            <path d="m17 11-5-5-5 5" />
+            <path d="m17 18-5-5-5 5" />
+          </svg>
+          <p>Speed</p>
+          <div class="slide-container">
+            <p>1x</p>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.5"
+              value="1"
+              class="slider"
+              id="slider"
+            />
+            <p>3x</p>
+          </div>
+        </div>
+      </div>
+      <div class="process-queue">
+        <h3>Process Queue</h3>
+        <div class="container">
+          <div class="input-prcs">
+            <input type="number" id="process-size" placeholder="Size (KB)" />
+            <button type="button" id="add-process-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-plus-icon lucide-plus"
+              >
+                <path d="M5 12h14" />
+                <path d="M12 5v14" />
+              </svg>
+            </button>
+            <button type="button" id="randomize-value">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-dices-icon lucide-dices"
+              >
+                <rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+                <path
+                  d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"
+                />
+                <path d="M6 18h.01" />
+                <path d="M10 14h.01" />
+                <path d="M15 6h.01" />
+                <path d="M18 9h.01" />
+              </svg>
+            </button>
+          </div>
+          <div class="process-container">
+            <!-- Dito papasok yung mga processes -->
+          </div>
+        </div>
+      </div>
+      <div class="simulation">
+        <h3>Memory Allocation Simulator</h3>
+        <p id="algo-description"></p>
+        <div class="container">
+          <div class="simulation-scroll-track">
+            <!-- Dito papasok yung mga blocks -->
+            <button class="add-block" id="add-block-btn">
+              <div>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="lucide lucide-plus-icon lucide-plus"
+                >
+                  <path d="M5 12h14" />
+                  <path d="M12 5v14" />
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        style="
+          grid-column: span 2;
+          display: grid;
+          grid-template-columns: 1fr 1.5fr;
+          gap: 20px;
+        "
+      >
+        <div class="console">
+          <h3>Console</h3>
+          <div class="container">
+            <!-- <p><span class="timestamp">[12:36:00PM]</span> System Ready. Add processes/partitions or click Start.</p> -->
+            <!-- <p><span class="timestamp">[12:36:00PM]</span> Lorem ipsum, dolor sit amet consectetur adipisicing elit.</p>
                     <p><span class="timestamp">[12:36:00PM]</span> Vero at, quo quibusdam odio optio aliquid iure assumenda quas perferendis laudantium deleniti pariatur sit dolor ea</p>
                     <p><span class="timestamp">[12:36:00PM]</span> Sed asperiores cum nihil iusto.</p> -->
-                </div>
-            </div>
-            <div class="statistics">
-                <h3>Statistics</h3>
-                <div class="container">
-                    <div style="grid-column: span 4;">
-                        <p>Total Memory</p>
-                        <h2 id="total-memory-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 4;">
-                        <p>Allocated</p>
-                        <h2 id="allocated-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 4;">
-                        <p>Total Free</p>
-                        <h2 id="total-free-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Internal Fragmentation</p>
-                        <h2 id="internal-frag-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>External Fragmentation</p>
-                        <h2 id="external-frag-value">0 KB</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Memory Utilization</p>
-                        <h2 id="util-value">0.0%</h2>
-                    </div>
-                    <div style="grid-column: span 3;">
-                        <p>Success Rate</p>
-                        <h2 id="success-rate-value">0.0%</h2>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div class="statistics">
+          <h3>Statistics</h3>
+          <div class="container">
+            <div style="grid-column: span 4">
+              <p>Total Memory</p>
+              <h2 id="total-memory-value">0 KB</h2>
+            </div>
+            <div style="grid-column: span 4">
+              <p>Allocated</p>
+              <h2 id="allocated-value">0 KB</h2>
+            </div>
+            <div style="grid-column: span 4">
+              <p>Total Free</p>
+              <h2 id="total-free-value">0 KB</h2>
+            </div>
+            <div style="grid-column: span 3">
+              <p>Internal Fragmentation</p>
+              <h2 id="internal-frag-value">0 KB</h2>
+            </div>
+            <div style="grid-column: span 3">
+              <p>External Fragmentation</p>
+              <h2 id="external-frag-value">0 KB</h2>
+            </div>
+            <div style="grid-column: span 3">
+              <p>Memory Utilization</p>
+              <h2 id="util-value">0.0%</h2>
+            </div>
+            <div style="grid-column: span 3">
+              <p>Success Rate</p>
+              <h2 id="success-rate-value">0.0%</h2>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
     <!-- Paging -->
-    <section id="paging-view" class="main-grid paging" style="display: none;">
-        <button id="toggle-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
-        </button>
-        <div class="simulation-controls" style="grid-column: span 3 ;">
+    <section id="paging-view" class="main-grid paging" style="display: none">
+      <button id="toggle-btn">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="36"
+          height="36"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          class="lucide lucide-chevrons-left-icon lucide-chevrons-left"
+        >
+          <path d="m11 17-5-5 5-5" />
+          <path d="m18 17-5-5 5-5" />
+        </svg>
+      </button>
+      <div class="simulation-controls" style="grid-column: span 3">
+        <div>
+          <button id="play-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-play-icon lucide-play"
+            >
+              <path
+                d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"
+              />
+            </svg>
+            <p>Play</p>
+          </button>
+          <button id="stop-btn" style="display: none">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-pause-icon lucide-pause"
+            >
+              <rect x="14" y="3" width="5" height="18" rx="1" />
+              <rect x="5" y="3" width="5" height="18" rx="1" />
+            </svg>
+            <p>Stop</p>
+          </button>
+        </div>
+        <div>
+          <button id="reset-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"
+            >
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+            </svg>
+            <p>Reset</p>
+          </button>
+        </div>
+        <div>
+          <button id="next-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-step-forward-icon lucide-step-forward"
+            >
+              <path
+                d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"
+              />
+              <path d="M3 4v16" />
+            </svg>
+            <p>Next</p>
+          </button>
+        </div>
+        <div>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="lucide lucide-chevrons-up-icon lucide-chevrons-up"
+          >
+            <path d="m17 11-5-5-5 5" />
+            <path d="m17 18-5-5-5 5" />
+          </svg>
+          <p>Speed</p>
+          <div class="slide-container">
+            <p>1x</p>
+            <input
+              type="range"
+              min="1"
+              max="3"
+              step="0.5"
+              value="1"
+              class="slider"
+              id="slider"
+            />
+            <p>3x</p>
+          </div>
+        </div>
+      </div>
+      <div class="statistics-paging" style="grid-column: span 3">
+        <div class="container-paging">
+          <div>
+            <p>Total Memory</p>
+            <h2 id="total-memory-value">0 KB</h2>
+          </div>
+          <div>
+            <p>Allocated</p>
+            <h2 id="allocated-value">0 KB</h2>
+          </div>
+          <div>
+            <p>Total Free</p>
+            <h2 id="total-free-value">0 KB</h2>
+          </div>
+          <div>
+            <p>Internal Fragmentation</p>
+            <h2 id="internal-frag-value">0 KB</h2>
+          </div>
+          <div>
+            <p>External Fragmentation</p>
+            <h2 id="external-frag-value">0 KB</h2>
+          </div>
+          <div>
+            <p>Memory Utilization</p>
+            <h2 id="util-value">0.0%</h2>
+          </div>
+          <div>
+            <p>Success Rate</p>
+            <h2 id="success-rate-value">0.0%</h2>
+          </div>
+        </div>
+      </div>
+      <div class="process-queue">
+        <h3>Process Queue</h3>
+        <div class="container">
+          <div class="input-prcs">
+            <input type="number" id="process-size" placeholder="Size (KB)" />
+            <button type="button" id="add-process-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-plus-icon lucide-plus"
+              >
+                <path d="M5 12h14" />
+                <path d="M12 5v14" />
+              </svg>
+            </button>
+            <button type="button" id="randomize-value">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-dices-icon lucide-dices"
+              >
+                <rect width="12" height="12" x="2" y="10" rx="2" ry="2" />
+                <path
+                  d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"
+                />
+                <path d="M6 18h.01" />
+                <path d="M10 14h.01" />
+                <path d="M15 6h.01" />
+                <path d="M18 9h.01" />
+              </svg>
+            </button>
+          </div>
+          <div class="process-container">
+            <!-- Dito papasok yung mga processes -->
+          </div>
+        </div>
+      </div>
+      <div class="simulation-paging" style="grid-row: span 2">
+        <div class="header">
+          <div style="display: flex; flex-direction: column; gap: 8px">
+            <h3>Memory Allocation Simulator</h3>
+            <p id="algo-description">Paging Algorithm</p>
+          </div>
+          <div class="input-size">
             <div>
-                <button id="play-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
-                    <p>Play</p>
-                </button>
-                <button id="stop-btn" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause-icon lucide-pause"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>  
-                    <p>Stop</p>
-                </button>
+              <label for="page-frame-size">Page / Frame Size (KB)</label>
+              <input
+                type="number"
+                id="page-frame-size"
+                value="4"
+                placeholder="Page / Frame Size (KB)"
+              />
             </div>
             <div>
-                <button id="reset-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
-                    <p>Reset</p>
-                </button>
+              <label for="memory-size">Total Memory Size (KB)</label>
+              <input
+                type="number"
+                id="memory-size"
+                value="128"
+                placeholder="Total Memory Size (KB)"
+              />
             </div>
-            <div>
-                <button id="next-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
-                    <p>Next</p>
-                </button>
-            </div>
-            <div>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-up-icon lucide-chevrons-up"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>
-                <p>Speed</p>
-                <div class="slide-container">
-                    <p>1x</p>
-                    <input type="range" min="1" max="3" step="0.5" value="1" class="slider" id="slider">
-                    <p>3x</p>
-                </div>
-            </div>
+          </div>
         </div>
-        <div class="statistics-paging" style="grid-column: span 3;">
-            <div class="container-paging">
-                <div>
-                    <p>Total Memory</p>
-                    <h2 id="total-memory-value">0 KB</h2>
-                </div>
-                <div>
-                    <p>Allocated</p>
-                    <h2 id="allocated-value">0 KB</h2>
-                </div>
-                <div>
-                    <p>Total Free</p>
-                    <h2 id="total-free-value">0 KB</h2>
-                </div>
-                <div>
-                    <p>Internal Fragmentation</p>
-                    <h2 id="internal-frag-value">0 KB</h2>
-                </div>
-                <div>
-                    <p>External Fragmentation</p>
-                    <h2 id="external-frag-value">0 KB</h2>
-                </div>
-                <div>
-                    <p>Memory Utilization</p>
-                    <h2 id="util-value">0.0%</h2>
-                </div>
-                <div>
-                    <p>Success Rate</p>
-                    <h2 id="success-rate-value">0.0%</h2>
-                </div>
-            </div>
+        <div class="container">
+          <div><h3>Pages (Virtual Memory)</h3></div>
+          <div><h3>Frames (Physical Memory)</h3></div>
+          <div class="pages-container"></div>
+          <div class="frames-container"></div>
         </div>
-        <div class="process-queue">
-            <h3>Process Queue</h3>
-            <div class="container">
-                <div class="input-prcs">
-                    <input type="number" id="process-size" placeholder="Size (KB)">
-                    <button type="button" id="add-process-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                    </button>
-                    <button type="button" id="randomize-value">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
-                    </button>
-                </div>
-                <div class="process-container">
-                    <!-- Dito papasok yung mga processes -->
-                </div>
-            </div>
+      </div>
+      <div class="page-table" style="grid-row: span 2">
+        <h3>Page Table</h3>
+        <div class="container">
+          <table class="page-table-info">
+            <thead>
+              <tr>
+                <th>Process ID</th>
+                <th>Page Number</th>
+                <th>Frame Number</th>
+              </tr>
+            </thead>
+            <tbody id="page-table-body"></tbody>
+          </table>
         </div>
-        <div class="simulation-paging" style="grid-row: span 2;">
-            <div class="header">
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <h3>Memory Allocation Simulator</h3>
-                    <p id="algo-description">Paging Algorithm</p>
-                </div>
-                <div class="input-size">
-                    <div>
-                        <label for="page-frame-size">Page / Frame Size (KB)</label>
-                        <input type="number" id="page-frame-size" value="4" placeholder="Page / Frame Size (KB)">
-                    </div>
-                    <div>
-                        <label for="memory-size">Total Memory Size (KB)</label>
-                        <input type="number" id="memory-size" value="128" placeholder="Total Memory Size (KB)">
-                    </div>
-                </div>
-            </div>
-            <div class="container">
-                <div><h3>Pages (Virtual Memory)</h3></div>
-                <div><h3>Frames (Physical Memory)</h3></div>
-                <div class="pages-container"></div>
-                <div class="frames-container"></div>
-            </div>
-        </div>
-        <div class="page-table" style="grid-row: span 2;">
-            <h3>Page Table</h3>
-            <div class="container">
-                <table class="page-table-info">
-                    <thead>
-                        <tr>
-                            <th>Process ID</th>
-                            <th>Page Number</th>
-                            <th>Frame Number</th>
-                        </tr>
-                    </thead>
-                    <tbody id="page-table-body">
-                        </tbody>
-                </table>
-            </div>
-        </div>
-        <div class="console">
-            <h3>Console</h3>
-            <div class="container">
-            </div>
-        </div>
+      </div>
+      <div class="console">
+        <h3>Console</h3>
+        <div class="container"></div>
+      </div>
     </section>
 
     <!-- Segmentation -->
-    
-</body>
+  </body>
 </html>

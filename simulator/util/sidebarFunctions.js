@@ -9,7 +9,7 @@
 //   });
 // });
 
-if (document.readyState !== 'loading') {
+if (document.readyState !== "loading") {
   loadSidebar().then(() => {
     sidebarLinks();
     showMenu();
@@ -39,31 +39,31 @@ async function loadSidebar() {
 const getBasePath = () => {
   const path = window.location.pathname;
 
-  if (path.includes('/admin-dashboard/')) return '../';
-  if (path.includes('/simulator/algorithm/')) return '../../';
-  if (path.includes('/simulator/')) return '../';
-  return './';
-}
+  if (path.includes("/admin-dashboard/")) return "../";
+  if (path.includes("/simulator/algorithm/")) return "../../";
+  if (path.includes("/simulator/")) return "../";
+  return "./";
+};
 
 const sidebarLinks = () => {
   const base = getBasePath();
 
   const linkMap = [
-    {id: 'menu-dashboard', path: 'simulator/index.html'},
-    {id: 'menu-admin-dashboard', path: 'admin-dashboard/index.html'},
-    {id: 'menu-back-simulator', path: 'simulator/index.html'}, // for admin dashboard
+    { id: "menu-dashboard", path: "simulator/index.html" },
+    { id: "menu-admin-dashboard", path: "admin-dashboard/index.html" },
+    { id: "menu-back-simulator", path: "simulator/index.html" }, // for admin dashboard
   ];
 
-  linkMap.forEach(item => {
+  linkMap.forEach((item) => {
     const link = document.getElementById(item.id);
-    if(!link) return;
+    if (!link) return;
 
-    const anchor = link.querySelector('a');
+    const anchor = link.querySelector("a");
     if (!anchor) return;
 
-    anchor.setAttribute('href', base + item.path);
+    anchor.setAttribute("href", base + item.path);
   });
-}
+};
 
 function initSidebarFunctions() {
   const toggleButton = document.getElementById("toggle-btn");
@@ -80,7 +80,7 @@ function initSidebarFunctions() {
     toggleButton: !!toggleButton,
     sidebar: !!sidebar,
     logo: !!logo,
-    logoH1: !!logoH1
+    logoH1: !!logoH1,
   });
 
   if (toggleButton) {
@@ -89,16 +89,31 @@ function initSidebarFunctions() {
 }
 
 const toggleSideBar = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const homeView = document.getElementById('home-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : (homeView || standardView);
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const homeView = document.getElementById("home-view");
+  const activeView =
+    pagingView && pagingView.style.display === "grid"
+      ? pagingView
+      : homeView || standardView;
 
   // Fallback to window references or direct DOM query for admin-dashboard pages
-  const sidebar = window.sidebar || (activeView && activeView.getElementById("sidebar")) || document.getElementById("sidebar");
-  const toggleButton = window.toggleButton || (activeView && activeView.querySelector('#toggle-btn')) || document.getElementById("toggle-btn");
-  const logo = window.logo || (activeView && activeView.getElementById("logo")) || document.getElementById("logo");
-  const logoH1 = window.logoH1 || (activeView && activeView.getElementById("h1")) || document.getElementById("h1");
+  const sidebar =
+    window.sidebar ||
+    (activeView && activeView.getElementById("sidebar")) ||
+    document.getElementById("sidebar");
+  const toggleButton =
+    window.toggleButton ||
+    (activeView && activeView.querySelector("#toggle-btn")) ||
+    document.getElementById("toggle-btn");
+  const logo =
+    window.logo ||
+    (activeView && activeView.getElementById("logo")) ||
+    document.getElementById("logo");
+  const logoH1 =
+    window.logoH1 ||
+    (activeView && activeView.getElementById("h1")) ||
+    document.getElementById("h1");
   const logoP = logo && logo.querySelector("p");
 
   if (sidebar) sidebar.classList.toggle("close");
