@@ -1357,14 +1357,7 @@ function reEnableSimulationButtons() {
     randomizeBtn.style.cursor = "pointer";
   }
   
-  // Re-enable add block button (standard view only)
-  const addBlockBtn = activeView.querySelector('#add-block-btn');
-  if (addBlockBtn) {
-    addBlockBtn.style.display = "flex";
-    addBlockBtn.disabled = false;
-    addBlockBtn.style.opacity = "1";
-    addBlockBtn.style.cursor = "pointer";
-  }
+  // Note: add block button is NOT re-enabled here - it only reappears when reset is clicked
   
   // Re-enable process action buttons
   activeView.querySelectorAll('.process-action').forEach(btn => {
