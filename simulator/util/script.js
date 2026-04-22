@@ -1478,6 +1478,10 @@ function startSimulation(event) {
   if (algoWhat === "Segmentation") {
     sessionStorage.setItem('selectedPartition', "segmentation");
   }
+
+    if (algoWhat === "Seg-Paging") {
+    sessionStorage.setItem('selectedPartition', "seg-paging");
+  }
   
   const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
   const whatAlgo = toggle.checked;
@@ -1491,6 +1495,8 @@ function startSimulation(event) {
       break;
       case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html?algorithm=segmentation`;
       break;  
+      case "Seg-Paging": window.location.href = `algorithm/simulation-Segmentation-Paging.html?algorithm=seg-paging`;
+      break;
     }
   }
 }
