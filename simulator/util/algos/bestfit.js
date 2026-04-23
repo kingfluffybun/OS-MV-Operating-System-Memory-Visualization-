@@ -225,6 +225,12 @@ const memorySimulator = {
     const totalFree = this.totalFreeSize(head);
     if (totalFree < processSize) return null;
 
+    let maxBlockId = 0;
+    for (let node = head; node; node = node.next) {
+        let logicalId = node.originalLabel || node.parentId || node.id;
+        if (logicalId > maxBlockId) maxBlockId = logicalId;
+    }
+
     // Step 2: Create new compacted list with only occupied nodes + one free block
     let newHead = null;
     let tail = null;
@@ -240,6 +246,7 @@ const memorySimulator = {
           id: newBlockId,
           size: node.size,
           status: "Occupied",
+          originalLabel: node.originalLabel || node.parentId || node.id,
           next: null,
         };
 
@@ -266,6 +273,7 @@ const memorySimulator = {
         id: newBlockId,
         size: freeTotal,
         status: "Free",
+        originalLabel: maxBlockId + 1,
         next: null,
       };
 
@@ -328,6 +336,7 @@ const memorySimulator = {
         status: "Free",
         next: bestBlock.next,
         originalLabel, // carry forward so future allocations from this fragment show the same block label
+        isSplit: true,
       };
     }
 
@@ -343,7 +352,7 @@ const memorySimulator = {
       successfulAllocations: 1,
       newFreeId,
       ifCompacted: Boolean(compactedHead),
-      newMemoryHead: compactedHead || undefined,
+      newMemoryHead: compactedHead || memoryHead,
       idMapping,
     };
 
