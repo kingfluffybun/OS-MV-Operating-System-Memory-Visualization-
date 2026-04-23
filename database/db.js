@@ -643,7 +643,7 @@ function resetPassword(userId) {
         title: 'Reset User Password',
         message: 'Enter a new password for this user. They will be required to change it on next login.',
         input: true,
-        inputType: 'password',
+        inputType: 'text',
         inputPlaceholder: 'New password (min 8 chars)',
         confirmText: 'Reset Password',
         confirmClass: 'popup-btn-reset',
