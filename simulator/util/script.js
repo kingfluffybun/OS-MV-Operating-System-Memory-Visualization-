@@ -54,6 +54,7 @@ function showMenu() {
   // Check which page is user on
   const isAdminPage = currentPath.includes('/admin-dashboard/');
   const isSimulator = currentPath.includes('/simulator/algorithm/');
+  const isComparisonPage = currentPath.includes('/simulator/comparison.html');
   const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
 
   // Admin Menu
@@ -79,6 +80,10 @@ function showMenu() {
 
     if (isSimulator) {
       document.getElementById('single-mode').classList.add('active');
+    }
+
+    if (isComparisonPage) {
+      document.getElementById('comparison-mode').classList.add('active');
     }
   }
 }
