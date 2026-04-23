@@ -1564,6 +1564,17 @@ function attachSimulationListeners(viewType) {
   if (slider) {
     slider.addEventListener("input", function () {
       speed = parseFloat(this.value);
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = setInterval(() => {
+          if (!runStep()) {
+            clearInterval(playInterval);
+            playInterval = null;
+            togglePlayStop();
+            reEnableSimulationButtons();
+          }
+        }, getStepDelay());
+      }
     });
   }
 
