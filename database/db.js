@@ -364,12 +364,18 @@ async function login(username, password) {
             sessionStorage.setItem('currentUser', JSON.stringify(user));
 
             // Track activity
-            const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
-            activeSession[user.user_id] = {
+            const activeSessions = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+            activeSessions[user.user_id] = {
                 username: user.username,
-                lastActivity: Date.now()
+                lastActivity: Date.now(),
+                loginTime: Date.now()
             };
-            localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+            localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSessions)));
+
+            // Update last sessions
+            const lastSessions = JSON.parse(decryptData(localStorage.getItem('lastSessions')) || '{}');
+            delete lastSessions[user.user_id];
+            localStorage.setItem('lastSessions', encryptData(JSON.stringify(lastSessions)));
 
             return {
                 success: true,
@@ -400,9 +406,18 @@ function logout(event) {
 
     const currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
     if (currentUser) {
-        const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
-        delete activeSession[currentUser.user_id];
-        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+        // Remove from active sessions
+        const activeSessions = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        delete activeSessions[currentUser.user_id];
+        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSessions)));
+
+        // Record logout time
+        const lastSessions = JSON.parse(decryptData(localStorage.getItem('lastSessions')) || '{}');
+        lastSessions[currentUser.user_id] = {
+            username: currentUser.username,
+            logoutTime: Date.now()
+        };
+        localStorage.setItem('lastSessions', encryptData(JSON.stringify(lastSessions)));
     }
 
     sessionStorage.removeItem('currentUser');
@@ -480,7 +495,8 @@ async function loadUsers() {
             return;
         }
 
-        const activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        const activeSessions = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        const lastSessions = JSON.parse(decryptData(localStorage.getItem('lastSessions')) || '{}');
         const now = Date.now();
         const SESSION_TIMEOUT = 5 * 60 * 1000;
 
@@ -491,38 +507,55 @@ async function loadUsers() {
             const isCurrentUser = user.user_id === currentAdminId;
             const row = document.createElement('tr');
 
-            const session = activeSession[user.user_id];
-            let isOnline = false;
-            let lastActivity = '';
+            // Status
+            const session = activeSessions[user.user_id];
+            let statusClass = 'badge offline';
+            let statusText = 'Offline';
 
             if (isCurrentUser && currentUser) {
-                isOnline = true;
-                lastActivity = '<span class="badge online">Online</span>';
+                statusClass = 'badge online';
+                statusText = 'Online';
             } else if (session) {
                 const timeSince = now - session.lastActivity;
                 isOnline = timeSince < SESSION_TIMEOUT;
 
-                const minutes = Math.floor(timeSince / 60000);
-                const hours = Math.floor(minutes / 60);
-
                 if (isOnline) {
-                    lastActivity = '<span class="badge online">Online</span>';
-                } else if (minutes < 1) {
-                    lastActivity = '<span class="badge offline">Just now</span>';
-                } else if (minutes < 60) {
-                    lastActivity = '<span class="badge offline">' + minutes + ' m ago</span>';
-                } else if (hours < 24) {
-                    lastActivity = '<span class="badge offline">' + hours + ' h ago</span>';
+                    statusClass = 'badge online';
+                    statusText = 'Online';
                 } else {
-                    lastActivity = formatDate(user.updated_at);
+                    statusClass = 'badge offline';
+                    statusText = 'Offline';
                 }
-            } else {
-                lastActivity = formatDate(user.updated_at);
             }
 
-            const statusClass = isOnline ? 'badge online' : 'badge offline';
-            const statusText = isOnline ? 'Online' : 'Offline';
+            // Last session
+            let lastSessionText = '';
 
+            const lastSession = lastSessions[user.user_id];
+            if (lastSession && lastSession.logoutTime) {
+                const timeSince = now - lastSession.logoutTime;
+                const minutes = Math.floor(timeSince / 60000);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+
+                if (minutes < 1) {
+                    lastSessionText = '<span class="badge offline">Just now</span>';
+                } else if (minutes < 60) {
+                    lastSessionText = '<span class="badge offline">' + minutes + ' m ago</span>';
+                } else if (hours < 24) {
+                    lastSessionText = '<span class="badge offline">' + hours + ' h ago</span>';
+                } else if (days < 30) {
+                    lastSessionText = '<span class="badge offline">' + days + ' d ago</span>';
+                } else {
+                    lastSessionText = formatDate(lastSession.logoutTime);
+                }
+            } else if (session && session.loginTime) {
+                lastSessionText = '<span class="badge online">Active now</span>';
+            } else {
+                lastSessionText = '<span class="badge offline">Never logged in</span>';
+            }
+
+            // Action buttons
             let actionButtons = '';
             if (isCurrentUser) {
                 actionButtons = `<span class="badge online" style="font-style: italic;">Current Admin</span>`
@@ -545,7 +578,7 @@ async function loadUsers() {
                 // Updated At
                 '<td>' + formatDate(user.updated_at) + '</td>' +
                 // Last Activity
-                '<td>' + lastActivity + '</td>' +
+                '<td>' + lastSessionText + '</td>' +
                 // Actions
                 '<td style="text-align: center;">' + actionButtons + '</td>';
 
@@ -553,6 +586,7 @@ async function loadUsers() {
         });
     } catch (e) {
         tableBody.innerHTML = "<tr><td colspan='5'>Error loading users</td></tr>";
+        console.log(e);
     }
 }
 
@@ -609,7 +643,7 @@ function resetPassword(userId) {
         title: 'Reset User Password',
         message: 'Enter a new password for this user. They will be required to change it on next login.',
         input: true,
-        inputType: 'password',
+        inputType: 'text',
         inputPlaceholder: 'New password (min 8 chars)',
         confirmText: 'Reset Password',
         confirmClass: 'popup-btn-reset',

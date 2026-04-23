@@ -585,6 +585,8 @@ const prepareSimulation = () => {
 
     const randomizeBtn = document.getElementById('randomize-value');
     if (randomizeBtn) randomizeBtn.disabled = true;
+    const addProcessBtn = document.getElementById('add-process-btn');
+    if (addProcessBtn) addProcessBtn.disabled = true;
 
     document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
     disableMemoryBlockControls();
@@ -1010,7 +1012,7 @@ const runStep = () => {
           playInterval = null;
           togglePlayStop();
         }
-        reEnableSimulationButtons();
+        // reEnableSimulationButtons();
         return false;
       }
       // Continue with next process in next runStep call
@@ -1470,6 +1472,11 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
+    const addProcessBtn = document.querySelector("#add-process-btn");
+    if (addProcessBtn) {
+        addProcessBtn.disabled = false;
+    }
+
     activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
   }
 
@@ -1523,6 +1530,9 @@ function reEnableSimulationButtons() {
     btn.style.opacity = "1";
     btn.style.cursor = "pointer";
   });
+
+  const addProcessBtn = document.getElementById('add-process-btn');
+  if (addProcessBtn) addProcessBtn.disabled = false;
 
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
