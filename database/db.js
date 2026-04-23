@@ -395,12 +395,26 @@ async function login(username, password) {
     }
 }
 
-function isLoggedIn() {
-    return sessionStorage.getItem('currentUser') !== null;
-}
-
+// ========== LOGOUT ==========
 function logout(event) {
     if (event) event.preventDefault();
+
+    if (sessionStorage.getItem('currentUser') !== null) {
+        showPopup({
+            title: "Logout",
+            message: "Are you sure you want to logout?",
+            confirmClass: "popup-btn-danger",
+            confirmText: "Logout",
+            onConfirm: function() {
+                doLogout();
+            }
+        })
+    } else {
+        doLogout();
+    }
+}
+
+function doLogout() {
     const base = getBasePath();
     window.location.href = base + "index.html";
 
