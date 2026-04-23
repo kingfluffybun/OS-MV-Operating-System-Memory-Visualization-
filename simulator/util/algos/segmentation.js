@@ -536,9 +536,12 @@ const updateSegmentationStatistics = () => {
       ? ((status.allocated ? status.allocated.length : 0) / segmentationState.processQueue.length) * 100 
       : 0;
     
+    // Only show total free when simulation has started (processes allocated)
+    const adjustedTotalFree = (status.allocated && status.allocated.length > 0) ? totalFree : 0;
+    
     const stats = {
       allocatedSize,
-      totalFree,
+      totalFree: adjustedTotalFree,
       intFragmentation,
       externalFragmentation,
       memoryUtilization,
