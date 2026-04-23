@@ -178,6 +178,23 @@ let segmentationState = {
   allocatedSegments: []
 };
 
+const getProcessColors = (processName) => {
+  const defaultColors = { bg: '#9BF6FF', border: '#74B8BF' };
+  if (!processName) return defaultColors;
+
+  const processes = Array.from(document.querySelectorAll('.process'));
+  const processEl = processes.find((process) => {
+    const nameEl = process.querySelector('.process-content p:first-child');
+    return nameEl && nameEl.textContent.trim() === processName;
+  });
+
+  if (!processEl) return defaultColors;
+  return {
+    bg: processEl.getAttribute('data-bg') || defaultColors.bg,
+    border: processEl.getAttribute('data-border') || defaultColors.border,
+  };
+};
+
 const getSegmentationInputs = () => {
   // Try to find the memory-size input in the segmentation view first
   let memorySizeInput = null;
@@ -224,7 +241,7 @@ const initializeSegmentationUI = (memory, processes = []) => {
 const resetSegmentationUI = () => {
   const segmentationContainer = document.querySelector(".segmentation-container");
   const physicalMemoryContainer = document.querySelector(".physical-memory-container");
-  const pageTableBody = document.querySelector("#page-table-body");
+  const pageTableBody = document.querySelector("#segmentation-page-table-body");
   
   if (segmentationContainer) segmentationContainer.innerHTML = "";
   if (physicalMemoryContainer) physicalMemoryContainer.innerHTML = "";
@@ -291,21 +308,25 @@ const updateSegmentationDisplay = (status) => {
         // Create a segments-container for each segment type
         segmentTypes.forEach((segmentType) => {
           if (segmentType.size > 0) {
+            const { bg, border } = getProcessColors(seg.name);
             const segmentContainer = document.createElement("div");
             segmentContainer.className = "segments-container";
-            
+
             // Add segment number
             const segmentNumberDiv = document.createElement("div");
             segmentNumberDiv.id = "segment-number";
             segmentNumberDiv.textContent = `S${seg.id - 1}`;
             segmentContainer.appendChild(segmentNumberDiv);
-            
+
             // Add segment type info
             const infoDiv = document.createElement("div");
             infoDiv.style.display = "flex";
             infoDiv.className = "segments";
             infoDiv.style.flexDirection = "column";
             infoDiv.style.alignItems = "center";
+            infoDiv.style.backgroundColor = bg;
+            infoDiv.style.borderBottom = `4px solid ${border}`;
+            infoDiv.style.borderRadius = "8px";
             
             const nameP = document.createElement("p");
             nameP.id = "process-segment";
@@ -372,8 +393,11 @@ processSegments.forEach(seg => {
   ];
     segmentTypes.forEach(segmentType => {
                 if (segmentType.size > 0) {
+                    const { bg, border } = getProcessColors(seg.name);
                     const segDiv = document.createElement("div");
                     segDiv.className = "allocated-segments";
+                    segDiv.style.backgroundColor = bg;
+                    segDiv.style.border = `2px solid ${border}`;
 
                     const baseValue = currentBase;
                     const limitValue = currentBase + segmentType.size;
@@ -432,7 +456,7 @@ processSegments.forEach(seg => {
 
 const updateSegmentationTable = () => {
   try {
-    const tableBody = document.querySelector("#page-table-body");
+    const tableBody = document.querySelector("#segmentation-page-table-body");
     if (!tableBody) return;
     
     tableBody.innerHTML = "";
