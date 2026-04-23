@@ -83,10 +83,39 @@ function initSidebarFunctions() {
     logoH1: !!logoH1
   });
 
+  // Restore sidebar state from localStorage
+  restoreSidebarState();
+
   if (toggleButton) {
     toggleButton.addEventListener("click", toggleSideBar);
   }
 }
+
+const restoreSidebarState = () => {
+  const sidebar = document.getElementById("sidebar");
+  const toggleButton = document.getElementById("toggle-btn");
+  const logo = document.getElementById("logo");
+  const logoH1 = document.getElementById("h1");
+  const logoP = logo && logo.querySelector("p");
+
+  const isClosed = localStorage.getItem("sidebarClosed") === "true";
+
+  if (isClosed && sidebar) {
+    sidebar.classList.add("close");
+    if (toggleButton) toggleButton.classList.add("rotate");
+    if (logo) logo.classList.add("hidden");
+    if (logoH1) logoH1.classList.add("hidden");
+    if (logoP) logoP.classList.add("hidden");
+    console.log("Sidebar restored as closed");
+  } else {
+    if (sidebar) sidebar.classList.remove("close");
+    if (toggleButton) toggleButton.classList.remove("rotate");
+    if (logo) logo.classList.remove("hidden");
+    if (logoH1) logoH1.classList.remove("hidden");
+    if (logoP) logoP.classList.remove("hidden");
+    console.log("Sidebar restored as open");
+  }
+};
 
 const toggleSideBar = () => {
   const standardView = document.getElementById('standard-view');
@@ -106,6 +135,12 @@ const toggleSideBar = () => {
   if (logo) logo.classList.toggle("hidden");
   if (logoH1) logoH1.classList.toggle("hidden");
   if (logoP) logoP.classList.toggle("hidden");
+
+  // Save sidebar state to localStorage
+  if (sidebar) {
+    const isClosed = sidebar.classList.contains("close");
+    localStorage.setItem("sidebarClosed", isClosed);
+  }
 
   if (toggleButton && toggleButton.classList.contains("rotate")) {
     console.log("Sidebar is now closed");
