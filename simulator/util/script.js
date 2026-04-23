@@ -530,6 +530,8 @@ const prepareSimulation = () => {
 
     const randomizeBtn = document.getElementById('randomize-value');
     if (randomizeBtn) randomizeBtn.disabled = true;
+    const addProcessBtn = document.getElementById('add-process-btn');
+    if (addProcessBtn) addProcessBtn.disabled = true;
 
     document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
     disableMemoryBlockControls();
@@ -727,20 +729,44 @@ const recreateBlocksFromMemory = () => {
   let node = simulationState.memoryHead;
   let blockIndex = 0;
   
+  let prevLogicalId = null;
+  
   while (node) {
+    const logicalId = String(node.originalLabel || node.parentId || node.id);
+    const nextLogicalId = node.next ? String(node.next.originalLabel || node.next.parentId || node.next.id) : null;
+    
+    const isFirstInGroup = (logicalId !== prevLogicalId);
+    const isLastInGroup = (logicalId !== nextLogicalId);
+
     // Create block with the node's current ID (already sequential after compaction)
-    const blockEl = createBlockElement(node.id, node.size);
+    const blockEl = createBlockElement(node.id, node.size, { isSplitFree: node.isSplit });
     
     if (node.status === "Occupied") {
       const statusLabel = blockEl.querySelector(".block-status");
       if (statusLabel) statusLabel.textContent = "Allocated";
       blockEl.classList.add("allocated");
+    } else if (node.isSplit) {
+      const statusLabel = blockEl.querySelector(".block-status");
+      if (statusLabel) statusLabel.textContent = "Hole";
     }
+
+    if (isFirstInGroup && !isLastInGroup) {
+      blockEl.style.borderRadius = "12px 0px 0px 12px";
+    } else if (!isFirstInGroup && !isLastInGroup) {
+      blockEl.style.borderRadius = "0px 0px 0px 0px";
+      blockEl.style.marginLeft = "-10px";
+    } else if (!isFirstInGroup && isLastInGroup) {
+      blockEl.style.borderRadius = "0px 12px 12px 0px";
+      blockEl.style.marginLeft = "-10px";
+    }
+
     blockEl.dataset.originalSize = String(node.size);
     blockEl.dataset.linkedListId = String(node.id);
     blockEl.dataset.linkedListNodeId = String(node.id); // Store node ID for matching
+    blockEl.dataset.logicalId = logicalId;
     container.appendChild(blockEl);
     blockIndex++;
+    prevLogicalId = logicalId;
     node = node.next;
   }
   
@@ -771,6 +797,13 @@ const recreateBlocksFromMemory = () => {
       // Store displayBlock but don't set label yet - we'll do it after grouping
       block.dataset.partitionLabel = String(matchingResult.displayBlock);
       block.dataset.displayBlock = String(matchingResult.displayBlock);
+    } else if (block.dataset.logicalId) {
+      block.dataset.partitionLabel = String(block.dataset.logicalId);
+      block.dataset.displayBlock = String(block.dataset.logicalId);
+      const titleEl = block.querySelector("p");
+      if (titleEl) {
+         titleEl.textContent = `Block ${block.dataset.logicalId}`;
+      }
     }
   });
   
@@ -893,7 +926,7 @@ const runStep = () => {
           playInterval = null;
           togglePlayStop();
         }
-        reEnableSimulationButtons();
+        // reEnableSimulationButtons();
         return false;
       }
       // Continue with next process in next runStep call
@@ -1056,15 +1089,9 @@ const runStep = () => {
   if (stepResult.newMemoryHead)
     simulationState.memoryHead = stepResult.newMemoryHead;
 
-  // CRITICAL: Apply idMapping to BOTH previous AND current results
+  // CRITICAL: Apply idMapping to previous results ONLY
   if (stepResult.idMapping) {
     remapCompactedResults(stepResult.idMapping);
-    
-    // Also apply mapping to the current result if it needs it
-    const oldBlockId = parseInt(stepResult.result.block, 10);
-    if (!Number.isNaN(oldBlockId) && stepResult.idMapping[oldBlockId]) {
-      stepResult.result.block = String(stepResult.idMapping[oldBlockId]);
-    }
   }
 
   // IMPORTANT: Store result FIRST (will be corrected later if compaction occurred)
@@ -1354,6 +1381,11 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
+    const addProcessBtn = document.querySelector("#add-process-btn");
+    if (addProcessBtn) {
+        addProcessBtn.disabled = false;
+    }
+
     activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
   }
 
@@ -1407,6 +1439,9 @@ function reEnableSimulationButtons() {
     btn.style.opacity = "1";
     btn.style.cursor = "pointer";
   });
+
+  const addProcessBtn = document.getElementById('add-process-btn');
+    if (addProcessBtn) addProcessBtn.disabled = false;
   
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
