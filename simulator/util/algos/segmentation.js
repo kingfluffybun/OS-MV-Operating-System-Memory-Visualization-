@@ -179,7 +179,28 @@ let segmentationState = {
 };
 
 const getSegmentationInputs = () => {
-  const memorySizeInput = document.getElementById("memory-size");
+  // Try to find the memory-size input in the segmentation view first
+  let memorySizeInput = null;
+  
+  // Check if we're in the segmentation view section
+  const segmentationView = document.getElementById("segmentation-view");
+  if (segmentationView && segmentationView.style.display !== 'none') {
+    memorySizeInput = segmentationView.querySelector("#memory-size");
+  }
+  
+  // Check standalone segmentation page (simulation-Segmentation.html)
+  if (!memorySizeInput) {
+    const mainGrid = document.querySelector(".main-grid.segmentation");
+    if (mainGrid) {
+      memorySizeInput = mainGrid.querySelector("#memory-size");
+    }
+  }
+  
+  // Fallback to any #memory-size element
+  if (!memorySizeInput) {
+    memorySizeInput = document.getElementById("memory-size");
+  }
+  
   const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : 1024;
   return { memorySize };
 };
@@ -252,6 +273,10 @@ const updateSegmentationDisplay = (status) => {
     Object.keys(processGroups).forEach(processName => {
       const processSegments = processGroups[processName];
       
+      // Create one segmentation container per process
+      const processDiv = document.createElement("div");
+      processDiv.className = "segmentation";
+      
       processSegments.forEach(seg => {
         if (!seg.breakdown) return;
         
@@ -263,26 +288,47 @@ const updateSegmentationDisplay = (status) => {
           { type: 'Heap', size: seg.breakdown.heap || 0 }
         ];
         
-        segmentTypes.forEach((segmentType, index) => {
+        // Create a segments-container for each segment type
+        segmentTypes.forEach((segmentType) => {
           if (segmentType.size > 0) {
-            const segDiv = document.createElement("div");
-            segDiv.className = "segments-container";
-            segDiv.innerHTML = `
-              <div id="segment-number">S${seg.id - 1}</div>
-              <div class="segments">
-                <div>
-                  <p id="process-segment">${seg.name}</p>
-                  <p class="segment-type">${segmentType.type}</p>
-                </div>
-                <div>
-                  <p id="segment-size">${segmentType.size}</p>
-                </div>
-              </div>
-            `;
-            container.appendChild(segDiv);
+            const segmentContainer = document.createElement("div");
+            segmentContainer.className = "segments-container";
+            
+            // Add segment number
+            const segmentNumberDiv = document.createElement("div");
+            segmentNumberDiv.id = "segment-number";
+            segmentNumberDiv.textContent = `S${seg.id - 1}`;
+            segmentContainer.appendChild(segmentNumberDiv);
+            
+            // Add segment type info
+            const infoDiv = document.createElement("div");
+            infoDiv.style.display = "flex";
+            infoDiv.style.flexDirection = "column";
+            infoDiv.style.alignItems = "center";
+            
+            const nameP = document.createElement("p");
+            nameP.id = "process-segment";
+            nameP.textContent = seg.name;
+            
+            const typeP = document.createElement("p");
+            typeP.className = "segment-type";
+            typeP.textContent = segmentType.type;
+            
+            const sizeP = document.createElement("p");
+            sizeP.id = "segment-size";
+            sizeP.textContent = segmentType.size;
+            
+            infoDiv.appendChild(nameP);
+            infoDiv.appendChild(typeP);
+            infoDiv.appendChild(sizeP);
+            
+            segmentContainer.appendChild(infoDiv);
+            processDiv.appendChild(segmentContainer);
           }
         });
       });
+      
+      container.appendChild(processDiv);
     });
   } catch (error) {
     console.error('Error updating segmentation display:', error);

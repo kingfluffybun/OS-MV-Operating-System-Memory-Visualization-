@@ -7,8 +7,34 @@ let pagingState = {
 };
 
 const getPagingInputs = () => {
-  const pageSizeInput = document.getElementById("page-frame-size");
-  const memorySizeInput = document.getElementById("memory-size");
+  // Try to find inputs in the paging view first
+  let pageSizeInput = null;
+  let memorySizeInput = null;
+  
+  // Check if we're in the paging view section
+  const pagingView = document.getElementById("paging-view");
+  if (pagingView && pagingView.style.display !== 'none') {
+    pageSizeInput = pagingView.querySelector("#page-frame-size");
+    memorySizeInput = pagingView.querySelector("#memory-size");
+  }
+  
+  // Check standalone paging page (simulation-Paging.html)
+  if (!memorySizeInput) {
+    const mainGrid = document.querySelector(".main-grid.paging");
+    if (mainGrid) {
+      pageSizeInput = mainGrid.querySelector("#page-frame-size");
+      memorySizeInput = mainGrid.querySelector("#memory-size");
+    }
+  }
+  
+  // Fallback to any element with those IDs
+  if (!pageSizeInput) {
+    pageSizeInput = document.getElementById("page-frame-size");
+  }
+  if (!memorySizeInput) {
+    memorySizeInput = document.getElementById("memory-size");
+  }
+  
   const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
   const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
   return { pageSize, memorySize };
