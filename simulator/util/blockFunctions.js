@@ -16,7 +16,7 @@ function isPagingMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algorithm");
 
   return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
 }
@@ -27,7 +27,7 @@ function isSegmentationMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algorithm");
 
   return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
 }

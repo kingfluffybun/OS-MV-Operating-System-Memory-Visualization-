@@ -120,7 +120,7 @@ function isPagingMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algorithm");
 
   return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
 }
@@ -131,7 +131,7 @@ function isSegmentationMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algorithm");
 
   return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
 }
@@ -1624,11 +1624,21 @@ function startSimulation(event) {
   }
 }
 
+function formatAlgorithmName(algo) {
+  if (!algo) return 'OS-MV';
+  return algo.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 function simulatorLoad() {
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get('algo');
+  const urlAlgo = urlParams.get('algorithm');
   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
   const selectedPartition = sessionStorage.getItem('selectedPartition');
+
+  // Set the page title based on the algorithm
+  if (selectedAlgo) {
+    document.title = 'OS-MV ' + formatAlgorithmName(selectedAlgo);
+  }
 
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
