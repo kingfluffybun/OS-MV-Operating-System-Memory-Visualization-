@@ -137,9 +137,27 @@ function isSegmentationMode() {
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const segmentationView = document.getElementById("segmentation-view");
+  // Also handle standalone simulation-Segmentation.html which has no view wrappers
+  const mainGrid = document.querySelector(".main-grid.segmentation");
+
+  let activeView = null;
+  if (pagingView && pagingView.style.display === "grid") {
+    activeView = pagingView;
+  } else if (segmentationView && segmentationView.style.display === "grid") {
+    activeView = segmentationView;
+  } else if (standardView && standardView.style.display === "grid") {
+    activeView = standardView;
+  } else if (mainGrid) {
+    // Standalone segmentation page (simulation-Segmentation.html)
+    activeView = mainGrid;
+  } else if (standardView) {
+    activeView = standardView;
+  }
 
   if (!activeView) return;
+
+  const isSegmentation = isSegmentationMode();
 
   const addProcessBtn = activeView.querySelector("#add-process-btn");
   const randomizeBtn = activeView.querySelector("#randomize-value");
@@ -150,22 +168,29 @@ function attachProcessListeners() {
     addProcessBtn.parentNode.replaceChild(newAddBtn, addProcessBtn);
 
     newAddBtn.addEventListener("click", () => {
-      const size = parseInt(activeView.querySelector("#process-size").value, 10);
+      const sizeInput = activeView.querySelector("#process-size");
+      const size = parseInt(sizeInput ? sizeInput.value : 0, 10);
       if (!size || size <= 0) return;
 
       if (isPagingMode()) {
         const pagingprocessContainer = activeView.querySelector(".process-container");
+        if (!pagingprocessContainer) return;
         const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
         pagingprocessContainer.appendChild(newProcess);
-        activeView.querySelector("#process-size").value = '';
-
-        if (pagingprocessContainer) {
-          pagingprocessContainer.scrollTo({
-            top: pagingprocessContainer.scrollHeight,
-            behavior: "smooth",
-          });
-        }
+        if (sizeInput) sizeInput.value = '';
+        pagingprocessContainer.scrollTo({
+          top: pagingprocessContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      } else if (isSegmentation) {
+        const segContainer = activeView.querySelector(".process-container");
+        if (!segContainer) return;
+        const nextId = segContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        segContainer.appendChild(newProcess);
+        if (sizeInput) sizeInput.value = '';
+        segContainer.scrollTo({ top: segContainer.scrollHeight, behavior: "smooth" });
       } else {
         if (!processContainer) return;
         const nextId = processContainer.querySelectorAll(".process").length + 1;
@@ -181,30 +206,36 @@ function attachProcessListeners() {
     const newRandomizeBtn = randomizeBtn.cloneNode(true);
     randomizeBtn.parentNode.replaceChild(newRandomizeBtn, randomizeBtn);
 
-    newRandomizeBtn.addEventListener("click", function() {
-        let min, max;
+    newRandomizeBtn.addEventListener("click", function () {
+      let min, max;
 
-        if (isPagingMode()) {
-            min = 3;
-            max = 6;
-        } else {
-            min = 4;
-            max = 8;
-        }
+      if (isPagingMode()) {
+        min = 3;
+        max = 6;
+      } else {
+        min = 4;
+        max = 8;
+      }
 
       const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
 
       if (isPagingMode()) {
         const pagingProcessContainer = activeView.querySelector(".process-container");
+        if (!pagingProcessContainer) return;
         const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
         pagingProcessContainer.appendChild(newProcess);
-        if (pagingProcessContainer) {
-          pagingProcessContainer.scrollTo({
-            top: pagingProcessContainer.scrollHeight,
-            behavior: "smooth",
-          });
-        }
+        pagingProcessContainer.scrollTo({
+          top: pagingProcessContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      } else if (isSegmentation) {
+        const segContainer = activeView.querySelector(".process-container");
+        if (!segContainer) return;
+        const nextId = segContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        segContainer.appendChild(newProcess);
+        segContainer.scrollTo({ top: segContainer.scrollHeight, behavior: "smooth" });
       } else {
         if (!processContainer) return;
         const nextId = processContainer.querySelectorAll(".process").length + 1;
@@ -408,18 +439,16 @@ const restorePreSimulationBlocks = () => {
 const prepareSimulation = () => {
   const processes = getProcessSizes();
   const isPaging = isPagingMode();
+  const isSegmentation = isSegmentationMode();
   const blocks = getBlockSizes();
-
-  // if (!isPaging) {
-  //   blocks = getBlockSizes();
-  // }
 
   if (!processes.length) {
     appendConsoleMessage("No processes in queue to allocate.");
     return false;
   }
 
-  if (!isPaging && !blocks.length) {
+  // Segmentation uses a continuous-memory model — no discrete blocks required
+  if (!isPaging && !isSegmentation && !blocks.length) {
     appendConsoleMessage("No memory blocks defined.");
     return false;
   }
@@ -459,6 +488,29 @@ const prepareSimulation = () => {
     };
     initializePagingUI(simulationState.memoryFrames, processes);
 
+  } else if (isSegmentation) {
+    const { memorySize } = getSegmentationInputs();
+    if (Number.isNaN(memorySize) || memorySize <= 0) {
+      appendConsoleMessage("Enter a valid total memory size.");
+      return false;
+    }
+    segmentationState.memory = memorySimulator.createMemory(memorySize);
+    segmentationState.processQueue = processes;
+    segmentationState.currentProcessIndex = 0;
+    segmentationState.results = {};
+    segmentationState.allocatedSegments = [];
+    segmentationState.isRunning = true;
+
+    // simulationState is still used for currentIndex / process tracking
+    simulationState = {
+      processes: processes,
+      currentIndex: 0,
+      results: {},
+      stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+    };
+
+    initializeSegmentationUI(segmentationState.memory, processes);
+
   } else {
     if (isDynamicPartitionMode()) {
       preSimBlockState = getBlockSizes().slice();
@@ -479,7 +531,7 @@ const prepareSimulation = () => {
 
   // Stamp the original size on every block element NOW, before any step shrinks them.
   // resetBlocksUI reads this to restore the display on reset.
-  if (!isPaging && simulationContainer) {
+  if (!isPaging && !isSegmentation && simulationContainer) {
     simulationContainer.querySelectorAll(".block").forEach((block) => {
       const sizeEl =
         block.querySelector(".block-size-value") || block.querySelector("h2");
@@ -506,6 +558,8 @@ const prepareSimulation = () => {
     });
     setTotalMemoryDisplay(totalMemory);
     initializePagingUI(simulationState.memoryFrames, processes);
+  } else if (isSegmentation) {
+    updateSegmentationStatistics();
   } else {
     setTotalMemoryDisplay(
       memorySimulator.totalMemory(simulationState.memoryHead),
@@ -524,7 +578,8 @@ const prepareSimulation = () => {
   currentStep = 0;
   highlightCurrentProcess();
 
-  if (!isPaging) {
+  // Only disable controls for standard fixed/dynamic partition modes
+  if (!isPaging && !isSegmentation) {
     const addBtn = document.getElementById('add-block-btn');
     if (addBtn) addBtn.style.display = 'none';
 
@@ -602,11 +657,11 @@ const insertFixedWasteSplitAfter = (
  */
 const ensureBlockLabelsMatchDOM = () => {
   if (!simulationContainer) return;
-  
+
   const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
     (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
   );
-  
+
   blocks.forEach((block, index) => {
     const newBlockId = index + 1;
     // Update the block's id attribute
@@ -634,19 +689,19 @@ const ensureBlockLabelsMatchDOM = () => {
  */
 const applyBlockGrouping = () => {
   if (!simulationContainer) return;
-  
+
   const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
     (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste") && !b.id.startsWith("block-split-")
   );
-  
+
   // Classify block positions in groups
   blocks.forEach((block, index) => {
     block.classList.remove("block-group-first", "block-group-middle", "block-group-last", "block-group-single");
-    
+
     const currentLabel = block.dataset.partitionLabel;
     const prevLabel = index > 0 ? blocks[index - 1].dataset.partitionLabel : null;
     const nextLabel = index < blocks.length - 1 ? blocks[index + 1].dataset.partitionLabel : null;
-    
+
     // Categorize block position in group
     if (currentLabel === prevLabel) {
       // Block follows another with same label - not first
@@ -663,7 +718,7 @@ const applyBlockGrouping = () => {
       block.classList.add("block-group-single");
     }
   });
-  
+
   // Hide labels for non-first blocks in groups
   blocks.forEach((block) => {
     const titleEl = block.querySelector("p");
@@ -678,7 +733,7 @@ const applyBlockGrouping = () => {
 
 const updateResultBlockIds = (blockIdMapping) => {
   if (!simulationState) return;
-  
+
   // Count actual blocks in the simulation
   let actualBlockCount = 0;
   let node = simulationState.memoryHead;
@@ -686,24 +741,24 @@ const updateResultBlockIds = (blockIdMapping) => {
     actualBlockCount++;
     node = node.next;
   }
-  
+
   // Update all results to use the new sequential block IDs
   Object.entries(simulationState.results).forEach(([processKey, result]) => {
     if (result.status === "Allocated" && result.block !== "None") {
       const oldBlockId = parseInt(result.block, 10);
       let newBlockId = oldBlockId;
-      
+
       // Use the mapping if available
       if (!Number.isNaN(oldBlockId) && blockIdMapping && blockIdMapping[oldBlockId]) {
         newBlockId = blockIdMapping[oldBlockId];
       }
-      
+
       // CRITICAL SAFETY CHECK: Ensure block ID doesn't exceed actual block count
       if (newBlockId > actualBlockCount) {
         console.warn(`Block ID ${newBlockId} exceeds actual block count ${actualBlockCount}, clamping to ${actualBlockCount}`);
         newBlockId = actualBlockCount;
       }
-      
+
       result.block = String(newBlockId);
     }
   });
@@ -719,26 +774,26 @@ const updateResultBlockIds = (blockIdMapping) => {
 const recreateBlocksFromMemory = () => {
   const container = simulationContainer;
   container.querySelectorAll(".block").forEach((b) => b.remove());
-  
+
   // Note: After compaction, linked list nodes already have sequential IDs (1, 2, 3...)
   // Do NOT renumber them here - that would break the result.block mapping
-  
+
   // FLATTEN: Extract all nodes from linked list
   let node = simulationState.memoryHead;
   let blockIndex = 0;
-  
+
   let prevLogicalId = null;
-  
+
   while (node) {
     const logicalId = String(node.originalLabel || node.parentId || node.id);
     const nextLogicalId = node.next ? String(node.next.originalLabel || node.next.parentId || node.next.id) : null;
-    
+
     const isFirstInGroup = (logicalId !== prevLogicalId);
     const isLastInGroup = (logicalId !== nextLogicalId);
 
     // Create block with the node's current ID (already sequential after compaction)
     const blockEl = createBlockElement(node.id, node.size, { isSplitFree: node.isSplit });
-    
+
     if (node.status === "Occupied") {
       const statusLabel = blockEl.querySelector(".block-status");
       if (statusLabel) statusLabel.textContent = "Allocated";
@@ -767,30 +822,30 @@ const recreateBlocksFromMemory = () => {
     prevLogicalId = logicalId;
     node = node.next;
   }
-  
+
   // CONSOLIDATE & RE-INDEX: Force DOM positions to be the source of truth
   ensureBlockLabelsMatchDOM();
-  
+
   // SYNC LOGS: Update results to use final block IDs
   // Note: blockIdMapping was already applied in runStep() before this is called
   // REMOVED: updateResultBlockIds(blockIdMapping);
-  
+
   // CRITICAL: Apply displayBlock values from results to UI block labels
   // This ensures UI shows the logical parent block even if it's a split allocation
   const blocks = Array.from(container.querySelectorAll(".block")).filter(
     (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
   );
-  
+
   blocks.forEach((block, index) => {
     const blockPosition = index + 1;
     const linkedListNodeId = parseInt(block.dataset.linkedListNodeId, 10);
-    
+
     // Find which result owns this node by matching the internal node ID
     // Results should have their block field set to this node's ID
     const matchingResult = Object.values(simulationState.results).find(
       (r) => r.status === "Allocated" && parseInt(r.block, 10) === linkedListNodeId
     );
-    
+
     if (matchingResult && matchingResult.displayBlock) {
       // Store displayBlock but don't set label yet - we'll do it after grouping
       block.dataset.partitionLabel = String(matchingResult.displayBlock);
@@ -800,14 +855,14 @@ const recreateBlocksFromMemory = () => {
       block.dataset.displayBlock = String(block.dataset.logicalId);
       const titleEl = block.querySelector("p");
       if (titleEl) {
-         titleEl.textContent = `Block ${block.dataset.logicalId}`;
+        titleEl.textContent = `Block ${block.dataset.logicalId}`;
       }
     }
   });
-  
+
   // Apply grouping to hide labels on non-first blocks
   applyBlockGrouping();
-  
+
   resizeBlocks();
   disableMemoryBlockControls();
 };
@@ -847,16 +902,16 @@ const getAccurateBlockIdFromDOM = (processId, result) => {
   // After recreation, blocks are numbered 1, 2, 3, ... sequentially
   // Find which block index contains an allocated process (any process, not just this one yet)
   // Then sync back to the result
-  
+
   // Get the actual block label from the DOM (which should be sequential 1, 2, 3...)
   if (blocks.length > 0) {
     // Check the first block's label to see if block IDs are already set correctly
     const firstBlockLabel = blocks[0].dataset.partitionLabel || blocks[0].id.replace("block-", "");
-    
+
     // If blocks are properly numbered, just verify result.block is in valid range
     const maxBlockId = blocks.length;
     const resultBlockId = parseInt(result.block, 10);
-    
+
     if (!Number.isNaN(resultBlockId) && resultBlockId >= 1 && resultBlockId <= maxBlockId) {
       // The block ID is valid, return it
       return String(resultBlockId);
@@ -896,6 +951,37 @@ const runStep = () => {
   const size = simulationState.processes[simulationState.currentIndex];
   const processId = `Process ${simulationState.currentIndex + 1}`;
   const isPaging = isPagingMode();
+  const isSegmentation = isSegmentationMode();
+
+  // --- Segmentation mode: delegate to segmentationState allocator ---
+  if (isSegmentation) {
+    if (segmentationState.currentProcessIndex >= segmentationState.processQueue.length) {
+      appendConsoleMessage("All processes have already been allocated.");
+      return false;
+    }
+
+    const didAllocate = allocateNextProcess();
+    const result = segmentationState.results[processId];
+    const statusMsg = result ? result.status : (didAllocate ? 'Allocated' : 'Unallocated');
+    appendConsoleMessage(`${processId} (${size} KB) -> ${statusMsg}`);
+
+    simulationState.currentIndex += 1;
+    currentStep = simulationState.currentIndex;
+    highlightCurrentProcess();
+
+    if (simulationState.currentIndex >= simulationState.processes.length) {
+      appendConsoleMessage("Simulation complete.");
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        togglePlayStop();
+      }
+      reEnableSimulationButtons();
+      return false;
+    }
+    return true;
+  }
+
 
   if (isPaging) {
     const { pageSize } = getPagingInputs();
@@ -911,7 +997,7 @@ const runStep = () => {
 
     // Calculate pages needed for this process
     const pagesNeeded = Math.ceil(size / pageSize);
-    
+
     // Check if we've already allocated all pages for this process
     if (simulationState.pageAllocationIndex >= pagesNeeded) {
       // Move to next process
@@ -963,7 +1049,7 @@ const runStep = () => {
       // Move to next process since current one can't be allocated
       simulationState.pageAllocationIndex = 0;
       simulationState.currentIndex += 1;
-      
+
       if (simulationState.currentIndex >= simulationState.processes.length) {
         appendConsoleMessage("Simulation complete");
         if (playInterval) {
@@ -978,7 +1064,7 @@ const runStep = () => {
     }
 
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
-    
+
     // Store result with process ID
     if (!simulationState.results[processId]) {
       simulationState.results[processId] = {
@@ -1017,8 +1103,8 @@ const runStep = () => {
     const successRate =
       simulationState.processes.length > 0
         ? (simulationState.stats.successfulAllocations /
-            simulationState.processes.length) *
-          100
+          simulationState.processes.length) *
+        100
         : 0;
 
     const pagingStats = {
@@ -1051,7 +1137,7 @@ const runStep = () => {
       appendConsoleMessage(`${processId} fully allocated`);
       simulationState.pageAllocationIndex = 0;
       simulationState.currentIndex += 1;
-      
+
       if (simulationState.currentIndex >= simulationState.processes.length) {
         appendConsoleMessage("Simulation complete");
         if (playInterval) {
@@ -1076,10 +1162,10 @@ const runStep = () => {
     typeof allocationFn === "function"
       ? allocationFn.call(memorySimulator, simulationState.memoryHead, size)
       : {
-          result: { size, block: "None", status: "Unallocated" },
-          allocatedSize: 0,
-          successfulAllocations: 0,
-        };
+        result: { size, block: "None", status: "Unallocated" },
+        allocatedSize: 0,
+        successfulAllocations: 0,
+      };
 
   // CRITICAL: Attach the process size to the result
   stepResult.result.size = size;
@@ -1118,7 +1204,7 @@ const runStep = () => {
   if (!stepResult.ifCompacted && stepResult.result.status === "Allocated") {
     let blockEl = document.getElementById(`block-split-${stepResult.result.block}`);
     if (!blockEl) {
-        blockEl = document.getElementById(`block-${stepResult.result.block}`);
+      blockEl = document.getElementById(`block-${stepResult.result.block}`);
     }
     const leftover = stepResult.result.fragmentation || 0;
 
@@ -1166,7 +1252,7 @@ const runStep = () => {
 
   // Refresh all visuals
   updateBlockVisuals(simulationState.results);
-  
+
   // Apply block grouping to hide labels on non-first blocks (works before and after compaction)
   applyBlockGrouping();
 
@@ -1175,13 +1261,13 @@ const runStep = () => {
     const blocks = Array.from(simulationContainer.querySelectorAll(".block")).filter(
       (b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste")
     );
-    
+
     // For each DOM block, check what process it's allocated to (if any)
     // and update that process result to have the correct block ID
     blocks.forEach((block, index) => {
       const blockId = index + 1; // Sequential block ID (1, 2, 3...)
       const statusLabel = block.querySelector(".block-status");
-      
+
       if (statusLabel && statusLabel.textContent.includes("Process")) {
         // This block has a process allocated to it
         const processKey = statusLabel.textContent.trim();
@@ -1329,14 +1415,19 @@ const runReset = () => {
   }
 
   const isDynamic = isDynamicPartitionMode();
+  const isSegmentation = isSegmentationMode();
 
   simulationState = null;
   currentStep = 0;
 
-  resetBlocksUI();
+  if (isSegmentation) {
+    resetSegmentation();
+  } else {
+    resetBlocksUI();
+  }
   resetConsole();
 
-  if (isDynamic && preSimBlockState && preSimBlockState.length) {
+  if (!isSegmentation && isDynamic && preSimBlockState && preSimBlockState.length) {
     restorePreSimulationBlocks();
   }
 
@@ -1407,9 +1498,9 @@ function reEnableSimulationButtons() {
   if (standardView && standardView.style.display === 'grid') activeView = standardView;
   if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
   if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
-  
+
   if (!activeView) return;
-  
+
   // Re-enable randomize button
   const randomizeBtn = activeView.querySelector('#randomize-value');
   if (randomizeBtn) {
@@ -1417,22 +1508,22 @@ function reEnableSimulationButtons() {
     randomizeBtn.style.opacity = "1";
     randomizeBtn.style.cursor = "pointer";
   }
-  
+
   // Note: add block button is NOT re-enabled here - it only reappears when reset is clicked
-  
+
   // Re-enable process action buttons
   activeView.querySelectorAll('.process-action').forEach(btn => {
     btn.style.display = "";
     btn.disabled = false;
   });
-  
+
   // Re-enable edit/delete buttons
   activeView.querySelectorAll('.edit-block-btn, .delete-block-btn').forEach(btn => {
     btn.disabled = false;
     btn.style.opacity = "1";
     btn.style.cursor = "pointer";
   });
-  
+
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
 }
@@ -1452,7 +1543,7 @@ function attachSimulationListeners(viewType) {
     return;
   }
 
-  console.log('Attaching listeners to:', activeView.id || 'unknown view'); 
+  console.log('Attaching listeners to:', activeView.id || 'unknown view');
 
   const playBtn = activeView.querySelector('#play-btn');
   const stopBtn = activeView.querySelector('#stop-btn');
@@ -1487,7 +1578,7 @@ function attachSimulationListeners(viewType) {
   }
 
   if (slider) {
-    slider.addEventListener("input", function() {
+    slider.addEventListener("input", function () {
       speed = parseFloat(this.value);
     });
   }
@@ -1501,7 +1592,7 @@ function attachSimulationListeners(viewType) {
     const newToggleBtn = toggleBtn.cloneNode(true);
     toggleBtn.parentNode.replaceChild(newToggleBtn, toggleBtn);
 
-    newToggleBtn.addEventListener('click', function(e) {
+    newToggleBtn.addEventListener('click', function (e) {
       e.preventDefault();
       e.stopPropagation();
       toggleSideBar();
@@ -1537,7 +1628,7 @@ function startSimulation(event) {
   if (algoWhat === "Segmentation") {
     sessionStorage.setItem('selectedPartition', "segmentation");
   }
-  
+
   const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
@@ -1547,9 +1638,9 @@ function startSimulation(event) {
   } else {
     switch (algoWhat) {
       case "Paging": window.location.href = `algorithm/index.html?algorithm=paging`;
-      break;
+        break;
       case "Segmentation": window.location.href = `algorithm/index.html?algorithm=segmentation`;
-      break;  
+        break;
     }
   }
 }
@@ -1572,7 +1663,7 @@ function simulatorLoad() {
     if (pagingView) {
       pagingView.style.display = 'grid';
 
-      loadPagingScript(function() {
+      loadPagingScript(function () {
         attachSimulationListeners();
         initPagingConsole();
         if (typeof initializePagingUI === 'function') {
@@ -1583,8 +1674,14 @@ function simulatorLoad() {
   } else if (selectedAlgo === "Segmentation") {
     if (segmentationView) {
       segmentationView.style.display = 'grid';
-      attachSimulationListeners();
-      initSegmentationConsole();
+
+      loadSegmentationScript(function () {
+        attachSimulationListeners();
+        initSegmentationConsole();
+        if (typeof initializeSegmentationUI === 'function') {
+          initializeSegmentationUI();
+        }
+      });
     }
   } else {
     if (standardView) {
@@ -1605,9 +1702,9 @@ function loadPagingScript(callback) {
   let loadedCount = 0;
   const totalScripts = 2;
 
-  const checkLoaded = function() {
+  const checkLoaded = function () {
     loadedCount++;
-    console.log('Script loaded:', loadedCount, 'of', totalScripts); 
+    console.log('Script loaded:', loadedCount, 'of', totalScripts);
     if (loadedCount === totalScripts) {
       window.pagingScriptLoaded = true;
       attachSimulationListeners();
@@ -1618,7 +1715,7 @@ function loadPagingScript(callback) {
   const script1 = document.createElement('script');
   script1.src = "../util/algos/paging.js";
   script1.onload = checkLoaded;
-  script1.onerror = function() {
+  script1.onerror = function () {
     console.error("Failed to load paging.js");
     checkLoaded();
   };
@@ -1626,7 +1723,7 @@ function loadPagingScript(callback) {
   const script2 = document.createElement('script');
   script2.src = "../util/pagingUI.js";
   script2.onload = checkLoaded;
-  script2.onerror = function() {
+  script2.onerror = function () {
     console.error("Failed to load pagingUI.js");
     checkLoaded();
   };
@@ -1635,14 +1732,23 @@ function loadPagingScript(callback) {
   document.head.appendChild(script2);
 }
 
-function loadSegmentationScript() {
+function loadSegmentationScript(callback) {
+  if (window.segmentationScriptLoaded) {
+    console.log("Segmentation script already loaded");
+    if (callback) callback();
+    return;
+  }
+
   const script = document.createElement('script');
   script.src = "../util/algos/segmentation.js";
-  script.onload = function() {
+  script.onload = function () {
+    window.segmentationScriptLoaded = true;
     attachSimulationListeners();
+    if (callback) callback();
   };
-  script.onerror = function() {
+  script.onerror = function () {
     console.error("Failed to load segmentation.js");
+    if (callback) callback();
   };
   document.head.appendChild(script);
 }
@@ -1663,7 +1769,7 @@ function loadDefaultScript(selectedAlgo, selectedPartition) {
       if (selectedPartition === "dynamic") {
         algoDescription.textContent = "First Fit Algorithm - Dynamic Partition";
       }
-      scriptSrc = "../util/algos/firstfit.js"; 
+      scriptSrc = "../util/algos/firstfit.js";
       break;
     case "next-fit":
       algoDescription.textContent = "Next Fit Algorithm - Fixed Partition";

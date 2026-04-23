@@ -61,9 +61,13 @@ const getProcessSizes = () => {
   
   let activeProcessContainer = null;
   
-  // Check which view is active - Segmentation, Paging, or Standard
-  if (mainGrid && mainGrid.classList.contains('paging') && !standardView && !pagingView) {
-    // Segmentation view (main-grid.paging in simulation-Segmentation.html)
+  // Check which view is active - Segmentation (in index.html), Paging, Standard,
+  // or standalone simulation-Segmentation.html
+  if (segmentationView && segmentationView.style.display === 'grid') {
+    // Segmentation section inside index.html
+    activeProcessContainer = segmentationView.querySelector('.process-container');
+  } else if (mainGrid && mainGrid.classList.contains('segmentation') && !standardView && !pagingView) {
+    // Standalone segmentation page (simulation-Segmentation.html)
     activeProcessContainer = mainGrid.querySelector('.process-container');
   } else if (pagingView && pagingView.style.display === 'grid') {
     activeProcessContainer = pagingView.querySelector('.process-container');
