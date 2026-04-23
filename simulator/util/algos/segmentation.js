@@ -527,26 +527,30 @@ const updateSegmentationStatistics = () => {
     if (!status) return;
     
     const totalMemory = status.totalSize || 0;
-    const allocated = status.allocated ? status.allocated.reduce((sum, seg) => sum + (seg ? seg.size || 0 : 0), 0) : 0;
-    const free = status.free ? status.free.reduce((sum, f) => sum + (f ? f.size || 0 : 0), 0) : 0;
-    const externalFrag = free;
-    const utilization = totalMemory > 0 ? (allocated / totalMemory) * 100 : 0;
+    const allocatedSize = status.allocated ? status.allocated.reduce((sum, seg) => sum + (seg ? seg.size || 0 : 0), 0) : 0;
+    const totalFree = status.free ? status.free.reduce((sum, f) => sum + (f ? f.size || 0 : 0), 0) : 0;
+    const intFragmentation = 0;
+    const externalFragmentation = totalFree;
+    const memoryUtilization = totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
     const successRate = segmentationState.processQueue && segmentationState.processQueue.length > 0 
       ? ((status.allocated ? status.allocated.length : 0) / segmentationState.processQueue.length) * 100 
       : 0;
     
-    const updateElement = (id, value) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
+    const stats = {
+      allocatedSize,
+      totalFree,
+      intFragmentation,
+      externalFragmentation,
+      memoryUtilization,
+      successRate
     };
     
-    updateElement("total-memory-value", `${totalMemory} KB`);
-    updateElement("allocated-value", `${allocated} KB`);
-    updateElement("total-free-value", `${free} KB`);
-    updateElement("external-frag-value", `${externalFrag} KB`);
-    updateElement("internal-frag-value", "0 KB");
-    updateElement("util-value", `${utilization.toFixed(2)}%`);
-    updateElement("success-rate-value", `${successRate.toFixed(2)}%`);
+    if (typeof updateStatistics === 'function') {
+      updateStatistics(stats);
+    }
+    if (typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(totalMemory);
+    }
   } catch (error) {
     console.error('Error updating segmentation statistics:', error);
   }
