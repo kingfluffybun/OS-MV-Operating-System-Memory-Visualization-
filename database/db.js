@@ -542,6 +542,8 @@ async function loadUsers() {
                 '<td><span class="' + statusClass + '">' + statusText + '</span></td>' +
                 // Created At
                 '<td>' + formatDate(user.created_at) + '</td>' +
+                // Updated At
+                '<td>' + formatDate(user.updated_at) + '</td>' +
                 // Last Activity
                 '<td>' + lastActivity + '</td>' +
                 // Actions
@@ -594,6 +596,133 @@ function executeDelete(userId) {
         showPopup({
             title: 'Error',
             message: 'Failed to delete user. Please try again.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
+    }
+}
+
+// Reset password
+function resetPassword(userId) {
+        showPopup({
+        title: 'Reset User Password',
+        message: 'Enter a new password for this user. They will be required to change it on next login.',
+        input: true,
+        inputType: 'password',
+        inputPlaceholder: 'New password (min 8 chars)',
+        confirmText: 'Reset Password',
+        confirmClass: 'popup-btn-reset',
+        onConfirm: async function(newPassword) {
+            if (!newPassword || newPassword.length < 8) {
+                showPopup({
+                    title: 'Invalid Password',
+                    message: 'Password must be at least 8 characters long.',
+                    confirmText: 'OK',
+                    cancelText: null,
+                    onConfirm: function() {
+                        resetPassword(userId);
+                    }
+                });
+                return;
+            }
+            await executePasswordReset(userId, newPassword);
+        }
+    });
+}
+
+async function executePasswordReset(userId, newPassword) {
+    let currentUser = JSON.parse(sessionStorage.getItem('currentUser'));
+
+    // Get old password
+    let oldPasswordHash = null;
+    try {
+        let stmt = db.prepare('SELECT password FROM users WHERE user_id = ?');
+        stmt.bind([userId]);
+        if (stmt.step()) {
+            oldPasswordHash = stmt.getAsObject().password;
+        }
+        stmt.free();
+    } catch (e) {
+        console.error('Error fetching old password:', e);
+    }
+
+    // Validation errors
+    let errors = [];
+
+    if (!newPassword || newPassword.length < 8) {
+        errors.push('At least 8 characters');
+    }
+
+    if (!/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) {
+        errors.push('Both uppercase and lowercase letters');
+    }
+
+    if (!/[0-9]/.test(newPassword)) {
+        errors.push('At least one number');
+    }
+
+    if (!/[@$!%*?&#]/.test(newPassword)) {
+        errors.push('At least one special character (@$!%*?&#)');
+    }
+
+    // Check if same as old password
+    if (oldPasswordHash) {
+        const newPasswordHash = await hashPassword(newPassword);
+        if (newPasswordHash === oldPasswordHash) {
+            errors.push('Cannot be the same as the old password');
+        }
+    }
+
+    // Show all errors
+    if (errors.length > 0) {
+        let errorMessage = 'Password does not meet requirements:\n\n';
+        errors.forEach(function(error) {
+            errorMessage += '• ' + error + '\n';
+        });
+
+        showPopup({
+            title: 'Invalid Password',
+            message: errorMessage,
+            confirmText: 'Try Again',
+            cancelText: 'Cancel',
+            onConfirm: function() {
+                resetPassword(userId);
+            },
+            onCancel: function() {}
+        });
+        return;
+    }
+
+    // All good
+    try {
+        const hashedPassword = await hashPassword(newPassword);
+
+        let stmt = db.prepare(`
+            UPDATE users SET password = ?, updated_at = datetime('now') WHERE user_id = ? AND user_id != ?
+        `);
+        stmt.run([hashedPassword, userId, currentUser.user_id]);
+        stmt.free();
+        saveDB();
+
+        let activeSession = JSON.parse(decryptData(localStorage.getItem('activeSession')) || '{}');
+        delete activeSession[userId];
+        localStorage.setItem('activeSession', encryptData(JSON.stringify(activeSession)));
+
+        loadUsers();
+
+        showPopup({
+            title: 'Success',
+            message: 'Password reset successfully. User must log in again.',
+            confirmText: 'OK',
+            cancelText: null,
+            onConfirm: function() {}
+        });
+    } catch (e) {
+        console.error('Error resetting password:', e);
+        showPopup({
+            title: 'Error',
+            message: 'Failed to reset password. Please try again.',
             confirmText: 'OK',
             cancelText: null,
             onConfirm: function() {}
@@ -754,42 +883,110 @@ function initPopup() {
     }
 }
 
+let popupConfirmHandler = null;
+let popupCancelHandler = null;
+let popupCloseHandler = null;
+let popupOverlayHandler = null;
+
 function showPopup(options) {
     const overlay = document.getElementById('popup-overlay');
-    const title = document.getElementById('popup-title');
-    const message = document.getElementById('popup-message');
+    const titleEl = document.getElementById('popup-title');
+    const messageEl = document.getElementById('popup-message');
     const confirmBtn = document.getElementById('popup-confirm');
     const cancelBtn = document.getElementById('popup-cancel');
+    const closeBtn = document.getElementById('popup-close');
+    const popupBody = document.querySelector('.popup-body');
 
     if (!overlay) return;
 
+    // Remove old listeners first
+    if (popupConfirmHandler) {
+        confirmBtn.removeEventListener('click', popupConfirmHandler);
+    }
+    if (popupCancelHandler) {
+        cancelBtn.removeEventListener('click', popupCancelHandler);
+    }
+    if (popupCloseHandler) {
+        closeBtn.removeEventListener('click', popupCloseHandler);
+    }
+    if (popupOverlayHandler) {
+        overlay.removeEventListener('click', popupOverlayHandler);
+    }
+
     // Set content
-    title.textContent = options.title || 'Confirm';
-    message.textContent = options.message || 'Are you sure?';
-    
-    // Set button styles
-    confirmBtn.className = 'popup-btn ' + (options.confirmClass || 'popup-btn-confirm');
+    titleEl.textContent = options.title || 'Confirm';
+    messageEl.textContent = options.message || '';
+
+    // Add input if needed
+    let inputEl = document.getElementById('popup-input');
+    if (options.input) {
+        if (!inputEl) {
+            inputEl = document.createElement('input');
+            inputEl.id = 'popup-input';
+            inputEl.className = 'popup-input';
+            popupBody.appendChild(inputEl);
+        }
+        inputEl.type = options.inputType || 'text';
+        inputEl.placeholder = options.inputPlaceholder || '';
+        inputEl.value = '';
+        inputEl.style.display = 'block';
+    } else if (inputEl) {
+        inputEl.style.display = 'none';
+    }
+
+    // Set button text
     confirmBtn.textContent = options.confirmText || 'Confirm';
-    cancelBtn.textContent = options.cancelText || 'Cancel';
-    
-    // Store callback
-    popupCallback = options.onConfirm || null;
-    
+    if (options.cancelText === null) {
+        cancelBtn.style.display = 'none';
+    } else {
+        cancelBtn.style.display = 'inline-block';
+        cancelBtn.textContent = options.cancelText || 'Cancel';
+    }
+
+    // Set button classes
+    confirmBtn.className = 'popup-btn ' + (options.confirmClass || 'popup-btn-confirm');
+    cancelBtn.className = 'popup-btn popup-btn-cancel';
+
     // Show popup
     overlay.style.display = 'flex';
-}
 
-function hidePopup() {
-    const overlay = document.getElementById('popup-overlay');
-    if (overlay) overlay.style.display = 'none';
-    popupCallback = null;
-}
+    // Create new handlers
+    popupConfirmHandler = function() {
+        const inputValue = inputEl && inputEl.style.display !== 'none' ? inputEl.value : null;
+        overlay.style.display = 'none';
+        if (options.onConfirm) {
+            options.onConfirm(inputValue);
+        }
+    };
 
-function handlePopupConfirm() {
-    if (typeof popupCallback === 'function') {
-        popupCallback();
-    }
-    hidePopup();
+    popupCancelHandler = function() {
+        overlay.style.display = 'none';
+        if (options.onCancel) {
+            options.onCancel();
+        }
+    };
+
+    popupCloseHandler = function() {
+        overlay.style.display = 'none';
+        if (options.onCancel) {
+            options.onCancel();
+        }
+    };
+
+    popupOverlayHandler = function(e) {
+        if (e.target === overlay) {
+            overlay.style.display = 'none';
+            if (options.onCancel) {
+                options.onCancel();
+            }
+        }
+    };
+
+    // Add listeners
+    confirmBtn.addEventListener('click', popupConfirmHandler);
+    cancelBtn.addEventListener('click', popupCancelHandler);
+    closeBtn.addEventListener('click', popupCloseHandler);
+    overlay.addEventListener('click', popupOverlayHandler);
 }
 
 document.addEventListener('DOMContentLoaded', initPopup);

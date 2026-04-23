@@ -440,6 +440,7 @@ body {
     font-size: 15px;
     color: #4b5563;
     line-height: 1.5;
+    white-space: pre-line;
 }
 
 .popup-footer {
@@ -499,4 +500,28 @@ body {
 
 .popup-btn-promote:hover {
     background: #d97706;
+}
+
+.popup-btn-reset {
+    background: #4CAF50;
+    color: white;
+}
+
+.popup-btn-reset:hover {
+    background: #429945;
+}
+
+.popup-input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.popup-input:focus {
+    outline: none;
+    border-color: #4CAF50;
 }
