@@ -235,6 +235,10 @@ const initializeSegmentationUI = (memory, processes = []) => {
   segmentationState.allocatedSegments = [];
   
   resetSegmentationUI();
+  const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
+  if (segmentationProcessContainer && typeof renumberProcesses === 'function') {
+    renumberProcesses(segmentationProcessContainer);
+  }
   updateSegmentationStatistics();
 };
 
@@ -574,6 +578,10 @@ const resetSegmentation = () => {
   segmentationState.isRunning = false;
   
   resetSegmentationUI();
+  const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
+  if (segmentationProcessContainer && typeof renumberProcesses === 'function') {
+    renumberProcesses(segmentationProcessContainer);
+  }
   updateSegmentationStatistics();
 };
 

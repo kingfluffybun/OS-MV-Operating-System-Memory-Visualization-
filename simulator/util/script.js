@@ -939,8 +939,6 @@ const runStep = () => {
     appendConsoleMessage(`${processId} (${size} KB) -> ${statusMsg}`);
 
     simulationState.currentIndex += 1;
-    currentStep = simulationState.currentIndex;
-    highlightCurrentProcess();
 
     if (simulationState.currentIndex >= simulationState.processes.length) {
       appendConsoleMessage("Simulation complete.");

@@ -29,18 +29,57 @@ const scrollDown = () => {
   }
 };
 
+const getActiveProcessContainer = () => {
+  const standardView = document.getElementById('standard-view');
+  const pagingView = document.getElementById('paging-view');
+  const segmentationView = document.getElementById('segmentation-view');
+  const mainGrid = document.querySelector('.main-grid.segmentation');
+
+  const isVisible = (element) => {
+    if (!element) return false;
+    const display = window.getComputedStyle(element).display;
+    return display !== 'none';
+  };
+
+  if (segmentationView && isVisible(segmentationView)) {
+    return segmentationView.querySelector('.process-container');
+  }
+  if (pagingView && isVisible(pagingView)) {
+    return pagingView.querySelector('.process-container');
+  }
+  if (standardView && isVisible(standardView)) {
+    return standardView.querySelector('.process-container');
+  }
+  if (mainGrid && isVisible(mainGrid)) {
+    return mainGrid.querySelector('.process-container');
+  }
+  return document.querySelector('.process-container');
+};
+
 const highlightCurrentProcess = () => {
-  document.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
-  const processes = document.querySelectorAll(".process");
-  if (currentStep < processes.length) {
-    const activeProcess = processes[currentStep];
-    activeProcess.classList.add("current");
-    activeProcess.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "start",
+  document.querySelectorAll('.process').forEach((p) => p.classList.remove('current'));
+  const activeContainer = getActiveProcessContainer();
+  if (!activeContainer) return;
+
+  const processes = Array.from(activeContainer.querySelectorAll('.process'));
+  if (!processes.length) return;
+
+  let activeProcess = processes[currentStep];
+  if (!activeProcess) {
+    const expectedLabel = `Process ${currentStep + 1}`;
+    activeProcess = processes.find((process) => {
+      const label = process.querySelector('.process-content p:first-child');
+      return label && label.textContent.trim() === expectedLabel;
     });
   }
+
+  if (!activeProcess) return;
+  activeProcess.classList.add('current');
+  activeProcess.scrollIntoView({
+    behavior: 'smooth',
+    block: 'nearest',
+    inline: 'start',
+  });
 };
 
 const createProcessElement = (id, sizeKb) => {
