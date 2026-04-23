@@ -21,6 +21,17 @@ function isPagingMode() {
   return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
 }
 
+function isSegmentationMode() {
+  const segmentationView = document.getElementById("segmentation-view");
+  const isSegmentation = segmentationView && segmentationView.style.display === "grid";
+
+  const selectedAlgo = sessionStorage.getItem("selectedAlgo");
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlAlgo = urlParams.get("algo");
+
+  return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
+}
+
 /** Lock edit/delete on memory blocks (including Fragmented splits added mid-run). */
 const disableMemoryBlockControls = () => {
   if (!simulationContainer) return;

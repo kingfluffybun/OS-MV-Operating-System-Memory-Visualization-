@@ -121,6 +121,17 @@ function isPagingMode() {
   return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
 }
 
+function isSegmentationMode() {
+  const segmentationView = document.getElementById("segmentation-view");
+  const isSegmentation = segmentationView && segmentationView.style.display === "grid";
+
+  const selectedAlgo = sessionStorage.getItem("selectedAlgo");
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlAlgo = urlParams.get("algo");
+
+  return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
+}
+
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
@@ -1177,7 +1188,12 @@ const runStep = () => {
 const getStepDelay = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const segmentationView = document.getElementById('segmentation-view');
+
+  let activeView = null;
+  if (standardView && standardView.style.display === 'grid') activeView = standardView;
+  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
 
   const slider = activeView ? activeView.querySelector("#slider") : null;
   const value = parseFloat(slider ? slider.value : 1) || 1;
@@ -1190,7 +1206,13 @@ const getStepDelay = () => {
 const togglePlayStop = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const segmentationView = document.getElementById('segmentation-view');
+
+  let activeView = null;
+  if (standardView && standardView.style.display === 'grid') activeView = standardView;
+  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+
   if (!activeView) return;
 
   const playBtn = activeView.querySelector("#play-btn");
@@ -1309,7 +1331,12 @@ const runReset = () => {
 
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const segmentationView = document.getElementById('segmentation-view');
+
+  let activeView = null;
+  if (standardView && standardView.style.display === 'grid') activeView = standardView;
+  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
 
   if (activeView) {
     activeView.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
@@ -1347,7 +1374,12 @@ const runReset = () => {
 function reEnableSimulationButtons() {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const segmentationView = document.getElementById('segmentation-view');
+
+  let activeView = null;
+  if (standardView && standardView.style.display === 'grid') activeView = standardView;
+  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
   
   if (!activeView) return;
   
@@ -1381,7 +1413,12 @@ function reEnableSimulationButtons() {
 function attachSimulationListeners(viewType) {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+  const segmentationView = document.getElementById('segmentation-view');
+
+  let activeView = null;
+  if (standardView && standardView.style.display === 'grid') activeView = standardView;
+  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
 
   if (!activeView) {
     console.error('No active view found.');
@@ -1484,7 +1521,7 @@ function startSimulation(event) {
     switch (algoWhat) {
       case "Paging": window.location.href = `algorithm/index.html?algorithm=paging`;
       break;
-      case "Segmentation": window.location.href = `algorithm/simulation-Segmentation.html?algorithm=segmentation`;
+      case "Segmentation": window.location.href = `algorithm/index.html?algorithm=segmentation`;
       break;  
     }
   }
@@ -1498,9 +1535,11 @@ function simulatorLoad() {
 
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
+  const segmentationView = document.getElementById('segmentation-view');
 
   if (standardView) standardView.style.display = 'none';
   if (pagingView) pagingView.style.display = 'none';
+  if (segmentationView) segmentationView.style.display = 'none';
 
   if (selectedAlgo === "Paging") {
     if (pagingView) {
@@ -1513,6 +1552,12 @@ function simulatorLoad() {
           initializePagingUI();
         }
       });
+    }
+  } else if (selectedAlgo === "Segmentation") {
+    if (segmentationView) {
+      segmentationView.style.display = 'grid';
+      attachSimulationListeners();
+      initSegmentationConsole();
     }
   } else {
     if (standardView) {
@@ -1561,6 +1606,18 @@ function loadPagingScript(callback) {
 
   document.head.appendChild(script1);
   document.head.appendChild(script2);
+}
+
+function loadSegmentationScript() {
+  const script = document.createElement('script');
+  script.src = "../util/algos/segmentation.js";
+  script.onload = function() {
+    attachSimulationListeners();
+  };
+  script.onerror = function() {
+    console.error("Failed to load segmentation.js");
+  };
+  document.head.appendChild(script);
 }
 
 function loadDefaultScript(selectedAlgo, selectedPartition) {
