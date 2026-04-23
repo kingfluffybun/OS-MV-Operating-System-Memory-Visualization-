@@ -118,13 +118,14 @@ button:disabled svg {
                 min-width: 39px;
                 border: none;
             } #add-process-btn {
+                background-color: transparent;
                 border: 2px var(--primary-color) solid; 
                 color: var(--primary-color);
                 transition: all 250ms ease;
             }
             #add-process-btn:hover {background-color: var(--primary-color); color: white;}
             #add-process-btn:disabled {border-color: #999;}
-            #randomize-value {background-color: white; color: black; transition: all 250ms ease;}
+            #randomize-value {background-color: #e0e0e0; color: black; transition: all 250ms ease;}
             #randomize-value:hover{
                 > svg {transform: rotate(15deg);}
             }
@@ -142,7 +143,7 @@ button:disabled svg {
             > .process {
                 display: flex;
                 align-items: center;
-                gap: 16px;
+                gap: 8px;
                 padding: 12px;
                 background-color: white;
                 border-radius: 12px;
