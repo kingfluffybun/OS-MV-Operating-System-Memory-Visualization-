@@ -303,6 +303,7 @@ const updateSegmentationDisplay = (status) => {
             // Add segment type info
             const infoDiv = document.createElement("div");
             infoDiv.style.display = "flex";
+            infoDiv.className = "segments";
             infoDiv.style.flexDirection = "column";
             infoDiv.style.alignItems = "center";
             
