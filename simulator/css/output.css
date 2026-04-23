@@ -262,6 +262,7 @@ form {
                 height: 8px;
                 width: 100%;
                 > .partition-fill {
+                    transition: all ease 250ms;
                     background-color: var(--primary-color);
                     position: absolute;
                     border-radius: 8px;
