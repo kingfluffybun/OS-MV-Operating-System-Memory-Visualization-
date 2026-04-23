@@ -496,6 +496,8 @@ const updateSegmentationTable = () => {
         segmentTypes.forEach((segmentType, index) => {
           if (segmentType.size > 0) {
             const row = document.createElement("tr");
+            const { bg, border } = getProcessColors(seg.name);
+            row.style.borderLeft = `8px solid ${bg}`;
             row.innerHTML = `
               <td>${seg.name}</td>
               <td>${segmentType.type}</td>
