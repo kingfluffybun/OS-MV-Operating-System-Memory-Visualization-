@@ -201,7 +201,9 @@ const updateBlockVisuals = (results) => {
 const updateStatistics = (stats) => {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const segmentationView = document.getElementById("segmentation-view");
+  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
+                     (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
 
   const query = (id) => {
     const el = activeView ? activeView.querySelector('#' + id) : document.getElementById(id);
@@ -235,7 +237,9 @@ const setTotalMemoryDisplay = (total) => {
 function resetConsole() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const segmentationView = document.getElementById("segmentation-view");
+  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
+                     (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
 
   const consoleContainer = activeView.querySelector(".console .container");
 
