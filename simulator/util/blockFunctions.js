@@ -87,9 +87,10 @@ const renumberBlocks = () => {
   });
 };
 
-const renumberProcesses = () => {
-  const processes = processContainer
-    ? processContainer.querySelectorAll(".process")
+const renumberProcesses = (container) => {
+  const targetContainer = container || processContainer;
+  const processes = targetContainer
+    ? targetContainer.querySelectorAll(".process")
     : [];
   processes.forEach((process, index) => {
     const label = process.querySelector(".process-content p:first-child");

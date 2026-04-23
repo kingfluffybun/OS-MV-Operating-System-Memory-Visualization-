@@ -39,8 +39,7 @@ function showMenu() {
     'menu-simulation',
     'menu-usermanagement',
     'menu-back-simulator',
-    'menu-admin-dashboard',
-    'comparison-mode',
+    'menu-admin-dashboard'
   ];
 
   // Hide all menus for now
@@ -56,7 +55,6 @@ function showMenu() {
   const isAdminPage = currentPath.includes('/admin-dashboard/');
   const isSimulator = currentPath.includes('/simulator/algorithm/');
   const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
-  const isComparisonPage = currentPath.includes('/simulator/comparison.html');
 
   // Admin Menu
   if (isAdminUser) {
@@ -67,21 +65,13 @@ function showMenu() {
       document.getElementById('menu-usermanagement').style.display = '';
       document.getElementById('menu-usermanagement').classList.add('active');
       document.getElementById('menu-back-simulator').style.display = '';
-      document.getElementById('comparison-mode').style.display = '';
     }
-  }
-
-  // If on comparison page
-  if (isComparisonPage) {
-    document.getElementById('comparison-mode').style.display = '';
-    document.getElementById('comparison-mode').classList.add('active');
   }
 
   // If on simulator page
   if (!isAdminPage) {
     document.getElementById('menu-dashboard').style.display = '';
     document.getElementById('menu-simulation').style.display = '';
-    document.getElementById('comparison-mode').style.display = '';
 
     if (isFrontPage) {
       document.getElementById('menu-dashboard').classList.add('active');
@@ -110,6 +100,8 @@ function loadCurrentUser() {
 }
 
 const processContainer = document.querySelector(".process-container");
+const allProcessContainers = Array.from(document.querySelectorAll(".process-container"));
+const getProcessContainer = (element) => (element ? element.closest(".process-container") : null);
 
 const simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
@@ -287,60 +279,29 @@ if (add_block_btn) {
   });
 }
 
-if (processContainer) {
-  processContainer.addEventListener("click", (event) => {
-    const target = event.target.closest("button");
-    if (!target) {
-      return;
-    }
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (target.classList.contains("delete-process-btn")) {
-      removeElement(target, ".process");
-      renumberProcesses();
-      return;
-    }
-
-    if (target.classList.contains("edit-process-btn")) {
-      const process = target.closest(".process");
-      if (process) {
-        editProcess(process);
+if (allProcessContainers.length) {
+  allProcessContainers.forEach((container) => {
+    container.addEventListener("click", (event) => {
+      const target = event.target.closest("button");
+      if (!target) {
+        return;
       }
-    }
-  });
-}
+      event.preventDefault();
+      event.stopPropagation();
 
-const pagingProcessContainer = document.querySelector("#paging-view .process-container");
-if (pagingProcessContainer) {
-  pagingProcessContainer.addEventListener("click", (event) => {
-    const target = event.target.closest("button");
-    if (!target) return;
-    event.preventDefault();
-    event.stopPropagation();
+      const currentContainer = getProcessContainer(target) || container;
 
-    if (target.classList.contains("delete-process-btn")) {
-      removeElement(target, ".process");
-      const processes = pagingProcessContainer.querySelectorAll(".process");
-      processes.forEach((process, index) => {
-        const label = process.querySelector(".process-content p:first-child");
-        const newId = index + 1;
-        if (label) label.textContent = `Process ${newId}`;
-        process.id = `process-${newId}`;
-        const colorIndex = index % processColors.length;
-        const colorPair = processColors[colorIndex];
-        process.setAttribute("data-bg", colorPair.bg);
-        process.setAttribute("data-border", colorPair.border);
-        process.style.backgroundColor = colorPair.bg;
-        process.style.borderBottomColor = colorPair.border;
-      });
-      return;
-    }
+      if (target.classList.contains("delete-process-btn")) {
+        removeElement(target, ".process");
+        renumberProcesses(currentContainer);
+        return;
+      }
 
-    if (target.classList.contains("edit-process-btn")) {
-      const process = target.closest(".process");
-      if (process) editProcess(process);
-    }
+      if (target.classList.contains("edit-process-btn")) {
+        const process = target.closest(".process");
+        if (process) editProcess(process);
+      }
+    });
   });
 }
 
