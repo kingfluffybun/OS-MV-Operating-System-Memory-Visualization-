@@ -39,7 +39,8 @@ function showMenu() {
     'menu-simulation',
     'menu-usermanagement',
     'menu-back-simulator',
-    'menu-admin-dashboard'
+    'menu-admin-dashboard',
+    'comparison-mode',
   ];
 
   // Hide all menus for now
@@ -55,6 +56,7 @@ function showMenu() {
   const isAdminPage = currentPath.includes('/admin-dashboard/');
   const isSimulator = currentPath.includes('/simulator/algorithm/');
   const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
+  const isComparisonPage = currentPath.includes('/simulator/comparison.html');
 
   // Admin Menu
   if (isAdminUser) {
@@ -65,13 +67,21 @@ function showMenu() {
       document.getElementById('menu-usermanagement').style.display = '';
       document.getElementById('menu-usermanagement').classList.add('active');
       document.getElementById('menu-back-simulator').style.display = '';
+      document.getElementById('comparison-mode').style.display = '';
     }
+  }
+
+  // If on comparison page
+  if (isComparisonPage) {
+    document.getElementById('comparison-mode').style.display = '';
+    document.getElementById('comparison-mode').classList.add('active');
   }
 
   // If on simulator page
   if (!isAdminPage) {
     document.getElementById('menu-dashboard').style.display = '';
     document.getElementById('menu-simulation').style.display = '';
+    document.getElementById('comparison-mode').style.display = '';
 
     if (isFrontPage) {
       document.getElementById('menu-dashboard').classList.add('active');

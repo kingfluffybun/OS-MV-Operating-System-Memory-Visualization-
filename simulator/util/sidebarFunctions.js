@@ -42,6 +42,7 @@ const getBasePath = () => {
   if (path.includes('/admin-dashboard/')) return '../';
   if (path.includes('/simulator/algorithm/')) return '../../';
   if (path.includes('/simulator/')) return '../';
+  if (path.includes('/simulator/comparison.html')) return '../';
   return './';
 }
 
@@ -52,6 +53,7 @@ const sidebarLinks = () => {
     {id: 'menu-dashboard', path: 'simulator/index.html'},
     {id: 'menu-admin-dashboard', path: 'admin-dashboard/index.html'},
     {id: 'menu-back-simulator', path: 'simulator/index.html'}, // for admin dashboard
+    {id: 'comparison-mode', path: 'simulator/comparison.html'}, // for comparison mode
   ];
 
   linkMap.forEach(item => {
