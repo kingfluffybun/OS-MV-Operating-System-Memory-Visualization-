@@ -118,9 +118,9 @@ function isPagingMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algo") || urlParams.get("algorithm");
 
-  return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
+  return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging" || urlAlgo === "paging";
 }
 
 function isSegmentationMode() {
@@ -129,15 +129,20 @@ function isSegmentationMode() {
 
   const selectedAlgo = sessionStorage.getItem("selectedAlgo");
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get("algo");
+  const urlAlgo = urlParams.get("algo") || urlParams.get("algorithm");
 
-  return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
+  return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation" || urlAlgo === "segmentation";
 }
 
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
-  const activeView = (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const segmentationView = document.getElementById("segmentation-view");
+  
+  let activeView = null;
+  if (segmentationView && segmentationView.style.display === "grid") activeView = segmentationView;
+  else if (pagingView && pagingView.style.display === "grid") activeView = pagingView;
+  else activeView = standardView;
 
   if (!activeView) return;
 
@@ -153,16 +158,16 @@ function attachProcessListeners() {
       const size = parseInt(activeView.querySelector("#process-size").value, 10);
       if (!size || size <= 0) return;
 
-      if (isPagingMode()) {
-        const pagingprocessContainer = activeView.querySelector(".process-container");
-        const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
+      if (isPagingMode() || isSegmentationMode()) {
+        const processContainer = activeView.querySelector(".process-container");
+        const nextId = processContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
-        pagingprocessContainer.appendChild(newProcess);
+        processContainer.appendChild(newProcess);
         activeView.querySelector("#process-size").value = '';
 
-        if (pagingprocessContainer) {
-          pagingprocessContainer.scrollTo({
-            top: pagingprocessContainer.scrollHeight,
+        if (processContainer) {
+          processContainer.scrollTo({
+            top: processContainer.scrollHeight,
             behavior: "smooth",
           });
         }
@@ -187,6 +192,9 @@ function attachProcessListeners() {
         if (isPagingMode()) {
             min = 3;
             max = 6;
+        } else if (isSegmentationMode()) {
+            min = 3;
+            max = 8;
         } else {
             min = 4;
             max = 8;
@@ -194,14 +202,14 @@ function attachProcessListeners() {
 
       const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
 
-      if (isPagingMode()) {
-        const pagingProcessContainer = activeView.querySelector(".process-container");
-        const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
+      if (isPagingMode() || isSegmentationMode()) {
+        const processContainer = activeView.querySelector(".process-container");
+        const nextId = processContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
-        pagingProcessContainer.appendChild(newProcess);
-        if (pagingProcessContainer) {
-          pagingProcessContainer.scrollTo({
-            top: pagingProcessContainer.scrollHeight,
+        processContainer.appendChild(newProcess);
+        if (processContainer) {
+          processContainer.scrollTo({
+            top: processContainer.scrollHeight,
             behavior: "smooth",
           });
         }
@@ -281,6 +289,39 @@ if (pagingProcessContainer) {
     if (target.classList.contains("delete-process-btn")) {
       removeElement(target, ".process");
       const processes = pagingProcessContainer.querySelectorAll(".process");
+      processes.forEach((process, index) => {
+        const label = process.querySelector(".process-content p:first-child");
+        const newId = index + 1;
+        if (label) label.textContent = `Process ${newId}`;
+        process.id = `process-${newId}`;
+        const colorIndex = index % processColors.length;
+        const colorPair = processColors[colorIndex];
+        process.setAttribute("data-bg", colorPair.bg);
+        process.setAttribute("data-border", colorPair.border);
+        process.style.backgroundColor = colorPair.bg;
+        process.style.borderBottomColor = colorPair.border;
+      });
+      return;
+    }
+
+    if (target.classList.contains("edit-process-btn")) {
+      const process = target.closest(".process");
+      if (process) editProcess(process);
+    }
+  });
+}
+
+const segmentationProcessContainer = document.querySelector("#segmentation-view .process-container");
+if (segmentationProcessContainer) {
+  segmentationProcessContainer.addEventListener("click", (event) => {
+    const target = event.target.closest("button");
+    if (!target) return;
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (target.classList.contains("delete-process-btn")) {
+      removeElement(target, ".process");
+      const processes = segmentationProcessContainer.querySelectorAll(".process");
       processes.forEach((process, index) => {
         const label = process.querySelector(".process-content p:first-child");
         const newId = index + 1;
@@ -408,23 +449,36 @@ const restorePreSimulationBlocks = () => {
 const prepareSimulation = () => {
   const processes = getProcessSizes();
   const isPaging = isPagingMode();
+  const isSegmentation = isSegmentationMode();
   const blocks = getBlockSizes();
-
-  // if (!isPaging) {
-  //   blocks = getBlockSizes();
-  // }
 
   if (!processes.length) {
     appendConsoleMessage("No processes in queue to allocate.");
     return false;
   }
 
-  if (!isPaging && !blocks.length) {
-    appendConsoleMessage("No memory blocks defined.");
-    return false;
-  }
+  if (isSegmentation) {
+    const { memorySize } = getSegmentationInputs();
 
-  if (isPaging) {
+    if (Number.isNaN(memorySize) || memorySize <= 0) {
+      appendConsoleMessage("Enter a valid total memory size.");
+      return false;
+    }
+
+    simulationState = {
+      processes: processes,
+      memorySize: memorySize,
+      currentIndex: 0,
+      results: {},
+      stats: {
+        allocatedSize: 0,
+        successfulAllocations: 0,
+        intFragmentation: 0,
+      },
+    };
+    initializeSegmentationUI(null, processes);
+
+  } else if (isPaging) {
     const { pageSize, memorySize } = getPagingInputs();
     const frameCount = getPagingFrameCount();
 
@@ -460,6 +514,11 @@ const prepareSimulation = () => {
     initializePagingUI(simulationState.memoryFrames, processes);
 
   } else {
+    if (!blocks.length) {
+      appendConsoleMessage("No memory blocks defined.");
+      return false;
+    }
+
     if (isDynamicPartitionMode()) {
       preSimBlockState = getBlockSizes().slice();
     }
@@ -479,7 +538,7 @@ const prepareSimulation = () => {
 
   // Stamp the original size on every block element NOW, before any step shrinks them.
   // resetBlocksUI reads this to restore the display on reset.
-  if (!isPaging && simulationContainer) {
+  if (!isPaging && !isSegmentation && simulationContainer) {
     simulationContainer.querySelectorAll(".block").forEach((block) => {
       const sizeEl =
         block.querySelector(".block-size-value") || block.querySelector("h2");
@@ -492,7 +551,19 @@ const prepareSimulation = () => {
   resetConsole();
   appendConsoleMessage("Simulation ready. Use Next or Play.");
 
-  if (isPaging) {
+  if (isSegmentation) {
+    const { memorySize } = getSegmentationInputs();
+    updateStatistics({
+      allocatedSize: 0,
+      totalFree: memorySize,
+      intFragmentation: 0,
+      externalFragmentation: 0,
+      memoryUtilization: 0,
+      successRate: 0,
+    });
+    setTotalMemoryDisplay(memorySize);
+    initializeSegmentationUI(null, processes);
+  } else if (isPaging) {
     const totalMemory =
       simulationState.memoryFrames.count *
       simulationState.memoryFrames.frameSize;
@@ -524,7 +595,7 @@ const prepareSimulation = () => {
   currentStep = 0;
   highlightCurrentProcess();
 
-  if (!isPaging) {
+  if (!isPaging && !isSegmentation) {
     const addBtn = document.getElementById('add-block-btn');
     if (addBtn) addBtn.style.display = 'none';
 
@@ -865,6 +936,38 @@ const runStep = () => {
   const size = simulationState.processes[simulationState.currentIndex];
   const processId = `Process ${simulationState.currentIndex + 1}`;
   const isPaging = isPagingMode();
+  const isSegmentation = isSegmentationMode();
+
+  if (isSegmentation) {
+    // Handle segmentation allocation
+    if (typeof allocateNextProcess === 'function') {
+      const result = allocateNextProcess();
+      
+      if (result && result.status === 'Allocated') {
+        appendConsoleMessage(`${processId} (${size} KB) allocated to Segment`);
+        simulationState.stats.allocatedSize += size;
+        simulationState.stats.successfulAllocations += 1;
+      } else {
+        appendConsoleMessage(`${processId} (${size} KB) - Unallocated (not enough memory)`);
+      }
+      
+      updateSegmentationUI();
+      simulationState.currentIndex += 1;
+      
+      if (simulationState.currentIndex >= simulationState.processes.length) {
+        appendConsoleMessage("Simulation complete");
+        if (playInterval) {
+          clearInterval(playInterval);
+          playInterval = null;
+          togglePlayStop();
+        }
+        reEnableSimulationButtons();
+        return false;
+      }
+      return true;
+    }
+    return false;
+  }
 
   if (isPaging) {
     const { pageSize } = getPagingInputs();
@@ -1319,6 +1422,12 @@ const runReset = () => {
     resetPagingUI();
   }
 
+  if (isSegmentationMode()) {
+    if (typeof resetSegmentation === 'function') {
+      resetSegmentation();
+    }
+  }
+
   updateStatistics({
     allocatedSize: 0,
     totalFree: 0,
@@ -1531,7 +1640,7 @@ function startSimulation(event) {
 
 function simulatorLoad() {
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get('algo');
+  const urlAlgo = urlParams.get('algo') || urlParams.get('algorithm');
   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
   const selectedPartition = sessionStorage.getItem('selectedPartition');
 
@@ -1543,7 +1652,7 @@ function simulatorLoad() {
   if (pagingView) pagingView.style.display = 'none';
   if (segmentationView) segmentationView.style.display = 'none';
 
-  if (selectedAlgo === "Paging") {
+  if (selectedAlgo === "Paging" || selectedAlgo === "paging") {
     if (pagingView) {
       pagingView.style.display = 'grid';
 
@@ -1555,9 +1664,10 @@ function simulatorLoad() {
         }
       });
     }
-  } else if (selectedAlgo === "Segmentation") {
+  } else if (selectedAlgo === "Segmentation" || selectedAlgo === "segmentation") {
     if (segmentationView) {
       segmentationView.style.display = 'grid';
+      loadSegmentationScript();
       attachSimulationListeners();
       initSegmentationConsole();
     }
