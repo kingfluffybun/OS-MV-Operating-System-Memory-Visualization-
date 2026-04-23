@@ -90,8 +90,10 @@ function loadCurrentUser() {
 
   if (stored && stored.username) {
     username.textContent = stored.username;
+    document.getElementById("in-out").innerHTML = "Logout";
   } else {
     username.textContent = "Guest";
+    document.getElementById("in-out").innerHTML = "Login";
   }
 }
 
