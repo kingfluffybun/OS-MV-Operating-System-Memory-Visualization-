@@ -127,7 +127,7 @@ function isPagingMode() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlAlgo = urlParams.get("algorithm");
 
-  return isPaging || selectedAlgo === "Paging" || urlAlgo === "Paging";
+  return isPaging || (selectedAlgo && selectedAlgo.toLowerCase() === "paging") || (urlAlgo && urlAlgo.toLowerCase() === "paging");
 }
 
 function isSegmentationMode() {
@@ -138,7 +138,7 @@ function isSegmentationMode() {
   const urlParams = new URLSearchParams(window.location.search);
   const urlAlgo = urlParams.get("algorithm");
 
-  return isSegmentation || selectedAlgo === "Segmentation" || urlAlgo === "Segmentation";
+  return isSegmentation || (selectedAlgo && selectedAlgo.toLowerCase() === "segmentation") || (urlAlgo && urlAlgo.toLowerCase() === "segmentation");
 }
 
 function attachProcessListeners() {
@@ -1636,13 +1636,31 @@ function formatAlgorithmName(algo) {
 
 function simulatorLoad() {
   const urlParams = new URLSearchParams(window.location.search);
-  const urlAlgo = urlParams.get('algorithm');
+  let urlAlgo = urlParams.get('algorithm');
+  let urlPartition = null;
+
+  if (urlAlgo && (urlAlgo.endsWith('-fixed') || urlAlgo.endsWith('-dynamic'))) {
+    if (urlAlgo.endsWith('-fixed')) {
+      urlPartition = 'fixed';
+      urlAlgo = urlAlgo.replace('-fixed', '');
+    } else if (urlAlgo.endsWith('-dynamic')) {
+      urlPartition = 'dynamic';
+      urlAlgo = urlAlgo.replace('-dynamic', '');
+    }
+    sessionStorage.setItem('selectedAlgo', urlAlgo);
+    sessionStorage.setItem('selectedPartition', urlPartition);
+  }
+
   const selectedAlgo = urlAlgo || sessionStorage.getItem('selectedAlgo');
-  const selectedPartition = sessionStorage.getItem('selectedPartition');
+  const selectedPartition = urlPartition || sessionStorage.getItem('selectedPartition');
 
   // Set the page title based on the algorithm
   if (selectedAlgo) {
-    document.title = 'OS-MV ' + formatAlgorithmName(selectedAlgo);
+    let titleSuffix = "";
+    if (selectedPartition && selectedAlgo.toLowerCase() !== 'paging' && selectedAlgo.toLowerCase() !== 'segmentation') {
+      titleSuffix = " " + formatAlgorithmName(selectedPartition);
+    }
+    document.title = 'OS-MV ' + formatAlgorithmName(selectedAlgo) + titleSuffix;
   }
 
   const standardView = document.getElementById('standard-view');
@@ -1653,7 +1671,7 @@ function simulatorLoad() {
   if (pagingView) pagingView.style.display = 'none';
   if (segmentationView) segmentationView.style.display = 'none';
 
-  if (selectedAlgo === "Paging") {
+  if (selectedAlgo && selectedAlgo.toLowerCase() === "paging") {
     if (pagingView) {
       pagingView.style.display = 'grid';
 
@@ -1665,7 +1683,7 @@ function simulatorLoad() {
         }
       });
     }
-  } else if (selectedAlgo === "Segmentation") {
+  } else if (selectedAlgo && selectedAlgo.toLowerCase() === "segmentation") {
     if (segmentationView) {
       segmentationView.style.display = 'grid';
 
