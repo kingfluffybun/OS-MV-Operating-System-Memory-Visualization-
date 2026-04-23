@@ -151,11 +151,14 @@ const toggleSideBar = () => {
 
 const toggleSubMenu = (button) => {
   const sidebar = window.sidebar || document.getElementById("sidebar");
+  const subMenu = button.nextElementSibling;
 
   if (sidebar.classList.contains("close")) {
     toggleSideBar();
+    subMenu.classList.add("show");
+    button.classList.add("rotate");
+  } else {
+    subMenu.classList.toggle("show");
+    button.classList.toggle("rotate");
   }
-
-  button.nextElementSibling.classList.toggle("show");
-  button.classList.toggle("rotate");
 };
