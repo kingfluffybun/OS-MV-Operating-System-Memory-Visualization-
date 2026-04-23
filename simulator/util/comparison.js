@@ -436,8 +436,23 @@ const initPartitionListeners = () => {
     randomizeBtn.addEventListener('click', () => {
       const totalMemory = getTotalMemorySize();
       const remaining = calculateRemainingSpace();
-      const randomSize = Math.max(1, Math.floor(Math.random() * remaining) + 1);
-      blockSizeInput.value = randomSize;
+      if (remaining <= 0) {
+            appendConsoleMessage('⚠️ Memory is already full.');
+            return;
+        }
+        // random value para sa blocks
+        const min = 5;
+        const max = 8;
+        let size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
+        if (size > remaining) {
+            size = remaining;
+        }
+        const result = addPartitionBlock(size);
+        if (result.success) {
+            appendConsoleMessage(result.message);
+        } else {
+            appendConsoleMessage(`⚠️ ${result.message}`);
+        }
     });
   }
 
@@ -747,8 +762,11 @@ const initProcessListeners = () => {
 
   if (randomizeBtn && processSizeInput) {
     randomizeBtn.addEventListener('click', () => {
-      const randomSize = Math.floor(Math.random() * 256) + 1;
-      processSizeInput.value = randomSize;
+        // random value para sa processes
+        const min = 5;
+        const max = 8;
+        const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
+        const result = addProcessSetting(size);
     });
   }
 
