@@ -316,7 +316,7 @@ const PagingSegmentSimulator = {
   },
 
   getPageTableBody() {
-    return document.querySelector("#page-table-body");
+    return document.querySelector("#seg-paging-table-body");
   },
 
   resetSegmentationPagingUI() {
@@ -452,6 +452,22 @@ const PagingSegmentSimulator = {
     let framesHtml = '';
     let tableRowsHtml = '';
 
+    // Build table rows based on allocation (logical to physical mapping)
+    result.processResults.forEach((process) => {
+      const colorPair = this.getProcessColor(process.processName);
+      process.segments.forEach((segment) => {
+        segment.pages.forEach((page) => {
+          tableRowsHtml += `
+            <tr style="border-left: 8px solid ${colorPair.bg}">
+              <td>${process.processName}</td>
+              <td>${segment.segmentType}</td>
+              <td>Page ${page.pageIndex}</td>
+              <td>${page.frameId !== null ? 'Frame ' + page.frameId : '-'}</td>
+            </tr>`;
+        });
+      });
+    });
+
     // if (typeof appendConsoleMessage === 'function') {
     //   appendConsoleMessage(`DEBUG: Processing ${framesArray.length} frames...`);
     // }
@@ -483,13 +499,7 @@ const PagingSegmentSimulator = {
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</p>
           </div>`;
         
-        tableRowsHtml += `
-          <tr>
-            <td>${frame.processName || 'Unknown'}</td>
-            <td>${frame.segmentType || 'Page'}</td>
-            <td>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</td>
-            <td>Frame ${frameId}</td>
-          </tr>`;
+
       } else {
         frameContent = `
           <div class="frame-content" style="background-color: #fff; border-bottom-color: #ccc">
