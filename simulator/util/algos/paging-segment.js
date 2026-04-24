@@ -317,7 +317,7 @@ const PagingSegmentSimulator = {
   },
 
   getPageTableBody() {
-    return document.querySelector("#page-table-body");
+    return document.querySelector("#seg-paging-table-body");
   },
 
   resetSegmentationPagingUI() {
@@ -393,6 +393,8 @@ const PagingSegmentSimulator = {
     framesContainer.innerHTML = "";
     tableBody.innerHTML = "";
 
+    const currentAlloc = result.currentAllocation || {};
+
     const allocatedSize = result.processResults.reduce((sum, proc) => {
       return sum + (proc.status === "Allocated" ? proc.requestedSize : 0);
     }, 0);
@@ -419,10 +421,15 @@ const PagingSegmentSimulator = {
 
         let pagesHtml = "";
         segment.pages.forEach((page) => {
+          const isCurrent = currentAlloc.processName === process.processName &&
+                            currentAlloc.segmentType === segment.segmentType &&
+                            currentAlloc.pageIndex === page.pageIndex;
+          const currentClass = isCurrent ? " current" : "";
+          
           pagesHtml += `
-            <div class="page">
+            <div class="page" id="seg-page-${process.processName.replace(/\s+/g, '-')}-${segment.segmentType}-${page.pageIndex}">
               <p id="page-number">P${page.pageIndex}</p>
-              <div class="page-content" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">
+              <div class="page-content${currentClass}" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">
                 <p>${process.processName} - ${segment.segmentType}</p>
                 <p>${page.size} KB</p>
               </div>
@@ -453,6 +460,22 @@ const PagingSegmentSimulator = {
     let framesHtml = '';
     let tableRowsHtml = '';
 
+    // Build table rows based on allocation (logical to physical mapping)
+    result.processResults.forEach((process) => {
+      const colorPair = this.getProcessColor(process.processName);
+      process.segments.forEach((segment) => {
+        segment.pages.forEach((page) => {
+          tableRowsHtml += `
+            <tr style="border-left: 8px solid ${colorPair.bg}">
+              <td>${process.processName}</td>
+              <td>${segment.segmentType}</td>
+              <td>Page ${page.pageIndex}</td>
+              <td>${page.frameId !== null ? 'Frame ' + page.frameId : '-'}</td>
+            </tr>`;
+        });
+      });
+    });
+
     // if (typeof appendConsoleMessage === 'function') {
     //   appendConsoleMessage(`DEBUG: Processing ${framesArray.length} frames...`);
     // }
@@ -463,6 +486,9 @@ const PagingSegmentSimulator = {
       let frameContent = '';
       
       if (frame.status === 'Occupied') {
+        const isCurrent = currentAlloc.frameId === frameId;
+        const currentClass = isCurrent ? " current" : "";
+        
         let bg = "#CAFFBF"; // Fallback color
         let border = "#98BF8F";
         
@@ -477,19 +503,13 @@ const PagingSegmentSimulator = {
         }
 
         frameContent = `
-          <div class="frame-content" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
             <p>${frame.processName || 'Unknown'} - ${frame.segmentType || 'Page'}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</p>
             <p>${frame.size} KB</p>
           </div>`;
         
-        tableRowsHtml += `
-          <tr>
-            <td>${frame.processName || 'Unknown'}</td>
-            <td>${frame.segmentType || 'Page'}</td>
-            <td>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</td>
-            <td>Frame ${frameId}</td>
-          </tr>`;
+
       } else {
         frameContent = `
           <div class="frame-content" style="background-color: #fff; border-bottom-color: #ccc">
@@ -549,6 +569,19 @@ const PagingSegmentSimulator = {
         : result.totalMemory;
     if (typeof setTotalMemoryDisplay === "function") {
       setTotalMemoryDisplay(displayMemory);
+    }
+
+    if (currentAlloc && currentAlloc.frameId !== undefined) {
+      setTimeout(() => {
+        const currentEls = document.querySelectorAll('.segmentation-paging .page-content.current, .simulation-segmentation .frame-content.current');
+        currentEls.forEach(el => {
+          el.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "center",
+          });
+        });
+      }, 50);
     }
   },
 };

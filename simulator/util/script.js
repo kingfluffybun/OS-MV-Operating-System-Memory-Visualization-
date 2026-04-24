@@ -1063,6 +1063,7 @@ const runStep = () => {
         appendConsoleMessage(`${processName} (${processSize} KB) -> Logical segments allocated.`);
         simulationState.subStep = 1;
         simulationState.pageAllocationIndex = 0;
+        simulationState.lastSegPagingAllocation = null;
       } else {
         simulationState.processResults.push({
           processName,
@@ -1103,6 +1104,12 @@ const runStep = () => {
           if (allocationResult.success) {
             currentProcess.pages.push(allocationResult.allocation);
             appendConsoleMessage(`${processName} - ${segmentType} Page ${page.pageIndex} mapped to Frame ${page.frameId}.`);
+            simulationState.lastSegPagingAllocation = {
+              processName: currentProcess.processName,
+              segmentType: segmentType,
+              pageIndex: page.pageIndex,
+              frameId: page.frameId
+            };
             simulationState.pageAllocationIndex++;
           } else {
             console.error("Allocation failed unexpectedly!");
@@ -1131,6 +1138,9 @@ const runStep = () => {
     }
 
     const summary = PagingSegmentSimulator.getSimulationSummary(simulationState);
+    if (summary) {
+      summary.currentAllocation = simulationState.lastSegPagingAllocation;
+    }
     if (summary && typeof updateSegmentationPagingUI === 'function') {
       updateSegmentationPagingUI(summary);
     }
