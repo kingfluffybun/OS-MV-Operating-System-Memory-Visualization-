@@ -215,16 +215,11 @@ const PagingSegmentSimulator = {
         Code: breakdown.code,
         Heap: breakdown.heap,
         Data: breakdown.data,
-        Stack: breakdown.stack,
+        Stack: breakdown.stack
       }).forEach(([segmentType, segmentSize]) => {
         const { pages, internalFragmentation } = this.segmentToPages(segmentSize, pageSize);
 
         if (!processAllocatable) {
-          // If we ran out of memory in a previous segment, just record the segment with no physical frames
-          const { pages, internalFragmentation } = this.segmentToPages(
-            segmentSize,
-            pageSize,
-          );
           segments.push({
             segmentType,
             segmentSize,
@@ -381,7 +376,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize: 0,
         totalFree: 0,
-        intFragmentation: 0,
+        يفة: 0,
         externalFragmentation: 0,
         memoryUtilization: 0,
         successRate: 0,
@@ -405,7 +400,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize: 0,
         totalFree: displayMemory,
-        intFragmentation: 0,
+        يفة: 0,
         externalFragmentation: 0,
         memoryUtilization: 0,
         successRate: 0,
@@ -514,11 +509,10 @@ const PagingSegmentSimulator = {
       const colorPair = this.getProcessColor(process.processName);
       process.segments.forEach((segment) => {
         segment.pages.forEach((page) => {
-          const isCurrentRow =
-            currentAlloc.processName === process.processName &&
-            currentAlloc.segmentType === segment.segmentType &&
-            currentAlloc.pageIndex === page.pageIndex;
-          const currentClass = isCurrentRow ? ' class="current"' : "";
+          const isCurrentRow = currentAlloc.processName === process.processName &&
+                               currentAlloc.segmentType === segment.segmentType &&
+                               currentAlloc.pageIndex === page.pageIndex;
+          const currentClass = isCurrentRow ? " class=\"current\"" : "";
 
           tableRowsHtml += `
             <tr${currentClass} style="border-left: 8px solid ${colorPair.bg}">
