@@ -21,7 +21,9 @@
 /* For Tauri */
 h1, h2, h3, p, a {
     user-select: none;
-} input::-ms-reveal {display: none;}
+}
+input::-ms-reveal {display: none;}
+input::-ms-clear {display: none;}
 
 body {
 background-color: white;
