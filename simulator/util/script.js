@@ -1033,6 +1033,11 @@ const runStep = () => {
 
       console.log(`${processName} requires ${requiredPages} pages. Available: ${remainingFreeFrames} frames.`);
 
+      // Strict check for sufficient frames
+      if (requiredPages > remainingFreeFrames) {
+        processAllocatable = false;
+      }
+
       if (processAllocatable) {
         Object.entries({ Code: breakdown.code, Heap: breakdown.heap, Data: breakdown.data, Stack: breakdown.stack }).forEach(([segmentType, segmentSize]) => {
           const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(segmentSize, simulationState.pageSize);
@@ -1107,7 +1112,16 @@ const runStep = () => {
             };
             simulationState.pageAllocationIndex++;
           } else {
-            appendConsoleMessage(`${processName} -> Allocation stopped (Insufficient memory for remaining pages).`);
+            appendConsoleMessage(`${processName} -> Allocation failed (Insufficient memory). Rolling back.`);
+
+            // Rollback using the new method
+            PagingSegmentSimulator.deallocateProcess(simulationState.memory.frames, processName);
+
+            // Update the process result to Unallocated
+            currentProcess.status = "Unallocated";
+            currentProcess.pages = [];
+            currentProcess.internalFragmentation = 0;
+
             simulationState.currentIndex += 1;
             simulationState.subStep = 0;
           }
@@ -1498,6 +1512,10 @@ const runStep = () => {
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
 
+  if (finalResult && finalResult.status === "Allocated") {
+    followAllocatedBlock(finalResult.block);
+  }
+
   simulationState.currentIndex += 1;
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("Simulation complete");
@@ -1684,9 +1702,17 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
-    const addProcessBtn = document.querySelector("#add-process-btn");
+    const addProcessBtn = activeView.querySelector("#add-process-btn");
     if (addProcessBtn) {
-        addProcessBtn.disabled = false;
+      addProcessBtn.disabled = false;
+      addProcessBtn.style.opacity = "1";
+      addProcessBtn.style.cursor = "pointer";
+    }
+
+    const processSizeInput = activeView.querySelector("#process-size");
+    if (processSizeInput) {
+      processSizeInput.disabled = false;
+      processSizeInput.style.opacity = "1";
     }
 
     activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
@@ -1735,8 +1761,18 @@ function reEnableSimulationButtons() {
     btn.style.cursor = "pointer";
   });
 
-  const addProcessBtn = document.getElementById('add-process-btn');
-  if (addProcessBtn) addProcessBtn.disabled = false;
+  const addProcessBtn = activeView.querySelector('#add-process-btn');
+  if (addProcessBtn) {
+    addProcessBtn.disabled = false;
+    addProcessBtn.style.opacity = "1";
+    addProcessBtn.style.cursor = "pointer";
+  }
+
+  const processSizeInput = activeView.querySelector('#process-size');
+  if (processSizeInput) {
+    processSizeInput.disabled = false;
+    processSizeInput.style.opacity = "1";
+  }
 
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
