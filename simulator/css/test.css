@@ -646,7 +646,8 @@ button:disabled svg {
 }
 
 .frames-container .frame .frame-content.current,
-.pages-container .page .page-content.current {
+.pages-container .page .page-content.current,
+.segment-pages .page .page-content.current {
     outline: 2px solid var(--primary-color);
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
 }
