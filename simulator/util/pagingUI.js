@@ -196,7 +196,7 @@ const updatePagingUI = (memoryFrames) => {
         const pageIndex = Number.isFinite(frame.page) ? frame.page - 1 : "";
         statusLabel = `${frame.process}`;
         const colors = getProcessColor(frame.process);
-        // usageInfo = `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`;
+        usageInfo = `<p>${frame.used} KB</p>`;
 
         frameEl.innerHTML = `
           <p id="frame-number">F${frame.id}</p>

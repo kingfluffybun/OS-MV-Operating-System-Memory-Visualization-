@@ -246,8 +246,6 @@ function setFragmentationVisibility() {
           ? pagingView
           : standardView;
 
-  if (!activeView || activeView !== standardView) return; // only for standard view
-
   const query = (id) => {
     const el = activeView.querySelector("#" + id);
     return el;
@@ -256,22 +254,46 @@ function setFragmentationVisibility() {
   const internalFragEl = query("internal-frag-value");
   const externalFragEl = query("external-frag-value");
 
-  const isDynamic = typeof isDynamicPartitionMode === 'function' && isDynamicPartitionMode();
-  if (isDynamic) {
-    // Dynamic partition: show external fragmentation, hide internal
-    if (internalFragEl && internalFragEl.parentElement) {
-      internalFragEl.parentElement.style.display = 'none';
+  const isPaging = typeof isPagingMode === 'function' && isPagingMode();
+  const isSegmentation = typeof isSegmentationMode === 'function' && isSegmentationMode();
+  const isSegPaging = typeof isSegmentationPagingMode === 'function' && isSegmentationPagingMode();
+  const isStandard = !isPaging && !isSegmentation && !isSegPaging;
+
+  if (isStandard) {
+    // Contiguous allocation
+    const isDynamic = typeof isDynamicPartitionMode === 'function' && isDynamicPartitionMode();
+    if (isDynamic) {
+      // Dynamic partition: show external fragmentation, hide internal
+      if (internalFragEl && internalFragEl.parentElement) {
+        internalFragEl.parentElement.style.display = 'none';
+      }
+      if (externalFragEl && externalFragEl.parentElement) {
+        externalFragEl.parentElement.style.display = 'flex';
+      }
+    } else {
+      // Fixed partition: show internal fragmentation, hide external
+      if (externalFragEl && externalFragEl.parentElement) {
+        externalFragEl.parentElement.style.display = 'none';
+      }
+      if (internalFragEl && internalFragEl.parentElement) {
+        internalFragEl.parentElement.style.display = 'flex';
+      }
     }
-    if (externalFragEl && externalFragEl.parentElement) {
-      externalFragEl.parentElement.style.display = 'flex';
-    }
-  } else {
-    // Fixed partition: show internal fragmentation, hide external
+  } else if (isPaging || isSegPaging) {
+    // Paging and Segmentation with Paging: show internal fragmentation, hide external
     if (externalFragEl && externalFragEl.parentElement) {
       externalFragEl.parentElement.style.display = 'none';
     }
     if (internalFragEl && internalFragEl.parentElement) {
       internalFragEl.parentElement.style.display = 'flex';
+    }
+  } else if (isSegmentation) {
+    // Segmentation: show external fragmentation, hide internal
+    if (internalFragEl && internalFragEl.parentElement) {
+      internalFragEl.parentElement.style.display = 'none';
+    }
+    if (externalFragEl && externalFragEl.parentElement) {
+      externalFragEl.parentElement.style.display = 'flex';
     }
   }
 }
