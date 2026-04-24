@@ -827,12 +827,16 @@ const updateSegmentationStatistics = () => {
     const externalFragmentation = totalFree;
     const memoryUtilization =
       totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
+
+    const allocatedProcessNames = new Set((status.allocated || []).map((seg) => seg.name));
+    const completedProcessCount =
+    segmentationState.currentProcessIndex; // processes fully stepped through
     const successRate =
-      segmentationState.processQueue &&
-      segmentationState.processQueue.length > 0
-        ? ((status.allocated ? status.allocated.length : 0) /
+    segmentationState.processQueue &&
+    segmentationState.processQueue.length > 0
+        ? (allocatedProcessNames.size /
             segmentationState.processQueue.length) *
-          100
+        100
         : 0;
 
     // Only show total free and external fragmentation when simulation has started (processes allocated)
