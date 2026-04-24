@@ -150,13 +150,13 @@
                     <p id="algo-description">Segmentation Algorithm</p>
                 </div>
                 <div class="input-size">
-                    <!-- <div>
+                    <div>
                         <label for="page-frame-size">Page / Frame Size (KB)</label>
-                        <input type="number" id="page-frame-size" value="4" placeholder="Page / Frame Size (KB)">
-                    </div> -->
+                        <input type="number" id="page-frame-size" value="4" min="1" max="64">
+                    </div>
                     <div>
                         <label for="memory-size">Total Memory Size (KB)</label>
-                        <input type="number" id="memory-size" value="128" placeholder="Total Memory Size (KB)">
+                        <input type="number" id="memory-size" value="128" min="64" max="2048" step="64">
                     </div>
                 </div>
             </div>
@@ -364,23 +364,8 @@
                         </div>
                     </div> -->
                 </div>
-                <div class="frames-container">
-                    <div class="frame"><p id="frame-number">F1</p><div class="frame-content"><p>Frame 1</p></div></div>
-                    <div class="frame"><p id="frame-number">F2</p><div class="frame-content"><p>Frame 2</p></div></div>
-                    <div class="frame"><p id="frame-number">F3</p><div class="frame-content"><p>Frame 3</p></div></div>
-                    <div class="frame"><p id="frame-number">F4</p><div class="frame-content"><p>Frame 4</p></div></div>
-                    <div class="frame"><p id="frame-number">F5</p><div class="frame-content"><p>Frame 5</p></div></div>
-                    <div class="frame"><p id="frame-number">F6</p><div class="frame-content"><p>Frame 6</p></div></div>
-                    <div class="frame"><p id="frame-number">F7</p><div class="frame-content"><p>Frame 7</p></div></div>
-                    <div class="frame"><p id="frame-number">F8</p><div class="frame-content"><p>Frame 8</p></div></div>
-                    <div class="frame"><p id="frame-number">F9</p><div class="frame-content"><p>Frame 9</p></div></div>
-                    <div class="frame"><p id="frame-number">F10</p><div class="frame-content"><p>Frame 10</p></div></div>
-                    <div class="frame"><p id="frame-number">F11</p><div class="frame-content"><p>Frame 11</p></div></div>
-                    <div class="frame"><p id="frame-number">F12</p><div class="frame-content"><p>Frame 12</p></div></div>
-                    <div class="frame"><p id="frame-number">F13</p><div class="frame-content"><p>Frame 13</p></div></div>
-                    <div class="frame"><p id="frame-number">F14</p><div class="frame-content"><p>Frame 14</p></div></div>
-                    <div class="frame"><p id="frame-number">F15</p><div class="frame-content"><p>Frame 15</p></div></div>
-                    <div class="frame"><p id="frame-number">F16</p><div class="frame-content"><p>Frame 16</p></div></div>
+                <div class="frames-container" id="frames-container">
+                    <!-- Frames will be inserted here -->
                 </div>
             </div>
         </div>
@@ -392,35 +377,12 @@
                         <tr>
                             <th>Process ID</th>
                             <th>Segmentation</th>
-                            <th>Base</th>
-                            <th>Limit</th>
+                            <th>Page</th>
+                            <th>Frame</th>
                         </tr>
                     </thead>
                     <tbody id="page-table-body">
-                        <tr>
-                            <td>Process 1</td>
-                            <td>Code</td>
-                            <td>1000</td>
-                            <td>500</td>
-                        </tr>
-                        <tr>
-                            <td>Process 1</td>
-                            <td>Stack</td>
-                            <td>3000</td>
-                            <td>700</td>
-                        </tr>
-                        <tr>
-                            <td>Process 1</td>
-                            <td>Heap</td>
-                            <td>5000</td>
-                            <td>400</td>
-                        </tr>
-                        <tr>
-                            <td>Process 1</td>
-                            <td>Data</td>
-                            <td>4000</td>
-                            <td>200</td>
-                        </tr>
+                        <!-- Mapping data will be inserted here -->
                     </tbody>
                 </table>
             </div>

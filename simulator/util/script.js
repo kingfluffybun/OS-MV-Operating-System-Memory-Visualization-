@@ -495,7 +495,9 @@ const prepareSimulation = () => {
       memorySize,
       pageSize,
       currentIndex: 0,
-      results: {},
+      subStep: 0, // 0: Logical, 1: Physical
+      memory: PagingSegmentSimulator.createFrames(memorySize, pageSize),
+      processResults: [],
       stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
     };
 
@@ -1008,31 +1010,101 @@ const runStep = () => {
   const isSegmentation = isSegmentationMode();
 
   if (isSegmentationPaging) {
-    const result = typeof PagingSegmentSimulator !== 'undefined'
-      ? PagingSegmentSimulator.simulate(
-          simulationState.processes.slice(0, simulationState.currentIndex + 1),
-          simulationState.memorySize,
-          simulationState.pageSize,
-        )
-      : null;
+    const processIndex = simulationState.currentIndex;
+    const processSize = simulationState.processes[processIndex];
+    const processName = `Process ${processIndex + 1}`;
 
-    if (!result) {
-      appendConsoleMessage('Segmentation with paging simulator unavailable.');
-      return false;
+    console.log(`SegmentationPaging Step: Index=${processIndex}, SubStep=${simulationState.subStep}`);
+
+    if (simulationState.subStep === 0) {
+      // Step 1: Logical Allocation (Segments)
+      console.log(`Performing Logical Allocation for ${processName}`);
+      const breakdown = PagingSegmentSimulator.breakdownSize(processSize);
+      const segments = [];
+      let processAllocatable = true;
+      let processInternalFrag = 0;
+
+      const framesArray = Array.isArray(simulationState.memory.frames) ? simulationState.memory.frames : Object.values(simulationState.memory.frames);
+      const remainingFreeFrames = framesArray.filter((f) => f.status === "Free").length;
+      
+      const requiredPages = Object.values({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap })
+        .map((s) => Math.ceil(s / simulationState.pageSize))
+        .reduce((total, count) => total + count, 0);
+
+      console.log(`${processName} requires ${requiredPages} pages. Available: ${remainingFreeFrames} frames.`);
+
+      if (requiredPages > remainingFreeFrames) {
+        processAllocatable = false;
+      }
+
+      if (processAllocatable) {
+        Object.entries({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap }).forEach(([segmentType, segmentSize]) => {
+          const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(segmentSize, simulationState.pageSize);
+          processInternalFrag += internalFragmentation;
+          segments.push({
+            segmentType,
+            segmentSize,
+            pages,
+            internalFragmentation,
+          });
+        });
+
+        simulationState.processResults.push({
+          processName,
+          requestedSize: processSize,
+          status: "Allocated",
+          breakdown,
+          segments,
+          pages: [], 
+          internalFragmentation: processInternalFrag,
+        });
+
+        appendConsoleMessage(`${processName} (${processSize} KB) -> Logical segments allocated.`);
+        simulationState.subStep = 1;
+      } else {
+        simulationState.processResults.push({
+          processName,
+          requestedSize: processSize,
+          status: "Unallocated",
+          breakdown,
+          segments: [],
+          pages: [],
+          internalFragmentation: 0,
+        });
+        appendConsoleMessage(`${processName} (${processSize} KB) -> Unallocated (Insufficient memory).`);
+        simulationState.currentIndex += 1;
+        simulationState.subStep = 0;
+      }
+    } else {
+      // Step 2: Physical Allocation (Frames)
+      console.log(`Performing Physical Allocation for ${processName}`);
+      const currentProcess = simulationState.processResults[processIndex];
+      
+      if (currentProcess && currentProcess.segments) {
+        currentProcess.segments.forEach(segment => {
+          const allocationResult = PagingSegmentSimulator.allocatePagesToFrames(
+            simulationState.memory.frames, 
+            currentProcess.processName, 
+            segment.segmentType, 
+            segment.pages
+          );
+          if (allocationResult.success) {
+            currentProcess.pages = currentProcess.pages.concat(allocationResult.allocation);
+          }
+        });
+        appendConsoleMessage(`${processName} -> Pages mapped to physical frames.`);
+      } else {
+        console.error("Could not find current process results for physical allocation!");
+      }
+
+      simulationState.currentIndex += 1;
+      simulationState.subStep = 0;
     }
 
-    simulationState.results = result.processResults;
-    simulationState.lastResult = result;
-
-    if (typeof updateSegmentationPagingUI === 'function') {
-      updateSegmentationPagingUI(result);
+    const summary = PagingSegmentSimulator.getSimulationSummary(simulationState);
+    if (summary && typeof updateSegmentationPagingUI === 'function') {
+      updateSegmentationPagingUI(summary);
     }
-
-    const currentResult = result.processResults[simulationState.currentIndex];
-    const statusMsg = currentResult ? currentResult.status : 'Unallocated';
-    appendConsoleMessage(`${processId} (${size} KB) -> ${statusMsg}`);
-
-    simulationState.currentIndex += 1;
 
     if (simulationState.currentIndex >= simulationState.processes.length) {
       appendConsoleMessage('Simulation complete.');

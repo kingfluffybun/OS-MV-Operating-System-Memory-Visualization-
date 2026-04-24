@@ -90,10 +90,14 @@ const PagingSegmentSimulator = {
   allocatePagesToFrames(frames, processName, segmentType, pages) {
     const allocation = [];
     const allocatedFrames = [];
+    const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
+
+    console.log(`Allocating ${pages.length} pages for ${processName} - ${segmentType}`);
 
     for (const page of pages) {
-      const freeFrame = frames.find((frame) => frame.status === "Free");
+      const freeFrame = framesArray.find((frame) => frame.status === "Free");
       if (!freeFrame) {
+        console.warn("No free frames found during allocation!");
         // Roll back any changes made for this segment when allocation fails partway.
         allocatedFrames.forEach((frame) => {
           frame.status = "Free";
@@ -110,17 +114,19 @@ const PagingSegmentSimulator = {
       freeFrame.segmentType = segmentType;
       freeFrame.pageIndex = page.pageIndex;
       freeFrame.used = page.size;
-      page.frameId = freeFrame.frameId;
+      page.frameId = freeFrame.frameId || freeFrame.id; // Support both frameId and id
+      
       allocation.push({
         processName,
         segmentType,
         pageIndex: page.pageIndex,
         pageSize: page.size,
-        frameId: freeFrame.frameId,
+        frameId: page.frameId,
       });
       allocatedFrames.push(freeFrame);
     }
 
+    console.log(`Successfully allocated ${allocation.length} frames for ${segmentType}`);
     return { success: true, allocation };
   },
 
@@ -213,12 +219,36 @@ const PagingSegmentSimulator = {
     };
   },
 
+  getSimulationSummary(state) {
+    const { processes, memory, processResults, memorySize, pageSize } = state;
+    if (!memory || !memory.frames) return null;
+
+    const framesArray = Array.isArray(memory.frames) ? memory.frames : Object.values(memory.frames);
+    const usedFrames = framesArray.filter((frame) => frame.status === "Occupied").length;
+    const freeFrames = framesArray.filter((frame) => frame.status === "Free").length;
+    const totalInternalFragmentation = processResults.reduce((sum, proc) => sum + (proc.internalFragmentation || 0), 0);
+    const allocatedProcesses = processResults.filter(p => p.status === 'Allocated').length;
+
+    return {
+      totalMemory: memorySize,
+      pageSize,
+      frameCount: framesArray.length,
+      usedFrames,
+      freeFrames,
+      totalInternalFragmentation,
+      allocatedProcesses,
+      totalProcesses: processes.length,
+      memory: { frames: framesArray },
+      processResults,
+    };
+  },
+
   getSegmentContainer() {
     return document.querySelector('.segmentation-paging');
   },
 
   getFramesContainer() {
-    return document.querySelector('.frames-container');
+    return document.getElementById('frames-container') || document.querySelector('.frames-container');
   },
 
   getPageTableBody() {
@@ -281,7 +311,14 @@ const PagingSegmentSimulator = {
     const framesContainer = this.getFramesContainer();
     const tableBody = this.getPageTableBody();
 
-    if (!segContainer || !framesContainer || !tableBody || !result) return;
+    if (!segContainer || !framesContainer || !tableBody || !result) {
+      console.warn("UI Containers or Result missing:", { segContainer, framesContainer, tableBody, result });
+      return;
+    }
+
+    if (typeof appendConsoleMessage === 'function') {
+      appendConsoleMessage(`DEBUG: Rendering ${result.processResults.length} processes and ${result.memory.frames.length} frames.`);
+    }
 
     segContainer.innerHTML = '';
     framesContainer.innerHTML = '';
@@ -345,36 +382,85 @@ const PagingSegmentSimulator = {
       });
     });
 
-    result.memory.frames.forEach((frame) => {
-      const frameEl = document.createElement('div');
-      frameEl.className = 'frame';
-      frameEl.id = `frame-${frame.frameId}`;
-      let content = '';
-      if (frame.status === 'Occupied') {
-        const colorPair = this.getProcessColor(frame.processName);
-        content = `<div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">`;
-        content += `<p>${frame.size} KB</p><p>${frame.processName}</p><p>${frame.segmentType}</p><p>Page ${frame.pageIndex}</p>`;
-      } else {
-        content = `<div class="frame-content">`;
-        content += `<p>${frame.size} KB</p><p>Free</p>`;
-      }
-      content += '</div>';
-      frameEl.innerHTML = `<p id="frame-number">F${frame.frameId}</p>${content}`;
-      framesContainer.appendChild(frameEl);
-    });
+    const framesArray = Array.isArray(result.memory.frames) ? result.memory.frames : Object.values(result.memory.frames);
+    let framesHtml = '';
+    let tableRowsHtml = '';
 
-    Object.values(result.memory.frames)
-      .filter((frame) => frame.status === 'Occupied')
-      .forEach((frame) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td>${frame.processName}</td>
-          <td>${frame.segmentType}</td>
-          <td>Page ${frame.pageIndex}</td>
-          <td>Frame ${frame.frameId}</td>
-        `;
-        tableBody.appendChild(row);
-      });
+    if (typeof appendConsoleMessage === 'function') {
+      appendConsoleMessage(`DEBUG: Processing ${framesArray.length} frames...`);
+    }
+
+    for (let i = 0; i < framesArray.length; i++) {
+      const frame = framesArray[i];
+      const frameId = frame.frameId || frame.id || (i + 1);
+      let frameContent = '';
+      
+      if (frame.status === 'Occupied') {
+        let bg = "#CAFFBF"; // Fallback color
+        let border = "#98BF8F";
+        
+        try {
+          const colorPair = this.getProcessColor(frame.processName);
+          if (colorPair) {
+            bg = colorPair.bg;
+            border = colorPair.border;
+          }
+        } catch (e) {
+          console.error("Color lookup failed:", e);
+        }
+
+        frameContent = `
+          <div class="frame-content" style="background-color: ${bg}; border-bottom-color: ${border}">
+            <p>${frame.size} KB</p>
+            <p>${frame.processName || 'Unknown'}</p>
+            <p>${frame.segmentType || 'Page'}</p>
+            <p>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</p>
+          </div>`;
+        
+        tableRowsHtml += `
+          <tr>
+            <td>${frame.processName || 'Unknown'}</td>
+            <td>${frame.segmentType || 'Page'}</td>
+            <td>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</td>
+            <td>Frame ${frameId}</td>
+          </tr>`;
+      } else {
+        frameContent = `
+          <div class="frame-content" style="background-color: #fff; border-bottom-color: #ccc">
+            <p>${frame.size} KB</p>
+            <p>Free</p>
+          </div>`;
+      }
+
+      framesHtml += `
+        <div class="frame" id="frame-${frameId}" style="display: flex !important; min-height: 40px !important; width: 100% !important; margin-bottom: 5px !important; align-items: center !important;">
+          <p id="frame-number" style="min-width: 25px; font-weight: bold;">F${frameId}</p>
+          ${frameContent}
+        </div>`;
+    }
+
+    if (typeof appendConsoleMessage === 'function') {
+      appendConsoleMessage(`DEBUG: HTML build complete (${framesHtml.length} chars). Applying to DOM...`);
+    }
+
+    const targetContainer = document.querySelector('.simulation-segmentation #frames-container') || 
+                            document.querySelector('.simulation-segmentation .frames-container') ||
+                            document.getElementById('frames-container');
+
+    if (targetContainer) {
+      targetContainer.innerHTML = framesHtml;
+      if (typeof appendConsoleMessage === 'function') {
+        appendConsoleMessage(`DEBUG: DOM updated successfully. Container now has ${targetContainer.children.length} elements.`);
+      }
+    } else {
+      if (typeof appendConsoleMessage === 'function') {
+        appendConsoleMessage(`ERROR: Could not find frames container in DOM!`);
+      }
+    }
+    
+    if (tableBody) {
+      tableBody.innerHTML = tableRowsHtml;
+    }
 
     if (typeof updateStatistics === 'function') {
       updateStatistics({
