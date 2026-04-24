@@ -635,11 +635,6 @@ button[type="submit"] {
     border-color: #4CAF50;
 }
 
-.allocated-segments {
-  position: relative;
-  min-height: 40px;
-}
-
 .segment-base-limit {
   display: flex;
   flex-direction: column;
@@ -658,10 +653,10 @@ button[type="submit"] {
 
 .segment-base {
   position: absolute;
-  top: -8px; 
+  top: 0; 
 }
 
 .segment-limit {
   position: absolute;
-  bottom: -8px; 
+  bottom: -10px; 
 }

@@ -90,11 +90,13 @@ class SegmentationMemory {
 
     static breakdownSize(size) {
         if (size <= 0) return { code: 0, data: 0, stack: 0, heap: 0 };
-            const code = Math.floor(size * 0.40);
-            const data = Math.floor(size * 0.30);
-            const stack = Math.floor(size * 0.20);
-            const heap = size - code - data - stack;
-        return { code, data, stack, heap };
+            const evenFloor = (val) => Math.floor(val / 2) * 2;
+
+            const code  = evenFloor(size * 0.40);
+            const heap  = evenFloor(size * 0.30);
+            const data = evenFloor(size * 0.20);
+            const stack  = size - code - heap - data;
+        return { code, heap, data, stack };
     }
 }
 
@@ -304,13 +306,13 @@ const updateSegmentationDisplay = (status) => {
         // Create segments for Code, Data, Stack, Heap
         const segmentTypes = [
           { type: 'Code', size: seg.breakdown.code || 0 },
+          { type: 'Heap', size: seg.breakdown.heap || 0 },
           { type: 'Data', size: seg.breakdown.data || 0 },
-          { type: 'Stack', size: seg.breakdown.stack || 0 },
-          { type: 'Heap', size: seg.breakdown.heap || 0 }
+          { type: 'Stack', size: seg.breakdown.stack || 0 }
         ];
         
         // Create a segments-container for each segment type
-        segmentTypes.forEach((segmentType) => {
+        segmentTypes.forEach((segmentType, index) => {
           if (segmentType.size > 0) {
             const { bg, border } = getProcessColors(seg.name);
             const segmentContainer = document.createElement("div");
@@ -319,18 +321,17 @@ const updateSegmentationDisplay = (status) => {
             // Add segment number
             const segmentNumberDiv = document.createElement("div");
             segmentNumberDiv.id = "segment-number";
-            segmentNumberDiv.textContent = `S${seg.id - 1}`;
+            segmentNumberDiv.textContent = `S${index}`;
             segmentContainer.appendChild(segmentNumberDiv);
 
             // Add segment type info
             const infoDiv = document.createElement("div");
+            const PX_PER_KB = 1;
+            infoDiv.style.height = `${(segmentType.size * PX_PER_KB) + 48}px`;
             infoDiv.style.display = "flex";
             infoDiv.className = "segments";
-            infoDiv.style.flexDirection = "column";
-            infoDiv.style.alignItems = "center";
             infoDiv.style.backgroundColor = bg;
             infoDiv.style.borderBottom = `4px solid ${border}`;
-            infoDiv.style.borderRadius = "8px";
             
             const nameP = document.createElement("p");
             nameP.id = "process-segment";
@@ -342,10 +343,13 @@ const updateSegmentationDisplay = (status) => {
             
             const sizeP = document.createElement("p");
             sizeP.id = "segment-size";
-            sizeP.textContent = segmentType.size;
+            sizeP.textContent = `${segmentType.size} KB`;
+
+            const infoDiv2 = document.createElement("div");
+            infoDiv.appendChild(infoDiv2);
             
-            infoDiv.appendChild(nameP);
-            infoDiv.appendChild(typeP);
+            infoDiv2.appendChild(nameP);
+            infoDiv2.appendChild(typeP);
             infoDiv.appendChild(sizeP);
             
             segmentContainer.appendChild(infoDiv);
@@ -391,17 +395,20 @@ processSegments.forEach(seg => {
   
   const segmentTypes = [
     { type: 'Code', size: seg.breakdown.code || 0 },
+    { type: 'Heap', size: seg.breakdown.heap || 0 },
     { type: 'Data', size: seg.breakdown.data || 0 },
-    { type: 'Stack', size: seg.breakdown.stack || 0 },
-    { type: 'Heap', size: seg.breakdown.heap || 0 }
+    { type: 'Stack', size: seg.breakdown.stack || 0 }
   ];
     segmentTypes.forEach(segmentType => {
                 if (segmentType.size > 0) {
                     const { bg, border } = getProcessColors(seg.name);
                     const segDiv = document.createElement("div");
+                    const PX_PER_KB = 1;
+                    segDiv.style.height = `${(segmentType.size * PX_PER_KB) + 48}px`;
                     segDiv.className = "allocated-segments";
+                    segDiv.style.position = `relative`;
                     segDiv.style.backgroundColor = bg;
-                    segDiv.style.border = `2px solid ${border}`;
+                    segDiv.style.borderBottom = `4px solid ${border}`;
 
                     const baseValue = currentBase;
                     const limitValue = currentBase + segmentType.size;
@@ -413,7 +420,7 @@ processSegments.forEach(seg => {
                     }
 
                     segDiv.innerHTML = `
-                    <div>
+                    <div style="display:flex; flex-direction: column; align-items:center; width:100%;">
                         <p class="process-segment">${seg.name}</p>
                         <p class="segment-type">${segmentType.type}</p>
                     </div>
@@ -438,9 +445,9 @@ processSegments.forEach(seg => {
       status.free.forEach((freeSpace, idx) => {
         if (!freeSpace) return;
         const freeDiv = document.createElement("div");
-        freeDiv.style.height = ((freeSpace.size || 0) * 20) + "px";
+        const PX_PER_KB = 1.5;
+        freeDiv.style.height = `${((freeSpace.size || 0) * PX_PER_KB)}px`;
         freeDiv.style.backgroundColor = "#f0f0f0";
-        freeDiv.style.marginBottom = "4px";
         freeDiv.style.display = "flex";
         freeDiv.style.alignItems = "center";
         freeDiv.style.justifyContent = "center";
