@@ -316,7 +316,7 @@ if (add_block_btn) {
     if (!simulationContainer) {
       return;
     }
-    const min = 4;
+    const min = 5;
     const max = 8;
     const nextBlockId =
       simulationContainer.querySelectorAll(".block").length + 1;
@@ -1987,6 +1987,11 @@ function simulatorLoad() {
       attachSimulationListeners();
     }
     loadDefaultScript(selectedAlgo, selectedPartition);
+  }
+
+  // Set fragmentation visibility based on partition mode
+  if (typeof setFragmentationVisibility === 'function') {
+    setFragmentationVisibility();
   }
 }
 

@@ -232,6 +232,50 @@ const updateBlockVisuals = (results) => {
   });
 };
 
+function setFragmentationVisibility() {
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const segmentationView = document.getElementById("segmentation-view");
+  const segPagingView = document.getElementById("segmentation-paging-view");
+  const activeView =
+    segPagingView && segPagingView.style.display === "grid"
+      ? segPagingView
+      : segmentationView && segmentationView.style.display === "grid"
+        ? segmentationView
+        : pagingView && pagingView.style.display === "grid"
+          ? pagingView
+          : standardView;
+
+  if (!activeView || activeView !== standardView) return; // only for standard view
+
+  const query = (id) => {
+    const el = activeView.querySelector("#" + id);
+    return el;
+  };
+
+  const internalFragEl = query("internal-frag-value");
+  const externalFragEl = query("external-frag-value");
+
+  const isDynamic = typeof isDynamicPartitionMode === 'function' && isDynamicPartitionMode();
+  if (isDynamic) {
+    // Dynamic partition: show external fragmentation, hide internal
+    if (internalFragEl && internalFragEl.parentElement) {
+      internalFragEl.parentElement.style.display = 'none';
+    }
+    if (externalFragEl && externalFragEl.parentElement) {
+      externalFragEl.parentElement.style.display = 'flex';
+    }
+  } else {
+    // Fixed partition: show internal fragmentation, hide external
+    if (externalFragEl && externalFragEl.parentElement) {
+      externalFragEl.parentElement.style.display = 'none';
+    }
+    if (internalFragEl && internalFragEl.parentElement) {
+      internalFragEl.parentElement.style.display = 'flex';
+    }
+  }
+}
+
 const updateStatistics = (stats) => {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
@@ -270,6 +314,8 @@ const updateStatistics = (stats) => {
     externalFragEl.textContent = `${Math.round(stats.externalFragmentation)} KB`;
   if (utilEl) utilEl.textContent = `${stats.memoryUtilization.toFixed(1)}%`;
   if (successEl) successEl.textContent = `${stats.successRate.toFixed(1)}%`;
+
+  setFragmentationVisibility();
 };
 
 const setTotalMemoryDisplay = (total) => {
