@@ -301,6 +301,7 @@ const updatePagingUI = (memoryFrames) => {
       .forEach(([frameId, data]) => {
         const rowEl = document.createElement("tr");
         rowEl.className = "page-table-row";
+        rowEl.id = `page-table-row-${frameId}`;
         const colors = getProcessColor(data.proc);
         rowEl.style.borderLeft = `8px solid ${colors.bg}`;
 
@@ -321,7 +322,7 @@ const followAllocatedFrame = (frameId) => {
 
   document
     .querySelectorAll(
-      ".frames-container .frame .frame-content.current, .pages-container .page .page-content.current",
+      ".frames-container .frame .frame-content.current, .pages-container .page .page-content.current, #page-table-body .page-table-row.current",
     )
     .forEach((content) => content.classList.remove("current"));
 
@@ -353,6 +354,17 @@ const followAllocatedFrame = (frameId) => {
     }
   } else if (frameEl.scrollIntoView) {
     frameEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center",
+    });
+  }
+
+  // Scroll table row
+  const tableRowEl = document.getElementById(`page-table-row-${frameId}`);
+  if (tableRowEl) {
+    tableRowEl.classList.add("current");
+    tableRowEl.scrollIntoView({
       behavior: "smooth",
       block: "center",
       inline: "center",

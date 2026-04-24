@@ -719,6 +719,9 @@ const updateSegmentationTable = () => {
           const row = document.createElement("tr");
           const { bg, border } = getProcessColors(seg.name);
           row.style.borderLeft = `8px solid ${bg}`;
+          if (seg.id === segmentationState.currentAllocatedSegmentId) {
+            row.classList.add("current");
+          }
           row.innerHTML = `
             <td>${seg.name}</td>
             <td>${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</td>
@@ -752,6 +755,9 @@ const updateSegmentationTable = () => {
           const row = document.createElement("tr");
           const { bg, border } = getProcessColors(seg.name);
           row.style.borderLeft = `8px solid ${bg}`;
+          if (seg.id === segmentationState.currentAllocatedSegmentId) {
+            row.classList.add("current");
+          }
           row.innerHTML = `
             <td>${seg.name}</td>
             <td>${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</td>
@@ -762,6 +768,17 @@ const updateSegmentationTable = () => {
         });
       }
     });
+
+    setTimeout(() => {
+      const currentRow = tableBody.querySelector("tr.current");
+      if (currentRow) {
+        currentRow.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
+      }
+    }, 50);
   } catch (error) {
     console.error("Error updating segmentation table:", error);
   }
