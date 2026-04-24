@@ -476,6 +476,8 @@ const prepareSimulation = () => {
     segmentationState.memory = memorySimulator.createMemory(memorySize);
     segmentationState.processQueue = processes;
     segmentationState.currentProcessIndex = 0;
+    segmentationState.currentSegmentIndex = 0;
+    segmentationState.currentProcessBreakdown = null;
     segmentationState.results = {};
     segmentationState.allocatedSegments = [];
     segmentationState.isRunning = true;
@@ -941,14 +943,18 @@ const runStep = () => {
       return false;
     }
 
-    const didAllocate = allocateNextProcess();
-    const result = segmentationState.results[processId];
-    const statusMsg = result ? result.status : (didAllocate ? 'Allocated' : 'Unallocated');
-    appendConsoleMessage(`${processId} (${size} KB) -> ${statusMsg}`);
+    const allocation = allocateNextProcess();
+    if (!allocation) {
+      appendConsoleMessage("Segmentation allocation failed.");
+      return false;
+    }
 
-    simulationState.currentIndex += 1;
+    const stepLabel = `${allocation.processName} ${allocation.segmentType.charAt(0).toUpperCase() + allocation.segmentType.slice(1)}`;
+    appendConsoleMessage(`${stepLabel} (${allocation.segmentSize} KB) -> ${allocation.status}`);
 
-    if (simulationState.currentIndex >= simulationState.processes.length) {
+    simulationState.currentIndex = segmentationState.currentProcessIndex;
+
+    if (segmentationState.currentProcessIndex >= segmentationState.processQueue.length) {
       appendConsoleMessage("Simulation complete.");
       if (playInterval) {
         clearInterval(playInterval);
@@ -958,6 +964,7 @@ const runStep = () => {
       reEnableSimulationButtons();
       return false;
     }
+
     return true;
   }
 
