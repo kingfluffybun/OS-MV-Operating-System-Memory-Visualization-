@@ -1688,9 +1688,17 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
-    const addProcessBtn = document.querySelector("#add-process-btn");
+    const addProcessBtn = activeView.querySelector("#add-process-btn");
     if (addProcessBtn) {
-        addProcessBtn.disabled = false;
+      addProcessBtn.disabled = false;
+      addProcessBtn.style.opacity = "1";
+      addProcessBtn.style.cursor = "pointer";
+    }
+
+    const processSizeInput = activeView.querySelector("#process-size");
+    if (processSizeInput) {
+      processSizeInput.disabled = false;
+      processSizeInput.style.opacity = "1";
     }
 
     activeView.querySelectorAll(".process-action").forEach((action) => (action.style.display = ""));
@@ -1739,8 +1747,18 @@ function reEnableSimulationButtons() {
     btn.style.cursor = "pointer";
   });
 
-  const addProcessBtn = document.getElementById('add-process-btn');
-  if (addProcessBtn) addProcessBtn.disabled = false;
+  const addProcessBtn = activeView.querySelector('#add-process-btn');
+  if (addProcessBtn) {
+    addProcessBtn.disabled = false;
+    addProcessBtn.style.opacity = "1";
+    addProcessBtn.style.cursor = "pointer";
+  }
+
+  const processSizeInput = activeView.querySelector('#process-size');
+  if (processSizeInput) {
+    processSizeInput.disabled = false;
+    processSizeInput.style.opacity = "1";
+  }
 
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
