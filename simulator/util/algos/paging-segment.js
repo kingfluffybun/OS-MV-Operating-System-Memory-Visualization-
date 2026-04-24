@@ -109,15 +109,8 @@ const PagingSegmentSimulator = {
       const freeFrame = framesArray.find((frame) => frame.status === "Free");
       if (!freeFrame) {
         console.warn("No free frames found during allocation!");
-        // Roll back any changes made for this segment when allocation fails partway.
-        allocatedFrames.forEach((frame) => {
-          frame.status = "Free";
-          frame.processName = null;
-          frame.segmentType = null;
-          frame.pageIndex = null;
-          frame.used = 0;
-        });
-        return { success: false, allocation: [] };
+        // Return whatever was allocated so far instead of rolling back
+        return { success: false, allocation };
       }
 
       freeFrame.status = "Occupied";
@@ -184,65 +177,58 @@ const PagingSegmentSimulator = {
       let processInternalFrag = 0;
       let processPagesAllocated = [];
 
-      const remainingFreeFrames = memory.frames.filter(
-        (frame) => frame.status === "Free",
-      ).length;
-      const requiredPages = Object.values({
+      Object.entries({
         Code: breakdown.code,
         Heap: breakdown.heap,
         Data: breakdown.data,
         Stack: breakdown.stack
-      })
-        .map((segmentSize) => Math.ceil(segmentSize / pageSize))
-        .reduce((total, count) => total + count, 0);
-
-      if (requiredPages > remainingFreeFrames) {
-        processAllocatable = false;
-      }
-
-      if (processAllocatable) {
-        Object.entries({
-          Code: breakdown.code,
-          Heap: breakdown.heap,
-          Data: breakdown.data,
-          Stack: breakdown.stack
-        }).forEach(([segmentType, segmentSize]) => {
-          const { pages, internalFragmentation } = this.segmentToPages(
-            segmentSize,
-            pageSize,
-          );
-          const allocationResult = this.allocatePagesToFrames(
-            memory.frames,
-            processName,
-            segmentType,
-            pages,
-          );
-
-          if (!allocationResult.success) {
-            processAllocatable = false;
-            return;
-          }
-
-          processInternalFrag += internalFragmentation;
-          processPagesAllocated = processPagesAllocated.concat(
-            allocationResult.allocation,
-          );
+      }).forEach(([segmentType, segmentSize]) => {
+        if (!processAllocatable) {
+          // If we ran out of memory in a previous segment, just record the segment with no physical frames
+          const { pages, internalFragmentation } = this.segmentToPages(segmentSize, pageSize);
           segments.push({
             segmentType,
             segmentSize,
             pages,
-            internalFragmentation,
+            internalFragmentation: 0,
           });
-        });
-      }
+          return;
+        }
 
-      if (!processAllocatable) {
+        const { pages, internalFragmentation } = this.segmentToPages(
+          segmentSize,
+          pageSize,
+        );
+        const allocationResult = this.allocatePagesToFrames(
+          memory.frames,
+          processName,
+          segmentType,
+          pages,
+        );
+
+        if (!allocationResult.success) {
+          processAllocatable = false;
+        }
+
+        processInternalFrag += internalFragmentation;
+        processPagesAllocated = processPagesAllocated.concat(
+          allocationResult.allocation,
+        );
+        segments.push({
+          segmentType,
+          segmentSize,
+          pages,
+          internalFragmentation,
+        });
+      });
+
+      if (processPagesAllocated.length === 0) {
         processResults.push({
           processName,
           requestedSize: processSize,
           status: "Unallocated",
           breakdown,
-          segments: [],
+          segments,
           pages: [],
           internalFragmentation: 0,
         });
