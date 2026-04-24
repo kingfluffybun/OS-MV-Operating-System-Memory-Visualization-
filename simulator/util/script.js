@@ -248,7 +248,7 @@ function attachProcessListeners() {
       let min, max;
 
       if (isSegmentationPagingMode()) {
-        min = 5;
+        min = 6;
         max = 8;
       } else if (isPagingMode()) {
         min = 3;

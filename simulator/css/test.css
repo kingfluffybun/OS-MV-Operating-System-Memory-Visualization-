@@ -488,7 +488,6 @@ button:disabled svg {
                 > .segments-container {
                     display: flex;
                     gap: 12px;
-                    > #segment-number {min-width: 20px; display: flex; align-items: center;}
                     > .segments {
                         font-size: 12px;
                         display: flex;
@@ -542,7 +541,7 @@ button:disabled svg {
         }
     }
 }
-
+#segment-number {min-width: 20px; display: flex; align-items: center;}
 .process-segment {font-weight: bold;}
 
 .console {
