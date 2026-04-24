@@ -1028,7 +1028,7 @@ const runStep = () => {
       const framesArray = Array.isArray(simulationState.memory.frames) ? simulationState.memory.frames : Object.values(simulationState.memory.frames);
       const remainingFreeFrames = framesArray.filter((f) => f.status === "Free").length;
       
-      const requiredPages = Object.values({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap })
+      const requiredPages = Object.values({ Code: breakdown.code, Heap: breakdown.heap, Data: breakdown.data, Stack: breakdown.stack })
         .map((s) => Math.ceil(s / simulationState.pageSize))
         .reduce((total, count) => total + count, 0);
 
@@ -1039,7 +1039,7 @@ const runStep = () => {
       }
 
       if (processAllocatable) {
-        Object.entries({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap }).forEach(([segmentType, segmentSize]) => {
+        Object.entries({ Code: breakdown.code, Heap: breakdown.heap, Data: breakdown.data, Stack: breakdown.stack }).forEach(([segmentType, segmentSize]) => {
           const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(segmentSize, simulationState.pageSize);
           processInternalFrag += internalFragmentation;
           segments.push({
