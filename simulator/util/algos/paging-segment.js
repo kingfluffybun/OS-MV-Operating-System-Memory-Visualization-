@@ -309,15 +309,15 @@ const PagingSegmentSimulator = {
   },
 
   getSegmentContainer() {
-    return document.querySelector(".segmentation-paging");
+    return document.querySelector("#segmentation-paging-view .segmentation-paging");
   },
 
   getFramesContainer() {
-    return document.getElementById('frames-container') || document.querySelector('.frames-container');
+    return document.querySelector('#segmentation-paging-view .frames-container');
   },
 
   getPageTableBody() {
-    return document.querySelector("#seg-paging-table-body");
+    return document.querySelector("#segmentation-paging-view #seg-paging-table-body");
   },
 
   resetSegmentationPagingUI() {
@@ -529,9 +529,7 @@ const PagingSegmentSimulator = {
     //   appendConsoleMessage(`DEBUG: HTML build complete (${framesHtml.length} chars). Applying to DOM...`);
     // }
 
-    const targetContainer = document.querySelector('.simulation-segmentation #frames-container') || 
-                            document.querySelector('.simulation-segmentation .frames-container') ||
-                            document.getElementById('frames-container');
+    const targetContainer = this.getFramesContainer();
 
     if (targetContainer) {
       targetContainer.innerHTML = framesHtml;
