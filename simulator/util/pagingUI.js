@@ -18,6 +18,12 @@ const getPagingInputs = () => {
     memorySizeInput = pagingView.querySelector("#memory-size");
   }
 
+  const segPagingView = document.getElementById("segmentation-paging-view");
+  if (segPagingView && segPagingView.style.display !== "none") {
+    pageSizeInput = segPagingView.querySelector("#page-frame-size");
+    memorySizeInput = segPagingView.querySelector("#memory-size");
+  }
+
   // Check standalone paging page (simulation-Paging.html)
   if (!memorySizeInput) {
     const mainGrid = document.querySelector(".main-grid.paging");
