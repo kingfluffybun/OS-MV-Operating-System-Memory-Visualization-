@@ -1864,6 +1864,7 @@ function startSimulation(event) {
 
 function formatAlgorithmName(algo) {
   if (!algo) return 'OS-MV';
+  if (algo.toLowerCase() === 'seg-paging') return 'Segmentation with Paging';
   return algo.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
