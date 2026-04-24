@@ -407,8 +407,12 @@ const PagingSegmentSimulator = {
 
     const currentAlloc = result.currentAllocation || {};
 
-    const allocatedSize = result.processResults.reduce((sum, proc) => {
-      return sum + (proc.status === "Allocated" ? proc.requestedSize : 0);
+    const framesArrayForStats = Array.isArray(result.memory.frames)
+      ? result.memory.frames
+      : Object.values(result.memory.frames);
+
+    const allocatedSize = framesArrayForStats.reduce((sum, frame) => {
+      return sum + (frame.status === "Occupied" ? frame.used : 0);
     }, 0);
     const totalFree = result.freeFrames * result.pageSize;
     const successRate =
