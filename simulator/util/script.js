@@ -278,7 +278,7 @@ if (add_block_btn) {
     if (!simulationContainer) {
       return;
     }
-    const min = 4;
+    const min = 5;
     const max = 8;
     const nextBlockId =
       simulationContainer.querySelectorAll(".block").length + 1;
@@ -577,6 +577,21 @@ const prepareSimulation = () => {
 
     document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
     disableMemoryBlockControls();
+  }
+  if (isPaging || isSegmentation) {
+    const activeView = isPaging 
+        ? document.getElementById('paging-view') 
+        : document.getElementById('segmentation-view');
+    
+    if (activeView) {
+        const randomizeBtn = activeView.querySelector('#randomize-value');
+        if (randomizeBtn) randomizeBtn.disabled = true;
+
+        const addProcessBtn = activeView.querySelector('#add-process-btn');
+        if (addProcessBtn) addProcessBtn.disabled = true;
+
+        activeView.querySelectorAll('.process-action').forEach((action) => action.style.display = 'none');
+    }
   }
   return true;
 };
@@ -1349,8 +1364,8 @@ const runPlay = () => {
     const pagingView = document.getElementById('paging-view');
     const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
 
-    const playBtn = document.querySelector("#play-btn");
-    const stopBtn = document.querySelector("#stop-btn");
+    const playBtn = activeView ? activeView.querySelector("#play-btn") : document.querySelector("#play-btn");
+    const stopBtn = activeView ? activeView.querySelector("#stop-btn") : document.querySelector("#stop-btn");
 
     playBtn.style.display = `none`;
     stopBtn.style.display = `flex`;
