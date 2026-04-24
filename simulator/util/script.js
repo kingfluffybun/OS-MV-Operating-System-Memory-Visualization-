@@ -1891,7 +1891,7 @@ function simulatorLoad() {
   // Set the page title based on the algorithm
   if (selectedAlgo) {
     let titleSuffix = "";
-    if (selectedPartition && selectedAlgo.toLowerCase() !== 'paging' && selectedAlgo.toLowerCase() !== 'segmentation') {
+    if (selectedPartition && selectedAlgo.toLowerCase() !== 'paging' && selectedAlgo.toLowerCase() !== 'segmentation' && selectedAlgo.toLowerCase() !== 'seg-paging') {
       titleSuffix = " " + formatAlgorithmName(selectedPartition);
     }
     document.title = 'OS-MV ' + formatAlgorithmName(selectedAlgo) + titleSuffix;
