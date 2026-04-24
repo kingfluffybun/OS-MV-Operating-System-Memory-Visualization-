@@ -26,12 +26,13 @@ const PagingSegmentSimulator = {
       return { code: 0, data: 0, stack: 0, heap: 0 };
     }
 
-    const code = Math.floor(size * 0.4);
-    const data = Math.floor(size * 0.3);
-    const stack = Math.floor(size * 0.2);
-    const heap = size - code - data - stack;
+    const evenFloor = (val) => Math.floor(val / 2) * 2;
 
-    return { code, data, stack, heap };
+    const code = evenFloor(size * 0.4);
+    const heap = evenFloor(size * 0.3);
+    const data = evenFloor(size * 0.2);
+    const stack = size - code - heap - data;
+    return { code, heap, data, stack };
   },
 
   // Split a segment into pages and compute internal fragmentation.
@@ -188,9 +189,9 @@ const PagingSegmentSimulator = {
       ).length;
       const requiredPages = Object.values({
         Code: breakdown.code,
-        Data: breakdown.data,
-        Stack: breakdown.stack,
         Heap: breakdown.heap,
+        Data: breakdown.data,
+        Stack: breakdown.stack
       })
         .map((segmentSize) => Math.ceil(segmentSize / pageSize))
         .reduce((total, count) => total + count, 0);
@@ -202,9 +203,9 @@ const PagingSegmentSimulator = {
       if (processAllocatable) {
         Object.entries({
           Code: breakdown.code,
-          Data: breakdown.data,
-          Stack: breakdown.stack,
           Heap: breakdown.heap,
+          Data: breakdown.data,
+          Stack: breakdown.stack
         }).forEach(([segmentType, segmentSize]) => {
           const { pages, internalFragmentation } = this.segmentToPages(
             segmentSize,
