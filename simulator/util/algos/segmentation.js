@@ -304,6 +304,14 @@ const initializeSegmentationUI = (memory, processes = []) => {
   segmentationState.currentProcessBreakdown = null;
   segmentationState.currentAllocatedSegmentId = null;
   
+  // Display total memory at initialization
+  if (memory && typeof memory.getStatus === 'function') {
+    const status = memory.getStatus();
+    if (status && status.totalSize && typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(status.totalSize);
+    }
+  }
+  
   resetSegmentationUI();
   const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
   if (segmentationProcessContainer && typeof renumberProcesses === 'function') {
@@ -329,6 +337,12 @@ const updateSegmentationUI = () => {
   
   try {
     const status = segmentationState.memory.getStatus();
+    
+    // Ensure total memory is displayed
+    if (status && status.totalSize && typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(status.totalSize);
+    }
+    
     updateSegmentationDisplay(status);
     updatePhysicalMemoryDisplay(status);
     updateSegmentationTable();

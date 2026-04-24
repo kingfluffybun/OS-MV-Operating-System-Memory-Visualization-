@@ -68,6 +68,14 @@ const initializePagingUI = (memoryFrames, processes = []) => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
 
+  // Display total memory at initialization
+  if (memoryFrames && memoryFrames.count && memoryFrames.frameSize) {
+    const totalMemory = memoryFrames.count * memoryFrames.frameSize;
+    if (typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(totalMemory);
+    }
+  }
+
   // 1. Initialize frames container - show all frames as Free
   if (framesContainer) {
     framesContainer.innerHTML = "";
@@ -155,6 +163,14 @@ const updatePagingUI = (memoryFrames) => {
   const tableContainer = document.querySelector("#page-table-body");
   
   if (!memoryFrames) return;
+
+  // Ensure total memory is displayed
+  if (memoryFrames.count && memoryFrames.frameSize) {
+    const totalMemory = memoryFrames.count * memoryFrames.frameSize;
+    if (typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(totalMemory);
+    }
+  }
 
   const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
 

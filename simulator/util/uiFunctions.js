@@ -230,8 +230,47 @@ const updateStatistics = (stats) => {
 };
 
 const setTotalMemoryDisplay = (total) => {
-  const totalMemoryEl = document.getElementById("total-memory-value");
-  if (totalMemoryEl) totalMemoryEl.textContent = `${Math.round(total)} KB`;
+  // Try to find the element in the active view (paging/segmentation/standard)
+  let totalMemoryEl = null;
+  
+  // Check if paging view is active
+  const pagingView = document.getElementById("paging-view");
+  if (pagingView && pagingView.style.display !== 'none') {
+    totalMemoryEl = pagingView.querySelector("#total-memory-value");
+  }
+  
+  // Check if segmentation view is active
+  if (!totalMemoryEl) {
+    const segmentationView = document.getElementById("segmentation-view");
+    if (segmentationView && segmentationView.style.display !== 'none') {
+      totalMemoryEl = segmentationView.querySelector("#total-memory-value");
+    }
+  }
+  
+  // Check if standard view is active
+  if (!totalMemoryEl) {
+    const standardView = document.getElementById("standard-view");
+    if (standardView && standardView.style.display !== 'none') {
+      totalMemoryEl = standardView.querySelector("#total-memory-value");
+    }
+  }
+  
+  // Check standalone paging page (simulation-Paging.html)
+  if (!totalMemoryEl) {
+    const mainGrid = document.querySelector(".main-grid.paging");
+    if (mainGrid) {
+      totalMemoryEl = mainGrid.querySelector("#total-memory-value");
+    }
+  }
+  
+  // Fallback to global search
+  if (!totalMemoryEl) {
+    totalMemoryEl = document.getElementById("total-memory-value");
+  }
+  
+  if (totalMemoryEl) {
+    totalMemoryEl.textContent = `${Math.round(total)} KB`;
+  }
 };
 
 function resetConsole() {
