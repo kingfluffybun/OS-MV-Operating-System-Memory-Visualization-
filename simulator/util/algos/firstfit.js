@@ -118,8 +118,8 @@ const memorySimulator = {
 
     let maxBlockId = 0;
     for (let node = head; node; node = node.next) {
-        let logicalId = node.parentId || node.id;
-        if (logicalId > maxBlockId) maxBlockId = logicalId;
+      let logicalId = node.parentId || node.id;
+      if (logicalId > maxBlockId) maxBlockId = logicalId;
     }
 
     // Step 2: Create new compacted list with only occupied nodes + one free block
@@ -180,91 +180,74 @@ const memorySimulator = {
   },
 
   firstFitDynamicStep(memoryHead, processSize) {
+    let firstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
-        const leftover = block.size - processSize;
-        const displayBlockId = block.parentId || block.id;
-        block.size = processSize;
-        block.status = "Occupied";
-
-        let newFreeId = null;
-        if (leftover > 0) {
-          newFreeId = Math.max(...this._collectIds(memoryHead)) + 1;
-          block.next = {
-            id: newFreeId,
-            size: leftover,
-            status: "Free",
-            next: block.next,
-            parentId: block.id,
-            isSplit: true,
-          };
-        }
-
-        return {
-          result: {
-            size: processSize,
-            block: block.id,
-            displayBlock: displayBlockId,
-            status: "Allocated",
-            fragmentation: leftover,
-          },
-          allocatedSize: processSize,
-          successfulAllocations: 1,
-          newFreeId,
-          ifCompacted: false,
-          newMemoryHead: memoryHead,
-        };
+        firstBlock = block;
+        break;
       }
     }
 
-    // Trigger compaction
-    const compacted = this.performCompaction(memoryHead, processSize);
-    if (compacted && compacted.head) {
-      const { head: compactedHead, idMapping } = compacted;
-      for (let block = compactedHead; block; block = block.next) {
-        if (block.status === "Free" && processSize <= block.size) {
-          const leftover = block.size - processSize;
-          const displayBlockId = block.id;
-          block.size = processSize;
-          block.status = "Occupied";
-
-          let newFreeId = null;
-          if (leftover > 0) {
-            newFreeId = block.id + 1;
-            block.next = {
-              id: newFreeId,
-              size: leftover,
-              status: "Free",
-              next: block.next,
-              parentId: block.id,
-              isSplit: true,
-            };
+    let compactedHead = null;
+    let idMapping = null;
+    if (!firstBlock) {
+      const compacted = this.performCompaction(memoryHead, processSize);
+      if (compacted && compacted.head) {
+        compactedHead = compacted.head;
+        idMapping = compacted.idMapping;
+        for (let block = compactedHead; block; block = block.next) {
+          if (block.status === "Free" && processSize <= block.size) {
+            firstBlock = block;
+            break;
           }
-
-          return {
-            result: {
-              size: processSize,
-              block: block.id,
-              displayBlock: displayBlockId,
-              status: "Allocated",
-              fragmentation: leftover,
-            },
-            allocatedSize: processSize,
-            successfulAllocations: 1,
-            newFreeId,
-            newMemoryHead: compactedHead,
-            ifCompacted: true,
-            idMapping,
-          };
         }
       }
+    }
+
+    if (!firstBlock) {
+      return {
+        result: { size: processSize, block: "None", status: "Unallocated" },
+        allocatedSize: 0,
+        successfulAllocations: 0,
+      };
+    }
+
+    const originalLabel = firstBlock.originalLabel ?? firstBlock.id;
+    const leftover = firstBlock.size - processSize;
+    firstBlock.size = processSize;
+    firstBlock.status = "Occupied";
+
+    let newFreeId = null;
+    if (leftover > 0) {
+      const idsHead = compactedHead || memoryHead;
+      newFreeId = Math.max(...this._collectIds(idsHead)) + 1;
+      firstBlock.next = {
+        id: newFreeId,
+        size: leftover,
+        status: "Free",
+        next: firstBlock.next,
+        // Always inherit originalLabel so all splits from the same region
+        // (whether a pre-compaction partition or the post-compaction merged block)
+        // continue to report the same block label.
+        originalLabel,
+        isSplit: true,
+      };
     }
 
     return {
-      result: { size: processSize, block: "None", status: "Unallocated" },
-      allocatedSize: 0,
-      successfulAllocations: 0,
-      ifCompacted: false,
+      result: {
+        size: processSize,
+        block: firstBlock.id,
+        displayBlock: originalLabel,
+        status: "Allocated",
+        fragmentation: leftover,
+      },
+      allocatedSize: processSize,
+      successfulAllocations: 1,
+      newFreeId,
+      ifCompacted: Boolean(compactedHead),
+      newMemoryHead: compactedHead || memoryHead,
+      idMapping,
     };
   },
 

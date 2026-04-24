@@ -1,12 +1,12 @@
 // /c:/OS-MV-Operating-System-Memory-Visualization/util/algos/segmentation.js
 
 class Segment {
-    constructor(id, name, base, size, breakdown = { code: 0, heap: 0, stack: 0 }) {
+    constructor(id, name, type, base, size) {
         this.id = id
         this.name = name
+        this.type = type
         this.base = base
         this.size = size
-        this.breakdown = breakdown
     }
 
     get end() {
@@ -37,11 +37,30 @@ class SegmentationMemory {
 
     allocate(name, size) {
         if (!name || size <= 0) throw new Error('invalid allocation')
+        const breakdown = SegmentationMemory.breakdownSize(size)
+        const segments = []
+        const segmentTypes = ['code', 'heap', 'data', 'stack']
+        segmentTypes.forEach(type => {
+            const segSize = breakdown[type]
+            if (segSize > 0) {
+                const base = this._findHole(segSize)
+                if (base >= 0) {
+                    const seg = new Segment(this.nextId++, name, type, base, segSize)
+                    this.segments.push(seg)
+                    segments.push(seg)
+                }
+            }
+        })
+        this.segments.sort((a, b) => a.base - b.base)
+        return segments.length > 0 ? segments[0] : null // return first segment or null
+    }
+
+    allocateSegment(name, type, size) {
+        if (!name || !type || size <= 0) throw new Error('invalid allocation')
         const base = this._findHole(size)
         if (base < 0) return null
 
-        const breakdown = SegmentationMemory.breakdownSize(size)
-        const seg = new Segment(this.nextId++, name, base, size, breakdown)
+        const seg = new Segment(this.nextId++, name, type, base, size)
         this.segments.push(seg)
         this.segments.sort((a, b) => a.base - b.base)
         return seg
@@ -63,10 +82,10 @@ class SegmentationMemory {
         const allocated = this.segments.map(seg => ({
             id: seg.id,
             name: seg.name,
+            type: seg.type,
             base: seg.base,
             size: seg.size,
-            end: seg.end,
-            breakdown: seg.breakdown
+            end: seg.end
         }))
         let free = []
         if (allocated.length === 0) {
@@ -107,6 +126,11 @@ const memorySimulator = {
 
     allocate(memory, name, size) {
         const segment = memory.allocate(name, size)
+        return segment
+    },
+
+    allocateSegment(memory, name, type, size) {
+        const segment = memory.allocateSegment(name, type, size)
         return segment
     },
 
@@ -156,7 +180,7 @@ const memorySimulator = {
 
     segmentationStep(memory, processId, processSize) {
         const seg = memory.allocate(processId, processSize)
-        const breakdown = seg ? seg.breakdown : { code: 0, data: 0, stack: 0, heap: 0 }
+        const breakdown = SegmentationMemory.breakdownSize(processSize)
         return {
             result: {
                 id: processId,
@@ -164,6 +188,20 @@ const memorySimulator = {
                 status: seg ? 'Allocated' : 'Unallocated',
                 segment: seg,
                 breakdown
+            },
+            memory
+        }
+    },
+
+    segmentationStepSingle(memory, processId, segmentType, segmentSize) {
+        const seg = memory.allocateSegment(processId, segmentType, segmentSize)
+        return {
+            result: {
+                id: processId,
+                type: segmentType,
+                size: segmentSize,
+                status: seg ? 'Allocated' : 'Unallocated',
+                segment: seg
             },
             memory
         }
@@ -177,7 +215,10 @@ let segmentationState = {
   currentProcessIndex: 0,
   results: {},
   isRunning: false,
-  allocatedSegments: []
+  allocatedSegments: [],
+  currentSegmentIndex: 0,
+  currentProcessBreakdown: null,
+  currentAllocatedSegmentId: null
 };
 
 const getProcessColors = (processName) => {
@@ -195,6 +236,30 @@ const getProcessColors = (processName) => {
     bg: processEl.getAttribute('data-bg') || defaultColors.bg,
     border: processEl.getAttribute('data-border') || defaultColors.border,
   };
+};
+
+const followAllocatedSegment = (segmentId) => {
+  if (!segmentId) return;
+
+  document
+    .querySelectorAll(".physical-memory-container .allocated-segments.current")
+    .forEach((seg) => {
+      seg.classList.remove("current");
+      seg.style.outline = "";
+      seg.style.boxShadow = "";
+    });
+
+  const segEl = document.getElementById(`segment-${segmentId}`);
+  if (segEl) {
+    segEl.classList.add("current");
+    segEl.style.outline = "2px solid var(--primary-color)";
+    segEl.style.boxShadow = "0 0 0 1px rgba(76, 175, 80, 0.2)";
+    segEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center",
+    });
+  }
 };
 
 const getSegmentationInputs = () => {
@@ -235,6 +300,9 @@ const initializeSegmentationUI = (memory, processes = []) => {
   segmentationState.currentProcessIndex = 0;
   segmentationState.results = {};
   segmentationState.allocatedSegments = [];
+  segmentationState.currentSegmentIndex = 0;
+  segmentationState.currentProcessBreakdown = null;
+  segmentationState.currentAllocatedSegmentId = null;
   
   resetSegmentationUI();
   const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
@@ -292,7 +360,13 @@ const updateSegmentationDisplay = (status) => {
       processGroups[seg.name].push(seg);
     });
     
-    // Display each process with its breakdown segments
+    // Add current process breakdown if exists
+    const currentProcessName = `Process ${segmentationState.currentProcessIndex + 1}`;
+    if (segmentationState.currentProcessBreakdown && !processGroups[currentProcessName]) {
+      processGroups[currentProcessName] = []; // Will be handled separately
+    }
+    
+    // Display each process
     Object.keys(processGroups).forEach(processName => {
       const processSegments = processGroups[processName];
       
@@ -300,21 +374,18 @@ const updateSegmentationDisplay = (status) => {
       const processDiv = document.createElement("div");
       processDiv.className = "segmentation";
       
-      processSegments.forEach(seg => {
-        if (!seg.breakdown) return;
-        
-        // Create segments for Code, Data, Stack, Heap
+      if (processName === currentProcessName && segmentationState.currentProcessBreakdown) {
+        // Show breakdown for current process
         const segmentTypes = [
-          { type: 'Code', size: seg.breakdown.code || 0 },
-          { type: 'Heap', size: seg.breakdown.heap || 0 },
-          { type: 'Data', size: seg.breakdown.data || 0 },
-          { type: 'Stack', size: seg.breakdown.stack || 0 }
+          { type: 'Code', size: segmentationState.currentProcessBreakdown.code || 0 },
+          { type: 'Heap', size: segmentationState.currentProcessBreakdown.heap || 0 },
+          { type: 'Data', size: segmentationState.currentProcessBreakdown.data || 0 },
+          { type: 'Stack', size: segmentationState.currentProcessBreakdown.stack || 0 }
         ];
         
-        // Create a segments-container for each segment type
         segmentTypes.forEach((segmentType, index) => {
           if (segmentType.size > 0) {
-            const { bg, border } = getProcessColors(seg.name);
+            const { bg, border } = getProcessColors(processName);
             const segmentContainer = document.createElement("div");
             segmentContainer.className = "segments-container";
 
@@ -335,7 +406,7 @@ const updateSegmentationDisplay = (status) => {
             
             const nameP = document.createElement("p");
             nameP.id = "process-segment";
-            nameP.textContent = seg.name;
+            nameP.textContent = processName;
             
             const typeP = document.createElement("p");
             typeP.className = "segment-type";
@@ -356,7 +427,51 @@ const updateSegmentationDisplay = (status) => {
             processDiv.appendChild(segmentContainer);
           }
         });
-      });
+      } else {
+        // Show allocated segments for completed processes
+        processSegments.forEach((seg, index) => {
+          const { bg, border } = getProcessColors(seg.name);
+          const segmentContainer = document.createElement("div");
+          segmentContainer.className = "segments-container";
+
+          // Add segment number
+          const segmentNumberDiv = document.createElement("div");
+          segmentNumberDiv.id = "segment-number";
+          segmentNumberDiv.textContent = `S${seg.id}`;
+          segmentContainer.appendChild(segmentNumberDiv);
+
+          // Add segment type info
+          const infoDiv = document.createElement("div");
+          const PX_PER_KB = 1;
+          infoDiv.style.height = `${(seg.size * PX_PER_KB) + 48}px`;
+          infoDiv.style.display = "flex";
+          infoDiv.className = "segments";
+          infoDiv.style.backgroundColor = bg;
+          infoDiv.style.borderBottom = `4px solid ${border}`;
+          
+          const nameP = document.createElement("p");
+          nameP.id = "process-segment";
+          nameP.textContent = seg.name;
+          
+          const typeP = document.createElement("p");
+          typeP.className = "segment-type";
+          typeP.textContent = seg.type.charAt(0).toUpperCase() + seg.type.slice(1);
+          
+          const sizeP = document.createElement("p");
+          sizeP.id = "segment-size";
+          sizeP.textContent = `${seg.size} KB`;
+
+          const infoDiv2 = document.createElement("div");
+          infoDiv.appendChild(infoDiv2);
+          
+          infoDiv2.appendChild(nameP);
+          infoDiv2.appendChild(typeP);
+          infoDiv.appendChild(sizeP);
+          
+          segmentContainer.appendChild(infoDiv);
+          processDiv.appendChild(segmentContainer);
+        });
+      }
       
       container.appendChild(processDiv);
     });
@@ -386,59 +501,51 @@ const updatePhysicalMemoryDisplay = (status) => {
       
       let currentBase = 0;
       let lastPrinted = null;
-      // Display each process with its breakdown segments
+      // Display each process with its segments
       Object.keys(processGroups).forEach(processName => {
         const processSegments = processGroups[processName];
 
-processSegments.forEach(seg => {
-  if (!seg.breakdown) return;
-  
-  const segmentTypes = [
-    { type: 'Code', size: seg.breakdown.code || 0 },
-    { type: 'Heap', size: seg.breakdown.heap || 0 },
-    { type: 'Data', size: seg.breakdown.data || 0 },
-    { type: 'Stack', size: seg.breakdown.stack || 0 }
-  ];
-    segmentTypes.forEach(segmentType => {
-                if (segmentType.size > 0) {
-                    const { bg, border } = getProcessColors(seg.name);
-                    const segDiv = document.createElement("div");
-                    const PX_PER_KB = 1;
-                    segDiv.style.height = `${(segmentType.size * PX_PER_KB) + 48}px`;
-                    segDiv.className = "allocated-segments";
-                    segDiv.style.position = `relative`;
-                    segDiv.style.backgroundColor = bg;
-                    segDiv.style.borderBottom = `4px solid ${border}`;
+        processSegments.forEach(seg => {
+          const { bg, border } = getProcessColors(seg.name);
+          const segDiv = document.createElement("div");
+          const PX_PER_KB = 1;
+          segDiv.style.height = `${(seg.size * PX_PER_KB) + 48}px`;
+          segDiv.className = "allocated-segments";
+          segDiv.id = `segment-${seg.id}`;
+          if (seg.id === segmentationState.currentAllocatedSegmentId) {
+            segDiv.classList.add("current");
+          }
+          segDiv.style.position = `relative`;
+          segDiv.style.backgroundColor = bg;
+          segDiv.style.borderBottom = `4px solid ${border}`;
 
-                    const baseValue = currentBase;
-                    const limitValue = currentBase + segmentType.size;
+          const baseValue = currentBase;
+          const limitValue = currentBase + seg.size;
 
-                    // Only show base address if it hasn't been printed yet (i.e., very first segment)
-                    let baseHTML = "";
-                    if (lastPrinted === null) {
-                        baseHTML = `<p class="segment-base">${baseValue}</p>`;
-                    }
+          // Only show base address if it hasn't been printed yet (i.e., very first segment)
+          let baseHTML = "";
+          if (lastPrinted === null) {
+            baseHTML = `<p class="segment-base">${baseValue}</p>`;
+          }
 
-                    segDiv.innerHTML = `
-                    <div style="display:flex; flex-direction: column; align-items:center; width:100%;">
-                        <p class="process-segment">${seg.name}</p>
-                        <p class="segment-type">${segmentType.type}</p>
-                    </div>
-                    <div class="segment-base-limit">
-                        ${baseHTML}
-                        <p class="segment-limit">${limitValue}</p>
-                    </div>
-                    `;
+          segDiv.innerHTML = `
+          <div style="display:flex; flex-direction: column; align-items:center; width:100%;">
+            <p class="process-segment">${seg.name}</p>
+            <p class="segment-type">${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</p>
+          </div>
+          <div class="segment-base-limit">
+            ${baseHTML}
+            <p class="segment-limit">${limitValue}</p>
+          </div>
+          `;
 
-                    memDiv.appendChild(segDiv);
+          memDiv.appendChild(segDiv);
 
-                    currentBase = limitValue;
-                    lastPrinted = limitValue;
-                }
-            });
-        }); 
-    });
-}
+          currentBase = limitValue;
+          lastPrinted = limitValue;
+        });
+      });
+    }
     
     if (status && status.free) {
       // Show free space
@@ -460,6 +567,9 @@ processSegments.forEach(seg => {
     
     container.innerHTML = "";
     container.appendChild(memDiv);
+    
+    // Highlight and scroll to current segment
+    followAllocatedSegment(segmentationState.currentAllocatedSegmentId);
   } catch (error) {
     console.error('Error updating physical memory display:', error);
   }
@@ -487,39 +597,54 @@ const updateSegmentationTable = () => {
       processGroups[seg.name].push(seg);
     });
     
-    // Display each process with its breakdown segments
+    // Add current process breakdown if exists
+    const currentProcessName = `Process ${segmentationState.currentProcessIndex + 1}`;
+    if (segmentationState.currentProcessBreakdown && !processGroups[currentProcessName]) {
+      processGroups[currentProcessName] = []; // Will be handled separately
+    }
+    
+    // Display each process
     Object.keys(processGroups).forEach(processName => {
       const processSegments = processGroups[processName];
       
-      processSegments.forEach(seg => {
-        if (!seg.breakdown) return;
-        
-        let currentBase = seg.base;
-        
-        // Create table rows for Code, Data, Stack, Heap
+      if (processName === currentProcessName && segmentationState.currentProcessBreakdown) {
+        // Show breakdown for current process
         const segmentTypes = [
-          { type: 'Code', size: seg.breakdown.code || 0 },
-          { type: 'Data', size: seg.breakdown.data || 0 },
-          { type: 'Stack', size: seg.breakdown.stack || 0 },
-          { type: 'Heap', size: seg.breakdown.heap || 0 }
+          { type: 'Code', size: segmentationState.currentProcessBreakdown.code || 0 },
+          { type: 'Heap', size: segmentationState.currentProcessBreakdown.heap || 0 },
+          { type: 'Data', size: segmentationState.currentProcessBreakdown.data || 0 },
+          { type: 'Stack', size: segmentationState.currentProcessBreakdown.stack || 0 }
         ];
         
         segmentTypes.forEach((segmentType, index) => {
           if (segmentType.size > 0) {
             const row = document.createElement("tr");
-            const { bg, border } = getProcessColors(seg.name);
+            const { bg, border } = getProcessColors(processName);
             row.style.borderLeft = `8px solid ${bg}`;
             row.innerHTML = `
-              <td>${seg.name}</td>
+              <td>${processName}</td>
               <td>${segmentType.type}</td>
-              <td>${currentBase}</td>
-              <td>${currentBase + segmentType.size}</td>
+              <td>-</td>
+              <td>-</td>
             `;
             tableBody.appendChild(row);
-            currentBase += segmentType.size;
           }
         });
-      });
+      } else {
+        // Show allocated segments for completed processes
+        processSegments.forEach(seg => {
+          const row = document.createElement("tr");
+          const { bg, border } = getProcessColors(seg.name);
+          row.style.borderLeft = `8px solid ${bg}`;
+          row.innerHTML = `
+            <td>${seg.name}</td>
+            <td>${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</td>
+            <td>${seg.base}</td>
+            <td>${seg.end}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      }
     });
   } catch (error) {
     console.error('Error updating segmentation table:', error);
@@ -568,19 +693,48 @@ const updateSegmentationStatistics = () => {
 
 const allocateNextProcess = () => {
   if (!segmentationState.memory || segmentationState.currentProcessIndex >= segmentationState.processQueue.length) {
-    return false;
+    return null;
   }
-  
+
   const processSize = segmentationState.processQueue[segmentationState.currentProcessIndex];
-  const processName = `Process ${segmentationState.currentProcessIndex + 1}`;
-  
-  const result = memorySimulator.segmentationStep(segmentationState.memory, processName, processSize);
-  segmentationState.results[processName] = result.result;
+  const processIndex = segmentationState.currentProcessIndex;
+  const processName = `Process ${processIndex + 1}`;
+
+  // If starting a new process, calculate breakdown and display in segmentation view
+  if (segmentationState.currentSegmentIndex === 0) {
+    segmentationState.currentProcessBreakdown = SegmentationMemory.breakdownSize(processSize);
+    updateSegmentationUI();
+  }
+
+  const segmentTypes = ['code', 'heap', 'data', 'stack'];
+  const segmentType = segmentTypes[segmentationState.currentSegmentIndex];
+  const segmentSize = segmentationState.currentProcessBreakdown[segmentType];
+
+  const result = memorySimulator.segmentationStepSingle(segmentationState.memory, processName, segmentType, segmentSize);
+  segmentationState.results[`${processName}-${segmentType}`] = result.result;
   segmentationState.allocatedSegments.push(result.result);
-  segmentationState.currentProcessIndex++;
-  
+  segmentationState.currentAllocatedSegmentId = result.result.segment.id;
+
+  const waitForNextProcess = segmentationState.currentSegmentIndex >= 3;
+
+  segmentationState.currentSegmentIndex++;
+  if (segmentationState.currentSegmentIndex >= 4) {
+    segmentationState.currentProcessIndex++;
+    segmentationState.currentSegmentIndex = 0;
+    segmentationState.currentProcessBreakdown = null;
+  }
+
   updateSegmentationUI();
-  return result.result.status === 'Allocated';
+
+  return {
+    processName,
+    processIndex,
+    segmentType,
+    segmentSize,
+    status: result.result.status,
+    allocated: result.result.status === 'Allocated',
+    completedProcess: waitForNextProcess,
+  };
 };
 
 const resetSegmentation = () => {
@@ -590,6 +744,9 @@ const resetSegmentation = () => {
   segmentationState.results = {};
   segmentationState.allocatedSegments = [];
   segmentationState.isRunning = false;
+  segmentationState.currentSegmentIndex = 0;
+  segmentationState.currentProcessBreakdown = null;
+  segmentationState.currentAllocatedSegmentId = null;
   
   resetSegmentationUI();
   const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
