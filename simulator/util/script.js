@@ -120,6 +120,8 @@ const isDynamicPartitionMode = () =>
   document.body.dataset.partitionMode === "dynamic";
 
 function isPagingMode() {
+  if (isSegmentationPagingMode()) return false;
+
   const pagingView = document.getElementById("paging-view");
   const isPaging = pagingView && pagingView.style.display === "grid";
 
@@ -131,6 +133,8 @@ function isPagingMode() {
 }
 
 function isSegmentationMode() {
+  if (isSegmentationPagingMode()) return false;
+
   const segmentationView = document.getElementById("segmentation-view");
   const isSegmentation = segmentationView && segmentationView.style.display === "grid";
 
@@ -141,12 +145,22 @@ function isSegmentationMode() {
   return isSegmentation || (selectedAlgo && selectedAlgo.toLowerCase() === "segmentation") || (urlAlgo && urlAlgo.toLowerCase() === "segmentation");
 }
 
+function isSegmentationPagingMode() {
+  const mainGrid = document.querySelector('.main-grid.paging');
+  return !!(
+    mainGrid &&
+    mainGrid.querySelector('.segmentation-paging') &&
+    mainGrid.querySelector('.frames-container') &&
+    mainGrid.querySelector('#page-table-body')
+  );
+}
+
 function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
-  // Also handle standalone simulation-Segmentation.html which has no view wrappers
-  const mainGrid = document.querySelector(".main-grid.segmentation");
+  // Also handle standalone simulator pages such as simulation-Segmentation.html or simulation-Segmentation-Paging.html
+  const mainGrid = document.querySelector(".main-grid") || document.querySelector(".main-grid.segmentation");
 
   let activeView = null;
   if (pagingView && pagingView.style.display === "grid") {
@@ -419,6 +433,7 @@ const prepareSimulation = () => {
   const processes = getProcessSizes();
   const isPaging = isPagingMode();
   const isSegmentation = isSegmentationMode();
+  const isSegmentationPaging = isSegmentationPagingMode();
   const blocks = getBlockSizes();
 
   if (!processes.length) {
@@ -427,12 +442,37 @@ const prepareSimulation = () => {
   }
 
   // Segmentation uses a continuous-memory model — no discrete blocks required
-  if (!isPaging && !isSegmentation && !blocks.length) {
+  if (!isPaging && !isSegmentation && !isSegmentationPaging && !blocks.length) {
     appendConsoleMessage("No memory blocks defined.");
     return false;
   }
 
-  if (isPaging) {
+  if (isSegmentationPaging) {
+    const { pageSize, memorySize } = getPagingInputs();
+
+    if (Number.isNaN(pageSize) || pageSize <= 0) {
+      appendConsoleMessage("Enter a valid page/frame size.");
+      return false;
+    }
+
+    if (Number.isNaN(memorySize) || memorySize <= 0) {
+      appendConsoleMessage("Enter a valid total memory size.");
+      return false;
+    }
+
+    simulationState = {
+      processes: processes,
+      memorySize,
+      pageSize,
+      currentIndex: 0,
+      results: {},
+      stats: { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 },
+    };
+
+    if (typeof initializeSegmentationPagingUI === 'function') {
+      initializeSegmentationPagingUI(processes, memorySize, pageSize);
+    }
+  } else if (isPaging) {
     const { pageSize, memorySize } = getPagingInputs();
     const frameCount = getPagingFrameCount();
 
@@ -931,8 +971,50 @@ const runStep = () => {
 
   const size = simulationState.processes[simulationState.currentIndex];
   const processId = `Process ${simulationState.currentIndex + 1}`;
+  const isSegmentationPaging = isSegmentationPagingMode();
   const isPaging = isPagingMode();
   const isSegmentation = isSegmentationMode();
+
+  if (isSegmentationPaging) {
+    const result = typeof PagingSegmentSimulator !== 'undefined'
+      ? PagingSegmentSimulator.simulate(
+          simulationState.processes.slice(0, simulationState.currentIndex + 1),
+          simulationState.memorySize,
+          simulationState.pageSize,
+        )
+      : null;
+
+    if (!result) {
+      appendConsoleMessage('Segmentation with paging simulator unavailable.');
+      return false;
+    }
+
+    simulationState.results = result.processResults;
+    simulationState.lastResult = result;
+
+    if (typeof updateSegmentationPagingUI === 'function') {
+      updateSegmentationPagingUI(result);
+    }
+
+    const currentResult = result.processResults[simulationState.currentIndex];
+    const statusMsg = currentResult ? currentResult.status : 'Unallocated';
+    appendConsoleMessage(`${processId} (${size} KB) -> ${statusMsg}`);
+
+    simulationState.currentIndex += 1;
+
+    if (simulationState.currentIndex >= simulationState.processes.length) {
+      appendConsoleMessage('Simulation complete.');
+      if (playInterval) {
+        clearInterval(playInterval);
+        playInterval = null;
+        togglePlayStop();
+      }
+      reEnableSimulationButtons();
+      return false;
+    }
+
+    return true;
+  }
 
   // --- Segmentation mode: delegate to segmentationState allocator ---
   if (isSegmentation) {
@@ -1395,19 +1477,26 @@ const runReset = () => {
 
   const isDynamic = isDynamicPartitionMode();
   const isSegmentation = isSegmentationMode();
+  const isSegmentationPaging = isSegmentationPagingMode();
 
   simulationState = null;
   currentStep = 0;
 
   if (isSegmentation) {
     resetSegmentation();
-  } else {
+  } else if (!isSegmentationPaging) {
     resetBlocksUI();
   }
   resetConsole();
 
   if (!isSegmentation && isDynamic && preSimBlockState && preSimBlockState.length) {
     restorePreSimulationBlocks();
+  }
+
+  if (isSegmentationPagingMode()) {
+    if (typeof resetSegmentationPagingUI === 'function') {
+      resetSegmentationPagingUI();
+    }
   }
 
   if (isPagingMode()) {
@@ -1429,11 +1518,13 @@ const runReset = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const standaloneMainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid.segmentation') || document.querySelector('.main-grid');
 
   let activeView = null;
   if (standardView && standardView.style.display === 'grid') activeView = standardView;
   if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
   if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+  if (!activeView && standaloneMainGrid) activeView = standaloneMainGrid;
 
   if (activeView) {
     activeView.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
@@ -1519,11 +1610,13 @@ function attachSimulationListeners(viewType) {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const standaloneMainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid.segmentation') || document.querySelector('.main-grid');
 
   let activeView = null;
   if (standardView && standardView.style.display === 'grid') activeView = standardView;
   if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
   if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+  if (!activeView && standaloneMainGrid) activeView = standaloneMainGrid;
 
   if (!activeView) {
     console.error('No active view found.');
@@ -1836,4 +1929,15 @@ function hub() {
   sessionStorage.removeItem('selectedAlgo');
   sessionStorage.removeItem('selectedPartition');
   sessionStorage.removeItem('loaderLoaded');
+}
+
+function initializeStandaloneSegmentationPaging() {
+  if (!isSegmentationPagingMode()) return;
+  attachSimulationListeners();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeStandaloneSegmentationPaging);
+} else {
+  initializeStandaloneSegmentationPaging();
 }
