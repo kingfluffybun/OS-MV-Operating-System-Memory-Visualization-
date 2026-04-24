@@ -399,7 +399,7 @@ button:disabled svg {
 }
 
 .frame-content, .page-content {
-    min-height: 40px;
+    max-height: 20px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     place-content: center;
@@ -448,6 +448,7 @@ button:disabled svg {
                             display: flex;
                             justify-content: space-between;
                             padding: 12px;
+                            font-size: 12px;
                         }
                         > .segment-pages {
                             display: flex;
