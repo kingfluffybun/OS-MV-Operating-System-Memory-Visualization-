@@ -531,8 +531,8 @@ const PagingSegmentSimulator = {
       } else {
         frameContent = `
           <div class="frame-content" style="background-color: #fff; border-bottom-color: #ccc">
-            <p>${frame.size} KB</p>
             <p>Free</p>
+            <p>${frame.size} KB</p>
           </div>`;
       }
 
