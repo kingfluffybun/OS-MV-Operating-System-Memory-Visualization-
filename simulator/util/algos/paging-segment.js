@@ -480,8 +480,13 @@ const PagingSegmentSimulator = {
       const colorPair = this.getProcessColor(process.processName);
       process.segments.forEach((segment) => {
         segment.pages.forEach((page) => {
+          const isCurrentRow = currentAlloc.processName === process.processName &&
+                               currentAlloc.segmentType === segment.segmentType &&
+                               currentAlloc.pageIndex === page.pageIndex;
+          const currentClass = isCurrentRow ? " class=\"current\"" : "";
+
           tableRowsHtml += `
-            <tr style="border-left: 8px solid ${colorPair.bg}">
+            <tr${currentClass} style="border-left: 8px solid ${colorPair.bg}">
               <td>${process.processName}</td>
               <td>${segment.segmentType}</td>
               <td>Page ${page.pageIndex}</td>
@@ -585,7 +590,7 @@ const PagingSegmentSimulator = {
     if (currentAlloc && currentAlloc.frameId !== undefined) {
       setTimeout(() => {
         const currentEls = document.querySelectorAll(
-          ".segmentation-paging .page-content.current, .simulation-segmentation .frame-content.current",
+          ".segmentation-paging .page-content.current, .simulation-segmentation .frame-content.current, #seg-paging-table-body tr.current",
         );
         currentEls.forEach((el) => {
           el.scrollIntoView({
