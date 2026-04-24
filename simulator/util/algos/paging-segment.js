@@ -257,13 +257,16 @@ const PagingSegmentSimulator = {
 
   initializeSegmentationPagingUI(processes, totalMemory, pageSize) {
     this.resetSegmentationPagingUI();
+    // Try to use the actual user input for total memory if available
+    const { memorySize } = getSegmentationPagingInputs();
+    const displayMemory = !Number.isNaN(memorySize) && memorySize > 0 ? memorySize : totalMemory;
     if (typeof setTotalMemoryDisplay === 'function') {
-      setTotalMemoryDisplay(totalMemory);
+      setTotalMemoryDisplay(displayMemory);
     }
     if (typeof updateStatistics === 'function') {
       updateStatistics({
         allocatedSize: 0,
-        totalFree: totalMemory,
+        totalFree: displayMemory,
         intFragmentation: 0,
         externalFragmentation: 0,
         memoryUtilization: 0,
@@ -386,11 +389,99 @@ const PagingSegmentSimulator = {
         successRate,
       });
     }
+    // Use the actual user input for total memory instead of calculated value
+    const { memorySize } = getSegmentationPagingInputs();
+    const displayMemory = !Number.isNaN(memorySize) && memorySize > 0 ? memorySize : result.totalMemory;
     if (typeof setTotalMemoryDisplay === 'function') {
-      setTotalMemoryDisplay(result.totalMemory);
+      setTotalMemoryDisplay(displayMemory);
     }
   },
 };
+
+// ===== GET SEGMENTATION-PAGING INPUTS =====
+const getSegmentationPagingInputs = () => {
+  // Try to find the memory-size and page-size inputs in the segmentation-paging view
+  let memorySizeInput = null;
+  let pageSizeInput = null;
+
+  // Check if we're in the segmentation-paging view section
+  const segmentationPagingView = document.getElementById("segmentation-paging-view");
+  if (segmentationPagingView && segmentationPagingView.style.display !== "none") {
+    memorySizeInput = segmentationPagingView.querySelector("#memory-size");
+    pageSizeInput = segmentationPagingView.querySelector("#page-frame-size");
+  }
+
+  // Check standalone segmentation-paging page (simulation-Segmentation-Paging.html)
+  if (!memorySizeInput) {
+    const mainGrid = document.querySelector(".main-grid.segmentation-paging");
+    if (mainGrid) {
+      memorySizeInput = mainGrid.querySelector("#memory-size");
+      pageSizeInput = mainGrid.querySelector("#page-frame-size");
+    }
+  }
+
+  // Fallback to any element with those IDs
+  if (!memorySizeInput) {
+    memorySizeInput = document.getElementById("memory-size");
+  }
+  if (!pageSizeInput) {
+    pageSizeInput = document.getElementById("page-frame-size");
+  }
+
+  const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
+  const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+  return { memorySize, pageSize };
+};
+
+// ===== REAL-TIME TOTAL MEMORY UPDATE FOR SEGMENTATION-PAGING =====
+const updateTotalMemoryDisplaySegmentationPaging = () => {
+  const { memorySize } = getSegmentationPagingInputs();
+  if (!Number.isNaN(memorySize) && memorySize > 0) {
+    if (typeof setTotalMemoryDisplay === 'function') {
+      setTotalMemoryDisplay(memorySize);
+    }
+  }
+};
+
+// Attach listeners to segmentation-paging-view inputs
+const attachSegmentationPagingInputListeners = () => {
+  // Try to find inputs in the segmentation-paging view first
+  const segmentationPagingView = document.getElementById("segmentation-paging-view");
+  if (segmentationPagingView) {
+    const memorySizeInput = segmentationPagingView.querySelector("#memory-size");
+    if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
+      memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
+      memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+      memorySizeInput._segmentation_paging_listener_attached = true;
+    }
+  }
+
+  // Try standalone segmentation-paging page (simulation-Segmentation-Paging.html)
+  const mainGrid = document.querySelector(".main-grid.segmentation-paging");
+  if (mainGrid) {
+    const memorySizeInput = mainGrid.querySelector("#memory-size");
+    if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
+      memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
+      memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+      memorySizeInput._segmentation_paging_listener_attached = true;
+    }
+  }
+
+  // Fallback to global search
+  const memorySizeInput = document.getElementById("memory-size");
+  if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
+    memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
+    memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+    memorySizeInput._segmentation_paging_listener_attached = true;
+  }
+};
+
+// Attach listeners when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachSegmentationPagingInputListeners);
+} else {
+  attachSegmentationPagingInputListeners();
+}
 
 if (typeof window !== 'undefined') {
   window.PagingSegmentSimulator = PagingSegmentSimulator;
@@ -403,6 +494,8 @@ if (typeof window !== 'undefined') {
   window.resetSegmentationPagingUI = function() {
     PagingSegmentSimulator.resetSegmentationPagingUI();
   };
+  window.getSegmentationPagingInputs = getSegmentationPagingInputs;
+  window.attachSegmentationPagingInputListeners = attachSegmentationPagingInputListeners;
 }
 
 if (typeof module !== 'undefined' && module.exports) {

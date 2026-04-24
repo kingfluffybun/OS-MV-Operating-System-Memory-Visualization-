@@ -277,10 +277,18 @@ const setTotalMemoryDisplay = (total) => {
   // Try to find the element in the active view (paging/segmentation/standard)
   let totalMemoryEl = null;
 
+  // Check if segmentation-paging view is active
+  const segmentationPagingView = document.getElementById("segmentation-paging-view");
+  if (segmentationPagingView && segmentationPagingView.style.display !== "none") {
+    totalMemoryEl = segmentationPagingView.querySelector("#total-memory-value");
+  }
+
   // Check if paging view is active
-  const pagingView = document.getElementById("paging-view");
-  if (pagingView && pagingView.style.display !== "none") {
-    totalMemoryEl = pagingView.querySelector("#total-memory-value");
+  if (!totalMemoryEl) {
+    const pagingView = document.getElementById("paging-view");
+    if (pagingView && pagingView.style.display !== "none") {
+      totalMemoryEl = pagingView.querySelector("#total-memory-value");
+    }
   }
 
   // Check if segmentation view is active
