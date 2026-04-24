@@ -624,3 +624,8 @@ button:disabled svg {
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
 }
 
+.segmentation-container .segments.current {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+}
+

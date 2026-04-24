@@ -343,12 +343,18 @@ const updateSegmentationDisplay = (status) => {
     const container = document.querySelector(".segmentation-container");
     if (!container) return;
     
+    // Clear previous current highlights
+    document.querySelectorAll(".segmentation-container .segments.current").forEach(seg => seg.classList.remove("current"));
+    
     container.innerHTML = "";
     
     if (!status || !status.allocated || status.allocated.length === 0) {
       container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No segments allocated</div>';
       return;
     }
+    
+    // Get current allocated segment from current memory status
+    const currentSeg = status.allocated.find(seg => seg.id === segmentationState.currentAllocatedSegmentId);
     
     // Group segments by process name
     const processGroups = {};
@@ -400,7 +406,7 @@ const updateSegmentationDisplay = (status) => {
             const PX_PER_KB = 1;
             infoDiv.style.height = `${(segmentType.size * PX_PER_KB) + 48}px`;
             infoDiv.style.display = "flex";
-            infoDiv.className = "segments";
+            infoDiv.className = "segments" + (currentSeg && currentSeg.name === processName && currentSeg.type.toLowerCase() === segmentType.type.toLowerCase() ? " current" : "");
             infoDiv.style.backgroundColor = bg;
             infoDiv.style.borderBottom = `4px solid ${border}`;
             
@@ -445,7 +451,7 @@ const updateSegmentationDisplay = (status) => {
           const PX_PER_KB = 1;
           infoDiv.style.height = `${(seg.size * PX_PER_KB) + 48}px`;
           infoDiv.style.display = "flex";
-          infoDiv.className = "segments";
+          infoDiv.className = "segments" + (seg.id === segmentationState.currentAllocatedSegmentId ? " current" : "");
           infoDiv.style.backgroundColor = bg;
           infoDiv.style.borderBottom = `4px solid ${border}`;
           
@@ -475,6 +481,15 @@ const updateSegmentationDisplay = (status) => {
       
       container.appendChild(processDiv);
     });
+
+    const currentSegEl = container.querySelector('.segments.current');
+    if (currentSegEl) {
+      currentSegEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    }
   } catch (error) {
     console.error('Error updating segmentation display:', error);
   }
