@@ -184,6 +184,7 @@ function attachProcessListeners() {
         if (!pagingprocessContainer) return;
         const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         pagingprocessContainer.appendChild(newProcess);
         if (sizeInput) sizeInput.value = '';
         pagingprocessContainer.scrollTo({
@@ -195,6 +196,7 @@ function attachProcessListeners() {
         if (!segContainer) return;
         const nextId = segContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         segContainer.appendChild(newProcess);
         if (sizeInput) sizeInput.value = '';
         segContainer.scrollTo({ top: segContainer.scrollHeight, behavior: "smooth" });
@@ -202,6 +204,7 @@ function attachProcessListeners() {
         if (!processContainer) return;
         const nextId = processContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         processContainer.appendChild(newProcess);
         if (processSizeInput) processSizeInput.value = '';
         scrollDown();
@@ -234,6 +237,7 @@ function attachProcessListeners() {
         if (!pagingProcessContainer) return;
         const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         pagingProcessContainer.appendChild(newProcess);
         pagingProcessContainer.scrollTo({
           top: pagingProcessContainer.scrollHeight,
@@ -244,12 +248,14 @@ function attachProcessListeners() {
         if (!segContainer) return;
         const nextId = segContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         segContainer.appendChild(newProcess);
         segContainer.scrollTo({ top: segContainer.scrollHeight, behavior: "smooth" });
       } else {
         if (!processContainer) return;
         const nextId = processContainer.querySelectorAll(".process").length + 1;
         const newProcess = createProcessElement(nextId, size);
+        newProcess.classList.add('animate-in');
         processContainer.appendChild(newProcess);
         scrollDown();
       }
