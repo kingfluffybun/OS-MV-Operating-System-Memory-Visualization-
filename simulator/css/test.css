@@ -331,7 +331,7 @@ button:disabled svg {
 @keyframes pop-in {
     from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: scale(0.75);
     }
     to {
         opacity: 1;
@@ -510,6 +510,7 @@ button:disabled svg {
                     padding: 12px;
                     font-size: 12px;
                     border-radius: 8px;
+                    
                     > .segment-base-limit {
                         display: flex;
                         flex-direction: column;
@@ -520,7 +521,10 @@ button:disabled svg {
                         left: -20px;
                         font-size: 12px;
                     }
-                } 
+                }
+                .allocated-segments.current {
+                    animation: pop-in 250ms ease;
+                }
                 /* .allocated-segments:first-child {border-radius: 8px 8px 0 0;}
                 .allocated-segments:last-child {border-radius: 0 0 8px 8px;} */
             }

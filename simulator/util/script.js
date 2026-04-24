@@ -1392,6 +1392,10 @@ const runStep = () => {
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
 
+  if (finalResult?.status === "Allocated" && finalResult.block !== "None") {
+    followAllocatedBlock(finalResult.block);
+  }
+
   simulationState.currentIndex += 1;
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("Simulation complete");
@@ -1453,6 +1457,28 @@ const togglePlayStop = () => {
   }
 };
 
+const followAllocatedBlock = (blockId) => {
+  if (!blockId || blockId === "None") return;
+  let blockEl = document.getElementById(`block-split-${blockId}`);
+  if (!blockEl) {
+    blockEl = document.getElementById(`block-${blockId}`);
+  }
+  if (!blockEl) return;
+
+  // Remove current class from other blocks
+  document
+    .querySelectorAll(".simulation .block.current")
+    .forEach((block) => block.classList.remove("current"));
+
+  // Add current class and scroll
+  blockEl.classList.add("current");
+  blockEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+};
+
 const runPlay = () => {
   try {
     const isFirstPlay = !simulationState;
@@ -1466,12 +1492,11 @@ const runPlay = () => {
       playInterval = null;
     }
 
-    const standardView = document.getElementById("standard-view");
-    const pagingView = document.getElementById("paging-view");
-    const activeView =
-      pagingView && pagingView.style.display === "grid"
-        ? pagingView
-        : standardView;
+    const standardView = document.getElementById('standard-view');
+    const pagingView = document.getElementById('paging-view');
+    const segmentationView = document.getElementById('segmentation-view');
+    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView :
+    (segmentationView && segmentationView.style.display === 'grid') ? segmentationView : standardView;
 
     const playBtn = activeView
       ? activeView.querySelector("#play-btn")
@@ -1600,7 +1625,7 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
-    const addProcessBtn = document.querySelector("#add-process-btn");
+    const addProcessBtn = activeView.querySelector("#add-process-btn");
     if (addProcessBtn) {
       addProcessBtn.disabled = false;
     }
@@ -1646,6 +1671,13 @@ function reEnableSimulationButtons() {
     randomizeBtn.style.cursor = "pointer";
   }
 
+  const addProcessBtn = activeView.querySelector('#add-process-btn');
+  if (addProcessBtn) {
+    addProcessBtn.disabled = false;
+    addProcessBtn.style.opacity = "1";
+    addProcessBtn.style.cursor = "pointer";
+  }
+
   // Note: add block button is NOT re-enabled here - it only reappears when reset is clicked
 
   // Re-enable process action buttons
@@ -1662,9 +1694,6 @@ function reEnableSimulationButtons() {
       btn.style.opacity = "1";
       btn.style.cursor = "pointer";
     });
-
-  const addProcessBtn = document.getElementById("add-process-btn");
-  if (addProcessBtn) addProcessBtn.disabled = false;
 
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
