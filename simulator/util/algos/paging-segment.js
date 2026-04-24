@@ -2,6 +2,23 @@
 // This module creates 4 logical segments for a process and maps each segment's pages to physical frames.
 
 const PagingSegmentSimulator = {
+  processColors: [
+    { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
+    { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
+    { bg: "#FDFFB6", border: "#BEBF88" }, // Cream
+    { bg: "#CAFFBF", border: "#98BF8F" }, // Tea Green
+    { bg: "#9BF6FF", border: "#7DC6CE" }, // Electric Aqua
+    { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
+    { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
+    { bg: "#FFC6FF", border: "#BF94BF" }, // Mavue
+  ],
+
+  getProcessColor(processName) {
+    if (!processName) return { bg: "#ffffff", border: "#e0e0e0" };
+    const id = parseInt(processName.replace('Process ', '')) || 1;
+    return this.processColors[(id - 1) % this.processColors.length];
+  },
+
   // Divide the process size into four segments: Code 40%, Data 30%, Stack 20%, Heap 10%
   breakdownSize(totalSize) {
     const size = Number(totalSize);
@@ -214,10 +231,10 @@ const PagingSegmentSimulator = {
     const tableBody = this.getPageTableBody();
 
     if (segContainer) {
-      segContainer.innerHTML = '<div class="empty-state" style="padding:20px;color:#666;text-align:center;">No segmentation-paging allocation yet.</div>';
+      segContainer.innerHTML = '';
     }
     if (framesContainer) {
-      framesContainer.innerHTML = '<div class="frame" style="padding:16px;text-align:center;color:#666;">Frames will appear after allocation.</div>';
+      framesContainer.innerHTML = '';
     }
     if (tableBody) {
       tableBody.innerHTML = '';
@@ -277,55 +294,53 @@ const PagingSegmentSimulator = {
     const successRate = result.totalProcesses > 0 ? (result.allocatedProcesses / result.totalProcesses) * 100 : 0;
 
     result.processResults.forEach((process) => {
-      const processTitle = document.createElement('div');
-      processTitle.className = 'process-segmentation-heading';
-      processTitle.innerHTML = `<h4>${process.processName}${process.status === 'Unallocated' ? ' (Unallocated)' : ''}</h4>`;
-      segContainer.appendChild(processTitle);
+      const colorPair = this.getProcessColor(process.processName);
+      // const processTitle = document.createElement('div');
+      // processTitle.className = 'process-segmentation-heading';
+      // processTitle.innerHTML = `<h4>${process.processName}${process.status === 'Unallocated' ? ' (Unallocated)' : ''}</h4>`;
+      // segContainer.appendChild(processTitle);
 
-      if (process.segments.length === 0) {
-        const emptySignal = document.createElement('div');
-        emptySignal.style.padding = '12px';
-        emptySignal.style.color = '#777';
-        emptySignal.textContent = 'This process could not be allocated into frames.';
-        segContainer.appendChild(emptySignal);
-        return;
-      }
 
       process.segments.forEach((segment, index) => {
         const segmentCard = document.createElement('div');
         segmentCard.className = 'segments-paging-container';
 
-        const header = document.createElement('div');
-        header.className = 'segments-paging';
-        header.innerHTML = `
-          <div class="segment-paging-header">
+        const segmentNumber = document.createElement('p');
+        segmentNumber.id = 'segment-number';
+        segmentNumber.textContent = `S${index}`;
+
+        const segmentsPaging = document.createElement('div');
+        segmentsPaging.className = 'segments-paging';
+        segmentsPaging.style.borderColor = colorPair.bg;
+
+        let pagesHtml = '';
+        segment.pages.forEach((page) => {
+          pagesHtml += `
+            <div class="page">
+              <p id="page-number">P${page.pageIndex}</p>
+              <div class="page-content" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">
+                <p>${process.processName} - ${segment.segmentType}</p>
+                <p>${page.size} KB</p>
+              </div>
+            </div>
+          `;
+        });
+
+        segmentsPaging.innerHTML = `
+          <div class="segment-paging-header" style="background-color: ${colorPair.bg}">
             <div>
               <p><b>${process.processName}</b></p>
               <p class="segment-type">${segment.segmentType}</p>
             </div>
             <div><p>${segment.segmentSize} KB</p></div>
           </div>
+          <div class="segment-pages">
+            ${pagesHtml}
+          </div>
         `;
 
-        const pagesRow = document.createElement('div');
-        pagesRow.className = 'segment-pages';
-
-        segment.pages.forEach((page) => {
-          const pageEl = document.createElement('div');
-          pageEl.className = 'page';
-          pageEl.innerHTML = `
-            <p id="page-number">P${page.pageIndex}</p>
-            <div class="page-content">
-              <p>${process.processName} - ${segment.segmentType}</p>
-              <p>${page.size} KB</p>
-              <p>Frame ${page.frameId}</p>
-            </div>
-          `;
-          pagesRow.appendChild(pageEl);
-        });
-
-        segmentCard.appendChild(header);
-        segmentCard.appendChild(pagesRow);
+        segmentCard.appendChild(segmentNumber);
+        segmentCard.appendChild(segmentsPaging);
         segContainer.appendChild(segmentCard);
       });
     });
@@ -334,11 +349,14 @@ const PagingSegmentSimulator = {
       const frameEl = document.createElement('div');
       frameEl.className = 'frame';
       frameEl.id = `frame-${frame.frameId}`;
-      let content = `<div class="frame-content"><p>${frame.size} KB</p>`;
+      let content = '';
       if (frame.status === 'Occupied') {
-        content += `<p>${frame.processName}</p><p>${frame.segmentType}</p><p>Page ${frame.pageIndex}</p>`;
+        const colorPair = this.getProcessColor(frame.processName);
+        content = `<div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">`;
+        content += `<p>${frame.size} KB</p><p>${frame.processName}</p><p>${frame.segmentType}</p><p>Page ${frame.pageIndex}</p>`;
       } else {
-        content += `<p>Free</p>`;
+        content = `<div class="frame-content">`;
+        content += `<p>${frame.size} KB</p><p>Free</p>`;
       }
       content += '</div>';
       frameEl.innerHTML = `<p id="frame-number">F${frame.frameId}</p>${content}`;
