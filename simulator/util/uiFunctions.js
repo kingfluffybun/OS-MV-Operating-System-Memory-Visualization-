@@ -3,11 +3,19 @@ function appendConsoleMessage(message) {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const segPagingView = document.getElementById('segmentation-paging-view');
+
+  const isVisible = (el) => {
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    return style && style.display !== 'none' && style.visibility !== 'hidden';
+  };
 
   let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+  if (isVisible(segPagingView)) activeView = segPagingView;
+  else if (isVisible(segmentationView)) activeView = segmentationView;
+  else if (isVisible(pagingView)) activeView = pagingView;
+  else if (isVisible(standardView)) activeView = standardView;
 
   let consoleContainer = null;
 
@@ -57,19 +65,32 @@ const getProcessSizes = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const segPagingView = document.getElementById('segmentation-paging-view');
   const mainGrid = document.querySelector('.main-grid');
   
   let activeProcessContainer = null;
   
-  // Check which view is active - Segmentation (in index.html), Paging, Standard,
+  const getViewStyle = (el) => {
+    if (!el) return null;
+    return window.getComputedStyle(el);
+  };
+
+  const isViewVisible = (el) => {
+    const style = getViewStyle(el);
+    return style && style.display !== 'none' && style.visibility !== 'hidden';
+  };
+
+  // Check which view is active - seg-paging, Segmentation, Paging, Standard,
   // or standalone simulation-Segmentation.html
-  if (segmentationView && segmentationView.style.display === 'grid') {
+  if (isViewVisible(segPagingView)) {
+    activeProcessContainer = segPagingView.querySelector('.process-container');
+  } else if (isViewVisible(segmentationView)) {
     // Segmentation section inside index.html
     activeProcessContainer = segmentationView.querySelector('.process-container');
   } else if (mainGrid && mainGrid.classList.contains('segmentation') && !standardView && !pagingView) {
     // Standalone segmentation page (simulation-Segmentation.html)
     activeProcessContainer = mainGrid.querySelector('.process-container');
-  } else if (pagingView && pagingView.style.display === 'grid') {
+  } else if (isViewVisible(pagingView)) {
     activeProcessContainer = pagingView.querySelector('.process-container');
   } else {
     activeProcessContainer = standardView ? standardView.querySelector('.process-container') : processContainer;
@@ -202,7 +223,9 @@ const updateStatistics = (stats) => {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
-  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
+  const segPagingView = document.getElementById("segmentation-paging-view");
+  const activeView = (segPagingView && segPagingView.style.display === "grid") ? segPagingView :
+                     (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
                      (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
 
   const query = (id) => {
@@ -238,10 +261,12 @@ function resetConsole() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
-  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
+  const segPagingView = document.getElementById("segmentation-paging-view");
+  const activeView = (segPagingView && segPagingView.style.display === "grid") ? segPagingView :
+                     (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
                      (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
 
-  const consoleContainer = activeView.querySelector(".console .container");
+  const consoleContainer = activeView ? activeView.querySelector(".console .container") : null;
 
   if (!consoleContainer) return;
   consoleContainer.innerHTML = "";

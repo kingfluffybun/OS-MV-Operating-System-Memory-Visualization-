@@ -33,6 +33,7 @@ const getActiveProcessContainer = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const segPagingView = document.getElementById('segmentation-paging-view');
   const mainGrid = document.querySelector('.main-grid.segmentation');
 
   const isVisible = (element) => {
@@ -41,6 +42,9 @@ const getActiveProcessContainer = () => {
     return display !== 'none';
   };
 
+  if (segPagingView && isVisible(segPagingView)) {
+    return segPagingView.querySelector('.process-container');
+  }
   if (segmentationView && isVisible(segmentationView)) {
     return segmentationView.querySelector('.process-container');
   }

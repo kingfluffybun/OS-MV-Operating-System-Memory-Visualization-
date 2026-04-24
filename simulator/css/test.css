@@ -451,7 +451,17 @@ button:disabled svg {
 .simulation-segmentation{
     .container {
         padding: 24px 0 12px 0;
-        > .segmentation-container, .physical-memory-container {
+        > .segmentation-container {
+            display: flex;
+            flex-direction: row;
+            gap: 24px;
+            padding: 12px 24px;
+            margin-right: 12px;
+            overflow-y: auto;
+            grid-column: 1 / -1;
+            min-height: 0;
+        }
+        > .physical-memory-container {
             display: flex;
             flex-direction: column;
             gap: 24px;

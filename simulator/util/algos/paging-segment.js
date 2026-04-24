@@ -214,10 +214,10 @@ const PagingSegmentSimulator = {
     const tableBody = this.getPageTableBody();
 
     if (segContainer) {
-      segContainer.innerHTML = '<div class="empty-state" style="padding:20px;color:#666;text-align:center;">No segmentation-paging allocation yet.</div>';
+      segContainer.innerHTML = '';
     }
     if (framesContainer) {
-      framesContainer.innerHTML = '<div class="frame" style="padding:16px;text-align:center;color:#666;">Frames will appear after allocation.</div>';
+      framesContainer.innerHTML = '';
     }
     if (tableBody) {
       tableBody.innerHTML = '';
@@ -276,29 +276,64 @@ const PagingSegmentSimulator = {
     const totalFree = result.freeFrames * result.pageSize;
     const successRate = result.totalProcesses > 0 ? (result.allocatedProcesses / result.totalProcesses) * 100 : 0;
 
-    result.processResults.forEach((process) => {
-      const processTitle = document.createElement('div');
-      processTitle.className = 'process-segmentation-heading';
-      processTitle.innerHTML = `<h4>${process.processName}${process.status === 'Unallocated' ? ' (Unallocated)' : ''}</h4>`;
-      segContainer.appendChild(processTitle);
+    const getProcessColors = (processName) => {
+      const defaultColors = { bg: '#9BF6FF', border: '#74B8BF' };
+      if (!processName) return defaultColors;
+      const processes = Array.from(document.querySelectorAll('.process'));
+      const processEl = processes.find((process) => {
+        const nameEl = process.querySelector('.process-content p:first-child');
+        return nameEl && nameEl.textContent.trim() === processName;
+      });
+      if (!processEl) return defaultColors;
+      return {
+        bg: processEl.getAttribute('data-bg') || defaultColors.bg,
+        border: processEl.getAttribute('data-border') || defaultColors.border,
+      };
+    };
 
-      if (process.segments.length === 0) {
-        const emptySignal = document.createElement('div');
-        emptySignal.style.padding = '12px';
-        emptySignal.style.color = '#777';
-        emptySignal.textContent = 'This process could not be allocated into frames.';
-        segContainer.appendChild(emptySignal);
-        return;
-      }
+    result.processResults.forEach((process) => {
+      // const processTitle = document.createElement('div');
+      // processTitle.className = 'process-segmentation-heading';
+      // processTitle.innerHTML = `<h4>${process.processName}${process.status === 'Unallocated' ? ' (Unallocated)' : ''}</h4>`;
+      // segContainer.appendChild(processTitle);
+
+      // if (process.segments.length === 0) {
+      //   const emptySignal = document.createElement('div');
+      //   emptySignal.style.padding = '12px';
+      //   emptySignal.style.color = '#777';
+      //   emptySignal.textContent = 'This process could not be allocated into frames.';
+      //   segContainer.appendChild(emptySignal);
+      //   return;
+      // }
+
+      const { bg, border } = getProcessColors(process.processName);
 
       process.segments.forEach((segment, index) => {
         const segmentCard = document.createElement('div');
         segmentCard.className = 'segments-paging-container';
+        // segmentCard.style.display = 'flex';
+        // segmentCard.style.alignItems = 'flex-start';
+        // segmentCard.style.gap = '12px';
+        // segmentCard.style.marginTop = '8px';
+
+        const segmentNumberDiv = document.createElement("div");
+        segmentNumberDiv.id = "segment-number";
+        segmentNumberDiv.textContent = `S${index}`;
+        segmentNumberDiv.style.minWidth = '20px';
+        segmentNumberDiv.style.display = 'flex';
+        segmentNumberDiv.style.alignItems = 'center';
+        segmentNumberDiv.style.marginTop = '12px';
+        segmentCard.appendChild(segmentNumberDiv);
 
         const header = document.createElement('div');
         header.className = 'segments-paging';
+        header.style.border = `4px solid ${bg}`;
+        header.style.borderRadius = '8px';
+        header.style.width = '100%';
+        header.style.backgroundColor = 'white';
+
         header.innerHTML = `
-          <div class="segment-paging-header">
+          <div class="segment-paging-header" style="background-color: ${bg}; padding: 12px; display: flex; justify-content: space-between;">
             <div>
               <p><b>${process.processName}</b></p>
               <p class="segment-type">${segment.segmentType}</p>
@@ -309,23 +344,30 @@ const PagingSegmentSimulator = {
 
         const pagesRow = document.createElement('div');
         pagesRow.className = 'segment-pages';
+        pagesRow.style.display = 'flex';
+        pagesRow.style.flexDirection = 'column';
+        pagesRow.style.gap = '4px';
+        pagesRow.style.padding = '8px';
 
         segment.pages.forEach((page) => {
           const pageEl = document.createElement('div');
           pageEl.className = 'page';
+          pageEl.style.display = 'flex';
+          pageEl.style.gap = '8px';
+          pageEl.style.alignItems = 'center';
+          
           pageEl.innerHTML = `
-            <p id="page-number">P${page.pageIndex}</p>
-            <div class="page-content">
-              <p>${process.processName} - ${segment.segmentType}</p>
-              <p>${page.size} KB</p>
-              <p>Frame ${page.frameId}</p>
+            <p id="page-number" style="font-size: 12px; min-width: 20px;">P${page.pageIndex}</p>
+            <div class="page-content" style="background-color: ${bg}; border-bottom: 2px solid ${border}; display: grid; grid-template-columns: repeat(2, 1fr); width: 100%; border-radius: 8px; padding: 10px; font-size: 10px; align-items: center; box-sizing: border-box;">
+              <p style="text-align: left;">${process.processName} - ${segment.segmentType}</p>
+              <p style="text-align: right;">${page.size} KB</p>
             </div>
           `;
           pagesRow.appendChild(pageEl);
         });
 
+        header.appendChild(pagesRow);
         segmentCard.appendChild(header);
-        segmentCard.appendChild(pagesRow);
         segContainer.appendChild(segmentCard);
       });
     });
@@ -334,21 +376,23 @@ const PagingSegmentSimulator = {
       const frameEl = document.createElement('div');
       frameEl.className = 'frame';
       frameEl.id = `frame-${frame.frameId}`;
-      let content = `<div class="frame-content"><p>${frame.size} KB</p>`;
+      let content = '';
       if (frame.status === 'Occupied') {
-        content += `<p>${frame.processName}</p><p>${frame.segmentType}</p><p>Page ${frame.pageIndex}</p>`;
+        const { bg, border } = getProcessColors(frame.processName);
+        content = `<div class="frame-content" style="grid-template-columns: repeat(3, 1fr); background-color: ${bg}; border-bottom: 4px solid ${border}; width: 100%; box-sizing: border-box;"><p style="text-align: left;">${frame.processName}</p><p style="text-align: center;">${frame.segmentType}</p><p style="text-align: right;">Page ${frame.pageIndex}</p></div>`;
       } else {
-        content += `<p>Free</p>`;
+        content = `<div class="frame-content" style="display: flex; justify-content: space-between; width: 100%; box-sizing: border-box;"><p>Free</p><p>${frame.size} KB</p></div>`;
       }
-      content += '</div>';
-      frameEl.innerHTML = `<p id="frame-number">F${frame.frameId}</p>${content}`;
+      frameEl.innerHTML = `<p id="frame-number" style="min-width: 24px;">F${frame.frameId}</p>${content}`;
       framesContainer.appendChild(frameEl);
     });
 
     Object.values(result.memory.frames)
       .filter((frame) => frame.status === 'Occupied')
       .forEach((frame) => {
+        const { bg } = getProcessColors(frame.processName);
         const row = document.createElement('tr');
+        row.style.borderLeft = `8px solid ${bg}`;
         row.innerHTML = `
           <td>${frame.processName}</td>
           <td>${frame.segmentType}</td>

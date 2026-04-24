@@ -60,30 +60,40 @@ function showMenu() {
   // Admin Menu
   if (isAdminUser) {
     const adminMenu = document.getElementById('menu-admin-dashboard');
-    if (!isAdminPage) adminMenu.style.display = '';
+    if (adminMenu && !isAdminPage) adminMenu.style.display = '';
 
     if (isAdminPage) {
-      document.getElementById('menu-usermanagement').style.display = '';
-      document.getElementById('menu-usermanagement').classList.add('active');
-      document.getElementById('menu-back-simulator').style.display = '';
+      const userManagementMenu = document.getElementById('menu-usermanagement');
+      const backSimulatorMenu = document.getElementById('menu-back-simulator');
+      if (userManagementMenu) {
+        userManagementMenu.style.display = '';
+        userManagementMenu.classList.add('active');
+      }
+      if (backSimulatorMenu) {
+        backSimulatorMenu.style.display = '';
+      }
     }
   }
 
   // If on simulator page
   if (!isAdminPage) {
-    document.getElementById('menu-dashboard').style.display = '';
-    document.getElementById('menu-simulation').style.display = '';
+    const dashboardMenu = document.getElementById('menu-dashboard');
+    const simulationMenu = document.getElementById('menu-simulation');
+    if (dashboardMenu) dashboardMenu.style.display = '';
+    if (simulationMenu) simulationMenu.style.display = '';
 
-    if (isFrontPage) {
-      document.getElementById('menu-dashboard').classList.add('active');
+    if (isFrontPage && dashboardMenu) {
+      dashboardMenu.classList.add('active');
     }
 
     if (isSimulator) {
-      document.getElementById('single-mode').classList.add('active');
+      const singleModeMenu = document.getElementById('single-mode');
+      if (singleModeMenu) singleModeMenu.classList.add('active');
     }
 
     if (isComparisonPage) {
-      document.getElementById('comparison-mode').classList.add('active');
+      const comparisonMenu = document.getElementById('comparison-mode');
+      if (comparisonMenu) comparisonMenu.classList.add('active');
     }
   }
 }
@@ -92,15 +102,21 @@ function showMenu() {
 function loadCurrentUser() {
   const stored = JSON.parse(sessionStorage.getItem("currentUser"));
   const username = document.getElementById("username");
+  const inOutIcon = document.getElementById("in-out-icon");
+  const inOutText = document.getElementById("in-out");
 
   if (stored && stored.username) {
-    username.textContent = stored.username;
-    document.getElementById("in-out-icon").innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>`;
-    document.getElementById("in-out").innerHTML = "Logout";
+    if (username) username.textContent = stored.username;
+    if (inOutIcon) {
+      inOutIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-out-icon lucide-log-out"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg>`;
+    }
+    if (inOutText) inOutText.innerHTML = "Logout";
   } else {
-    username.textContent = "Guest";
-    document.getElementById("in-out-icon").innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in-icon lucide-log-in"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>`
-    document.getElementById("in-out").innerHTML = "Login";
+    if (username) username.textContent = "Guest";
+    if (inOutIcon) {
+      inOutIcon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-log-in-icon lucide-log-in"><path d="m10 17 5-5-5-5"/><path d="M15 12H3"/><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/></svg>`;
+    }
+    if (inOutText) inOutText.innerHTML = "Login";
   }
 }
 
@@ -146,12 +162,14 @@ function isSegmentationMode() {
 }
 
 function isSegmentationPagingMode() {
-  const mainGrid = document.querySelector('.main-grid.paging');
+  const segPagingView = document.getElementById('segmentation-paging-view');
+  if (!segPagingView) return false;
+  const segPagingStyle = window.getComputedStyle(segPagingView);
+  if (!segPagingStyle || segPagingStyle.display === 'none') return false;
   return !!(
-    mainGrid &&
-    mainGrid.querySelector('.segmentation-paging') &&
-    mainGrid.querySelector('.frames-container') &&
-    mainGrid.querySelector('#page-table-body')
+    segPagingView.querySelector('.segmentation-paging') &&
+    segPagingView.querySelector('.frames-container') &&
+    segPagingView.querySelector('#page-table-body')
   );
 }
 
@@ -159,6 +177,7 @@ function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
+  const segPagingView = document.getElementById("segmentation-paging-view");
   // Also handle standalone simulator pages such as simulation-Segmentation.html or simulation-Segmentation-Paging.html
   const mainGrid = document.querySelector(".main-grid") || document.querySelector(".main-grid.segmentation");
 
@@ -167,6 +186,8 @@ function attachProcessListeners() {
     activeView = pagingView;
   } else if (segmentationView && segmentationView.style.display === "grid") {
     activeView = segmentationView;
+  } else if (segPagingView && segPagingView.style.display === "grid") {
+    activeView = segPagingView;
   } else if (standardView && standardView.style.display === "grid") {
     activeView = standardView;
   } else if (mainGrid) {
@@ -193,7 +214,15 @@ function attachProcessListeners() {
       const size = parseInt(sizeInput ? sizeInput.value : 0, 10);
       if (!size || size <= 0) return;
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        const spContainer = activeView.querySelector(".process-container");
+        if (!spContainer) return;
+        const nextId = spContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        spContainer.appendChild(newProcess);
+        if (sizeInput) sizeInput.value = '';
+        spContainer.scrollTo({ top: spContainer.scrollHeight, behavior: "smooth" });
+      } else if (isPagingMode()) {
         const pagingprocessContainer = activeView.querySelector(".process-container");
         if (!pagingprocessContainer) return;
         const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
@@ -230,7 +259,10 @@ function attachProcessListeners() {
     newRandomizeBtn.addEventListener("click", function () {
       let min, max;
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        min = 3;
+        max = 6;
+      } else if (isPagingMode()) {
         min = 3;
         max = 6;
       } else if (isSegmentationMode()) {
@@ -243,7 +275,14 @@ function attachProcessListeners() {
 
       const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        const spContainer = activeView.querySelector(".process-container");
+        if (!spContainer) return;
+        const nextId = spContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        spContainer.appendChild(newProcess);
+        spContainer.scrollTo({ top: spContainer.scrollHeight, behavior: "smooth" });
+      } else if (isPagingMode()) {
         const pagingProcessContainer = activeView.querySelector(".process-container");
         if (!pagingProcessContainer) return;
         const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
@@ -550,7 +589,7 @@ const prepareSimulation = () => {
 
   // Stamp the original size on every block element NOW, before any step shrinks them.
   // resetBlocksUI reads this to restore the display on reset.
-  if (!isPaging && !isSegmentation && simulationContainer) {
+  if (!isPaging && !isSegmentation && !isSegmentationPaging && simulationContainer) {
     simulationContainer.querySelectorAll(".block").forEach((block) => {
       const sizeEl =
         block.querySelector(".block-size-value") || block.querySelector("h2");
@@ -563,7 +602,9 @@ const prepareSimulation = () => {
   resetConsole();
   appendConsoleMessage("Simulation ready. Use Next or Play.");
 
-  if (isPaging) {
+  if (isSegmentationPaging) {
+    // Stats already initialized inside the isSegmentationPaging block above
+  } else if (isPaging) {
     const totalMemory =
       simulationState.memoryFrames.count *
       simulationState.memoryFrames.frameSize;
@@ -598,7 +639,7 @@ const prepareSimulation = () => {
   highlightCurrentProcess();
 
   // Only disable controls for standard fixed/dynamic partition modes
-  if (!isPaging && !isSegmentation) {
+  if (!isPaging && !isSegmentation && !isSegmentationPaging) {
     const addBtn = document.getElementById('add-block-btn');
     if (addBtn) addBtn.style.display = 'none';
 
@@ -1359,16 +1400,32 @@ const runStep = () => {
   return true;
 };
 
-const getStepDelay = () => {
+const getActiveView = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const segPagingView = document.getElementById('segmentation-paging-view');
+  const standaloneMainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid.segmentation') || document.querySelector('.main-grid');
+
+  const isVisible = (el) => {
+    if (!el) return false;
+    const style = window.getComputedStyle(el);
+    return style && style.display !== 'none' && style.visibility !== 'hidden';
+  };
 
   let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+  if (isVisible(standardView)) activeView = standardView;
+  else if (isVisible(pagingView)) activeView = pagingView;
+  else if (isVisible(segmentationView)) activeView = segmentationView;
+  else if (isVisible(segPagingView)) activeView = segPagingView;
+  else if (standaloneMainGrid) activeView = standaloneMainGrid;
+  else activeView = document.body;
 
+  return activeView;
+};
+
+const getStepDelay = () => {
+  const activeView = getActiveView();
   const slider = activeView ? activeView.querySelector("#slider") : null;
   const value = parseFloat(slider ? slider.value : 1) || 1;
   const maxDelay = 1200;
@@ -1378,15 +1435,7 @@ const getStepDelay = () => {
 };
 
 const togglePlayStop = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
-
-  let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
-
+  const activeView = getActiveView();
   if (!activeView) return;
 
   const playBtn = activeView.querySelector("#play-btn");
@@ -1399,7 +1448,7 @@ const togglePlayStop = () => {
     if (playBtn) playBtn.style.display = `flex`;
     if (stopBtn) stopBtn.style.display = `none`;
   }
-}
+};
 
 const runPlay = () => {
   try {
@@ -1414,15 +1463,13 @@ const runPlay = () => {
       playInterval = null;
     }
 
-    const standardView = document.getElementById('standard-view');
-    const pagingView = document.getElementById('paging-view');
-    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+    const activeView = getActiveView();
 
-    const playBtn = document.querySelector("#play-btn");
-    const stopBtn = document.querySelector("#stop-btn");
+    const playBtn = activeView ? activeView.querySelector("#play-btn") : document.querySelector("#play-btn");
+    const stopBtn = activeView ? activeView.querySelector("#stop-btn") : document.querySelector("#stop-btn");
 
-    playBtn.style.display = `none`;
-    stopBtn.style.display = `flex`;
+    if (playBtn) playBtn.style.display = `none`;
+    if (stopBtn) stopBtn.style.display = `flex`;
 
     const startAllocation = () => {
       const delay = getStepDelay();
@@ -1515,16 +1562,7 @@ const runReset = () => {
   togglePlayStop();
   appendConsoleMessage("Simulation reset.");
 
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
-  const standaloneMainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid.segmentation') || document.querySelector('.main-grid');
-
-  let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
-  if (!activeView && standaloneMainGrid) activeView = standaloneMainGrid;
+  const activeView = getActiveView();
 
   if (activeView) {
     activeView.querySelectorAll(".process").forEach((p) => p.classList.remove("current"));
@@ -1565,15 +1603,7 @@ const runReset = () => {
 
 
 function reEnableSimulationButtons() {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
-
-  let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
-
+  const activeView = getActiveView();
   if (!activeView) return;
 
   // Re-enable randomize button
@@ -1607,16 +1637,7 @@ function reEnableSimulationButtons() {
 }
 
 function attachSimulationListeners(viewType) {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
-  const standaloneMainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid.segmentation') || document.querySelector('.main-grid');
-
-  let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
-  if (!activeView && standaloneMainGrid) activeView = standaloneMainGrid;
+  const activeView = getActiveView();
 
   if (!activeView) {
     console.error('No active view found.');
@@ -1720,6 +1741,10 @@ function startSimulation(event) {
     sessionStorage.setItem('selectedPartition', "segmentation");
   }
 
+  if (algoWhat === "Seg-Paging") {
+    sessionStorage.setItem('selectedPartition', "seg-paging");
+  }
+
   const toggle = document.querySelector('.toggle-partition input[type="checkbox"]');
   const whatAlgo = toggle.checked;
   const algoParam = `${algoWhat}-${whatAlgo ? "dynamic" : "fixed"}`;
@@ -1731,6 +1756,8 @@ function startSimulation(event) {
       case "Paging": window.location.href = `algorithm/index.html?algorithm=paging`;
         break;
       case "Segmentation": window.location.href = `algorithm/index.html?algorithm=segmentation`;
+        break;
+      case "Seg-Paging": window.location.href = `algorithm/index.html?algorithm=seg-paging`;
         break;
     }
   }
@@ -1764,7 +1791,7 @@ function simulatorLoad() {
   // Set the page title based on the algorithm
   if (selectedAlgo) {
     let titleSuffix = "";
-    if (selectedPartition && selectedAlgo.toLowerCase() !== 'paging' && selectedAlgo.toLowerCase() !== 'segmentation') {
+    if (selectedPartition && selectedAlgo.toLowerCase() !== 'paging' && selectedAlgo.toLowerCase() !== 'segmentation' && selectedAlgo.toLowerCase() !== 'seg-paging') {
       titleSuffix = " " + formatAlgorithmName(selectedPartition);
     }
     document.title = 'OS-MV ' + formatAlgorithmName(selectedAlgo) + titleSuffix;
@@ -1773,10 +1800,12 @@ function simulatorLoad() {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
   const segmentationView = document.getElementById('segmentation-view');
+  const segPagingView = document.getElementById('segmentation-paging-view');
 
   if (standardView) standardView.style.display = 'none';
   if (pagingView) pagingView.style.display = 'none';
   if (segmentationView) segmentationView.style.display = 'none';
+  if (segPagingView) segPagingView.style.display = 'none';
 
   if (selectedAlgo && selectedAlgo.toLowerCase() === "paging") {
     if (pagingView) {
@@ -1802,6 +1831,13 @@ function simulatorLoad() {
         }
       });
     }
+  } else if (selectedAlgo && selectedAlgo.toLowerCase() === "seg-paging") {
+    if (segPagingView) {
+      segPagingView.style.display = 'grid';
+      loadSegmentationPagingScript(function () {
+        attachSimulationListeners();
+      });
+    }
   } else {
     if (standardView) {
       standardView.style.display = 'grid';
@@ -1809,6 +1845,45 @@ function simulatorLoad() {
     }
     loadDefaultScript(selectedAlgo, selectedPartition);
   }
+}
+
+function loadSegmentationPagingScript(callback) {
+  if (window.segmentationPagingScriptLoaded) {
+    console.log("Segmentation-Paging scripts already loaded");
+    if (callback) callback();
+    return;
+  }
+
+  let loadedCount = 0;
+  const totalScripts = 2;
+
+  const checkLoaded = function () {
+    loadedCount++;
+    console.log('Seg-Paging script loaded:', loadedCount, 'of', totalScripts);
+    if (loadedCount === totalScripts) {
+      window.segmentationPagingScriptLoaded = true;
+      if (callback) callback();
+    }
+  };
+
+  const script1 = document.createElement('script');
+  script1.src = "../util/pagingUI.js";
+  script1.onload = checkLoaded;
+  script1.onerror = function () {
+    console.error("Failed to load pagingUI.js");
+    checkLoaded();
+  };
+
+  const script2 = document.createElement('script');
+  script2.src = "../util/algos/paging-segment.js";
+  script2.onload = checkLoaded;
+  script2.onerror = function () {
+    console.error("Failed to load paging-segment.js");
+    checkLoaded();
+  };
+
+  document.head.appendChild(script1);
+  document.head.appendChild(script2);
 }
 
 function loadPagingScript(callback) {

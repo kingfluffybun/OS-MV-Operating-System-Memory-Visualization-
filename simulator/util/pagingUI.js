@@ -18,21 +18,31 @@ const getPagingInputs = () => {
     memorySizeInput = pagingView.querySelector("#memory-size");
   }
   
+  // Check segmentation-paging page (simulation-Segmentation-Paging.html)
+  if (!memorySizeInput) {
+    const segPagingView = document.getElementById('segmentation-paging-view');
+    const segPagingStyle = segPagingView ? window.getComputedStyle(segPagingView) : null;
+    if (segPagingView && segPagingStyle && segPagingStyle.display !== 'none') {
+      pageSizeInput = segPagingView.querySelector('#page-frame-size');
+      memorySizeInput = segPagingView.querySelector('#memory-size');
+    }
+  }
+
   // Check standalone paging page (simulation-Paging.html)
   if (!memorySizeInput) {
-    const mainGrid = document.querySelector(".main-grid.paging");
+    const mainGrid = document.querySelector('.main-grid.paging') || document.querySelector('.main-grid');
     if (mainGrid) {
-      pageSizeInput = mainGrid.querySelector("#page-frame-size");
-      memorySizeInput = mainGrid.querySelector("#memory-size");
+      pageSizeInput = pageSizeInput || mainGrid.querySelector('#page-frame-size');
+      memorySizeInput = memorySizeInput || mainGrid.querySelector('#memory-size');
     }
   }
   
   // Fallback to any element with those IDs
   if (!pageSizeInput) {
-    pageSizeInput = document.getElementById("page-frame-size");
+    pageSizeInput = document.getElementById('page-frame-size');
   }
   if (!memorySizeInput) {
-    memorySizeInput = document.getElementById("memory-size");
+    memorySizeInput = document.getElementById('memory-size');
   }
   
   const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
