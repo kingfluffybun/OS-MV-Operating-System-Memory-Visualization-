@@ -108,12 +108,14 @@ const PagingSegmentSimulator = {
     );
 
     for (const page of pages) {
-      const freeFrame = framesArray.find((frame) => frame.status === "Free");
-      if (!freeFrame) {
+      const freeFrames = framesArray.filter((frame) => frame.status === "Free");
+      if (freeFrames.length === 0) {
         console.warn("No free frames found during allocation!");
         // Return whatever was allocated so far instead of rolling back
         return { success: false, allocation };
       }
+      const randomIndex = Math.floor(Math.random() * freeFrames.length);
+      const freeFrame = freeFrames[randomIndex];
 
       freeFrame.status = "Occupied";
       freeFrame.processName = processName;
@@ -141,11 +143,14 @@ const PagingSegmentSimulator = {
   // Allocate a single page to a free frame.
   allocatePageStepSingle(frames, processName, segmentType, page) {
     const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
-    const freeFrame = framesArray.find((frame) => frame.status === "Free");
+    const freeFrames = framesArray.filter((frame) => frame.status === "Free");
 
-    if (!freeFrame) {
+    if (freeFrames.length === 0) {
       return { success: false };
     }
+
+    const randomIndex = Math.floor(Math.random() * freeFrames.length);
+    const freeFrame = freeFrames[randomIndex];
 
     freeFrame.status = "Occupied";
     freeFrame.processName = processName;
