@@ -1292,6 +1292,10 @@ const runStep = () => {
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
 
+  if (finalResult?.status === "Allocated" && finalResult.block !== "None") {
+    followAllocatedBlock(finalResult.block);
+  }
+
   simulationState.currentIndex += 1;
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("Simulation complete");
@@ -1346,6 +1350,28 @@ const togglePlayStop = () => {
     if (stopBtn) stopBtn.style.display = `none`;
   }
 }
+
+const followAllocatedBlock = (blockId) => {
+  if (!blockId || blockId === "None") return;
+  let blockEl = document.getElementById(`block-split-${blockId}`);
+  if (!blockEl) {
+    blockEl = document.getElementById(`block-${blockId}`);
+  }
+  if (!blockEl) return;
+
+  // Remove current class from other blocks
+  document
+    .querySelectorAll(".simulation .block.current")
+    .forEach((block) => block.classList.remove("current"));
+
+  // Add current class and scroll
+  blockEl.classList.add("current");
+  blockEl.scrollIntoView({
+    behavior: "smooth",
+    block: "center",
+    inline: "center",
+  });
+};
 
 const runPlay = () => {
   try {
