@@ -111,8 +111,15 @@ const PagingSegmentSimulator = {
       const freeFrames = framesArray.filter((frame) => frame.status === "Free");
       if (freeFrames.length === 0) {
         console.warn("No free frames found during allocation!");
-        // Return whatever was allocated so far instead of rolling back
-        return { success: false, allocation };
+        // Rollback this segment's allocations if it fails
+        allocatedFrames.forEach((frame) => {
+          frame.status = "Free";
+          frame.processName = null;
+          frame.segmentType = null;
+          frame.pageIndex = null;
+          frame.used = 0;
+        });
+        return { success: false, allocation: [] };
       }
       const randomIndex = Math.floor(Math.random() * freeFrames.length);
       const freeFrame = freeFrames[randomIndex];
@@ -138,6 +145,20 @@ const PagingSegmentSimulator = {
       `Successfully allocated ${allocation.length} frames for ${segmentType}`,
     );
     return { success: true, allocation };
+  },
+
+  // Deallocate all frames belonging to a process
+  deallocateProcess(frames, processName) {
+    const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
+    framesArray.forEach((frame) => {
+      if (frame.processName === processName) {
+        frame.status = "Free";
+        frame.processName = null;
+        frame.segmentType = null;
+        frame.pageIndex = null;
+        frame.used = 0;
+      }
+    });
   },
 
   // Allocate a single page to a free frame.
@@ -182,9 +203,13 @@ const PagingSegmentSimulator = {
       const processName = `Process ${processIndex + 1}`;
       const breakdown = this.breakdownSize(processSize);
       const segments = [];
-      let processAllocatable = true;
-      let processInternalFrag = 0;
-      let processPagesAllocated = [];
+      // Calculate total pages needed for this process
+      const totalPagesNeeded = Object.values(breakdown).reduce((sum, sz) => sum + Math.ceil(sz / pageSize), 0);
+      const freeFramesCount = memory.frames.filter(f => f.status === "Free").length;
+
+      if (totalPagesNeeded > freeFramesCount) {
+        processAllocatable = false;
+      }
 
       Object.entries({
         Code: breakdown.code,
@@ -192,9 +217,9 @@ const PagingSegmentSimulator = {
         Data: breakdown.data,
         Stack: breakdown.stack
       }).forEach(([segmentType, segmentSize]) => {
+        const { pages, internalFragmentation } = this.segmentToPages(segmentSize, pageSize);
+
         if (!processAllocatable) {
-          // If we ran out of memory in a previous segment, just record the segment with no physical frames
-          const { pages, internalFragmentation } = this.segmentToPages(segmentSize, pageSize);
           segments.push({
             segmentType,
             segmentSize,
@@ -204,10 +229,6 @@ const PagingSegmentSimulator = {
           return;
         }
 
-        const { pages, internalFragmentation } = this.segmentToPages(
-          segmentSize,
-          pageSize,
-        );
         const allocationResult = this.allocatePagesToFrames(
           memory.frames,
           processName,
@@ -217,21 +238,25 @@ const PagingSegmentSimulator = {
 
         if (!allocationResult.success) {
           processAllocatable = false;
+          // Rollback any previously allocated segments for this process
+          this.deallocateProcess(memory.frames, processName);
+          processPagesAllocated = [];
+        } else {
+          processInternalFrag += internalFragmentation;
+          processPagesAllocated = processPagesAllocated.concat(
+            allocationResult.allocation,
+          );
         }
 
-        processInternalFrag += internalFragmentation;
-        processPagesAllocated = processPagesAllocated.concat(
-          allocationResult.allocation,
-        );
         segments.push({
           segmentType,
           segmentSize,
           pages,
-          internalFragmentation,
+          internalFragmentation: processAllocatable ? internalFragmentation : 0,
         });
       });
 
-      if (processPagesAllocated.length === 0) {
+      if (!processAllocatable || processPagesAllocated.length === 0) {
         processResults.push({
           processName,
           requestedSize: processSize,

@@ -1033,6 +1033,11 @@ const runStep = () => {
 
       console.log(`${processName} requires ${requiredPages} pages. Available: ${remainingFreeFrames} frames.`);
 
+      // Strict check for sufficient frames
+      if (requiredPages > remainingFreeFrames) {
+        processAllocatable = false;
+      }
+
       if (processAllocatable) {
         Object.entries({ Code: breakdown.code, Heap: breakdown.heap, Data: breakdown.data, Stack: breakdown.stack }).forEach(([segmentType, segmentSize]) => {
           const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(segmentSize, simulationState.pageSize);
@@ -1107,7 +1112,16 @@ const runStep = () => {
             };
             simulationState.pageAllocationIndex++;
           } else {
-            appendConsoleMessage(`${processName} -> Allocation stopped (Insufficient memory for remaining pages).`);
+            appendConsoleMessage(`${processName} -> Allocation failed (Insufficient memory). Rolling back.`);
+
+            // Rollback using the new method
+            PagingSegmentSimulator.deallocateProcess(simulationState.memory.frames, processName);
+
+            // Update the process result to Unallocated
+            currentProcess.status = "Unallocated";
+            currentProcess.pages = [];
+            currentProcess.internalFragmentation = 0;
+
             simulationState.currentIndex += 1;
             simulationState.subStep = 0;
           }
