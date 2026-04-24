@@ -448,11 +448,10 @@ const PagingSegmentSimulator = {
         }
 
         frameContent = `
-          <div class="frame-content" style="background-color: ${bg}; border-bottom-color: ${border}">
-            <p>${frame.size} KB</p>
-            <p>${frame.processName || 'Unknown'}</p>
-            <p>${frame.segmentType || 'Page'}</p>
+          <div class="frame-content" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+            <p>${frame.processName || 'Unknown'} - ${frame.segmentType || 'Page'}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</p>
+            <p>${frame.size} KB</p>
           </div>`;
         
         tableRowsHtml += `
@@ -471,7 +470,7 @@ const PagingSegmentSimulator = {
       }
 
       framesHtml += `
-        <div class="frame" id="frame-${frameId}" style="display: flex !important; min-height: 40px !important; width: 100% !important; margin-bottom: 5px !important; align-items: center !important;">
+        <div class="frame" id="frame-${frameId}">
           <p id="frame-number" style="min-width: 25px; font-weight: bold;">F${frameId}</p>
           ${frameContent}
         </div>`;
