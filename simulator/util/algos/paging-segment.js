@@ -15,7 +15,7 @@ const PagingSegmentSimulator = {
 
   getProcessColor(processName) {
     if (!processName) return { bg: "#ffffff", border: "#e0e0e0" };
-    const id = parseInt(processName.replace('Process ', '')) || 1;
+    const id = parseInt(processName.replace("Process ", "")) || 1;
     return this.processColors[(id - 1) % this.processColors.length];
   },
 
@@ -26,9 +26,9 @@ const PagingSegmentSimulator = {
       return { code: 0, data: 0, stack: 0, heap: 0 };
     }
 
-    const code = Math.floor(size * 0.40);
-    const data = Math.floor(size * 0.30);
-    const stack = Math.floor(size * 0.20);
+    const code = Math.floor(size * 0.4);
+    const data = Math.floor(size * 0.3);
+    const stack = Math.floor(size * 0.2);
     const heap = size - code - data - stack;
 
     return { code, data, stack, heap };
@@ -38,7 +38,12 @@ const PagingSegmentSimulator = {
   segmentToPages(segmentSize, pageSize) {
     const segSize = Number(segmentSize);
     const pgSize = Number(pageSize);
-    if (!Number.isFinite(segSize) || segSize <= 0 || !Number.isFinite(pgSize) || pgSize <= 0) {
+    if (
+      !Number.isFinite(segSize) ||
+      segSize <= 0 ||
+      !Number.isFinite(pgSize) ||
+      pgSize <= 0
+    ) {
       return { pages: [], internalFragmentation: 0 };
     }
 
@@ -64,7 +69,12 @@ const PagingSegmentSimulator = {
   createFrames(totalMemory, pageSize) {
     const memorySize = Number(totalMemory);
     const frameSize = Number(pageSize);
-    if (!Number.isFinite(memorySize) || memorySize <= 0 || !Number.isFinite(frameSize) || frameSize <= 0) {
+    if (
+      !Number.isFinite(memorySize) ||
+      memorySize <= 0 ||
+      !Number.isFinite(frameSize) ||
+      frameSize <= 0
+    ) {
       return { frames: [], frameSize: 0 };
     }
 
@@ -139,8 +149,15 @@ const PagingSegmentSimulator = {
       let processInternalFrag = 0;
       let processPagesAllocated = [];
 
-      const remainingFreeFrames = memory.frames.filter((frame) => frame.status === "Free").length;
-      const requiredPages = Object.values({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap })
+      const remainingFreeFrames = memory.frames.filter(
+        (frame) => frame.status === "Free",
+      ).length;
+      const requiredPages = Object.values({
+        Code: breakdown.code,
+        Data: breakdown.data,
+        Stack: breakdown.stack,
+        Heap: breakdown.heap,
+      })
         .map((segmentSize) => Math.ceil(segmentSize / pageSize))
         .reduce((total, count) => total + count, 0);
 
@@ -149,9 +166,22 @@ const PagingSegmentSimulator = {
       }
 
       if (processAllocatable) {
-        Object.entries({ Code: breakdown.code, Data: breakdown.data, Stack: breakdown.stack, Heap: breakdown.heap }).forEach(([segmentType, segmentSize]) => {
-          const { pages, internalFragmentation } = this.segmentToPages(segmentSize, pageSize);
-          const allocationResult = this.allocatePagesToFrames(memory.frames, processName, segmentType, pages);
+        Object.entries({
+          Code: breakdown.code,
+          Data: breakdown.data,
+          Stack: breakdown.stack,
+          Heap: breakdown.heap,
+        }).forEach(([segmentType, segmentSize]) => {
+          const { pages, internalFragmentation } = this.segmentToPages(
+            segmentSize,
+            pageSize,
+          );
+          const allocationResult = this.allocatePagesToFrames(
+            memory.frames,
+            processName,
+            segmentType,
+            pages,
+          );
 
           if (!allocationResult.success) {
             processAllocatable = false;
@@ -159,7 +189,9 @@ const PagingSegmentSimulator = {
           }
 
           processInternalFrag += internalFragmentation;
-          processPagesAllocated = processPagesAllocated.concat(allocationResult.allocation);
+          processPagesAllocated = processPagesAllocated.concat(
+            allocationResult.allocation,
+          );
           segments.push({
             segmentType,
             segmentSize,
@@ -196,8 +228,12 @@ const PagingSegmentSimulator = {
       });
     });
 
-    const usedFrames = memory.frames.filter((frame) => frame.status === "Occupied").length;
-    const freeFrames = memory.frames.filter((frame) => frame.status === "Free").length;
+    const usedFrames = memory.frames.filter(
+      (frame) => frame.status === "Occupied",
+    ).length;
+    const freeFrames = memory.frames.filter(
+      (frame) => frame.status === "Free",
+    ).length;
 
     return {
       totalMemory,
@@ -214,15 +250,15 @@ const PagingSegmentSimulator = {
   },
 
   getSegmentContainer() {
-    return document.querySelector('.segmentation-paging');
+    return document.querySelector(".segmentation-paging");
   },
 
   getFramesContainer() {
-    return document.querySelector('.frames-container');
+    return document.querySelector(".frames-container");
   },
 
   getPageTableBody() {
-    return document.querySelector('#page-table-body');
+    return document.querySelector("#page-table-body");
   },
 
   resetSegmentationPagingUI() {
@@ -231,16 +267,16 @@ const PagingSegmentSimulator = {
     const tableBody = this.getPageTableBody();
 
     if (segContainer) {
-      segContainer.innerHTML = '';
+      segContainer.innerHTML = "";
     }
     if (framesContainer) {
-      framesContainer.innerHTML = '';
+      framesContainer.innerHTML = "";
     }
     if (tableBody) {
-      tableBody.innerHTML = '';
+      tableBody.innerHTML = "";
     }
 
-    if (typeof updateStatistics === 'function') {
+    if (typeof updateStatistics === "function") {
       updateStatistics({
         allocatedSize: 0,
         totalFree: 0,
@@ -250,7 +286,7 @@ const PagingSegmentSimulator = {
         successRate: 0,
       });
     }
-    if (typeof setTotalMemoryDisplay === 'function') {
+    if (typeof setTotalMemoryDisplay === "function") {
       setTotalMemoryDisplay(0);
     }
   },
@@ -259,11 +295,12 @@ const PagingSegmentSimulator = {
     this.resetSegmentationPagingUI();
     // Try to use the actual user input for total memory if available
     const { memorySize } = getSegmentationPagingInputs();
-    const displayMemory = !Number.isNaN(memorySize) && memorySize > 0 ? memorySize : totalMemory;
-    if (typeof setTotalMemoryDisplay === 'function') {
+    const displayMemory =
+      !Number.isNaN(memorySize) && memorySize > 0 ? memorySize : totalMemory;
+    if (typeof setTotalMemoryDisplay === "function") {
       setTotalMemoryDisplay(displayMemory);
     }
-    if (typeof updateStatistics === 'function') {
+    if (typeof updateStatistics === "function") {
       updateStatistics({
         allocatedSize: 0,
         totalFree: displayMemory,
@@ -273,9 +310,9 @@ const PagingSegmentSimulator = {
         successRate: 0,
       });
     }
-    const algoDescription = document.getElementById('algo-description');
+    const algoDescription = document.getElementById("algo-description");
     if (algoDescription) {
-      algoDescription.textContent = 'Segmentation with Paging Simulation';
+      algoDescription.textContent = "Segmentation with Paging Simulation";
     }
   },
 
@@ -286,15 +323,18 @@ const PagingSegmentSimulator = {
 
     if (!segContainer || !framesContainer || !tableBody || !result) return;
 
-    segContainer.innerHTML = '';
-    framesContainer.innerHTML = '';
-    tableBody.innerHTML = '';
+    segContainer.innerHTML = "";
+    framesContainer.innerHTML = "";
+    tableBody.innerHTML = "";
 
     const allocatedSize = result.processResults.reduce((sum, proc) => {
-      return sum + (proc.status === 'Allocated' ? proc.requestedSize : 0);
+      return sum + (proc.status === "Allocated" ? proc.requestedSize : 0);
     }, 0);
     const totalFree = result.freeFrames * result.pageSize;
-    const successRate = result.totalProcesses > 0 ? (result.allocatedProcesses / result.totalProcesses) * 100 : 0;
+    const successRate =
+      result.totalProcesses > 0
+        ? (result.allocatedProcesses / result.totalProcesses) * 100
+        : 0;
 
     result.processResults.forEach((process) => {
       const colorPair = this.getProcessColor(process.processName);
@@ -303,20 +343,19 @@ const PagingSegmentSimulator = {
       // processTitle.innerHTML = `<h4>${process.processName}${process.status === 'Unallocated' ? ' (Unallocated)' : ''}</h4>`;
       // segContainer.appendChild(processTitle);
 
-
       process.segments.forEach((segment, index) => {
-        const segmentCard = document.createElement('div');
-        segmentCard.className = 'segments-paging-container';
+        const segmentCard = document.createElement("div");
+        segmentCard.className = "segments-paging-container";
 
-        const segmentNumber = document.createElement('p');
-        segmentNumber.id = 'segment-number';
+        const segmentNumber = document.createElement("p");
+        segmentNumber.id = "segment-number";
         segmentNumber.textContent = `S${index}`;
 
-        const segmentsPaging = document.createElement('div');
-        segmentsPaging.className = 'segments-paging';
+        const segmentsPaging = document.createElement("div");
+        segmentsPaging.className = "segments-paging";
         segmentsPaging.style.borderColor = colorPair.bg;
 
-        let pagesHtml = '';
+        let pagesHtml = "";
         segment.pages.forEach((page) => {
           pagesHtml += `
             <div class="page">
@@ -349,11 +388,11 @@ const PagingSegmentSimulator = {
     });
 
     result.memory.frames.forEach((frame) => {
-      const frameEl = document.createElement('div');
-      frameEl.className = 'frame';
+      const frameEl = document.createElement("div");
+      frameEl.className = "frame";
       frameEl.id = `frame-${frame.frameId}`;
-      let content = '';
-      if (frame.status === 'Occupied') {
+      let content = "";
+      if (frame.status === "Occupied") {
         const colorPair = this.getProcessColor(frame.processName);
         content = `<div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">`;
         content += `<p>${frame.size} KB</p><p>${frame.processName}</p><p>${frame.segmentType}</p><p>Page ${frame.pageIndex}</p>`;
@@ -361,15 +400,15 @@ const PagingSegmentSimulator = {
         content = `<div class="frame-content">`;
         content += `<p>${frame.size} KB</p><p>Free</p>`;
       }
-      content += '</div>';
+      content += "</div>";
       frameEl.innerHTML = `<p id="frame-number">F${frame.frameId}</p>${content}`;
       framesContainer.appendChild(frameEl);
     });
 
     Object.values(result.memory.frames)
-      .filter((frame) => frame.status === 'Occupied')
+      .filter((frame) => frame.status === "Occupied")
       .forEach((frame) => {
-        const row = document.createElement('tr');
+        const row = document.createElement("tr");
         row.innerHTML = `
           <td>${frame.processName}</td>
           <td>${frame.segmentType}</td>
@@ -379,20 +418,26 @@ const PagingSegmentSimulator = {
         tableBody.appendChild(row);
       });
 
-    if (typeof updateStatistics === 'function') {
+    if (typeof updateStatistics === "function") {
       updateStatistics({
         allocatedSize,
         totalFree,
         intFragmentation: result.totalInternalFragmentation,
         externalFragmentation: 0,
-        memoryUtilization: result.totalMemory > 0 ? ((result.totalMemory - totalFree) / result.totalMemory) * 100 : 0,
+        memoryUtilization:
+          result.totalMemory > 0
+            ? ((result.totalMemory - totalFree) / result.totalMemory) * 100
+            : 0,
         successRate,
       });
     }
     // Use the actual user input for total memory instead of calculated value
     const { memorySize } = getSegmentationPagingInputs();
-    const displayMemory = !Number.isNaN(memorySize) && memorySize > 0 ? memorySize : result.totalMemory;
-    if (typeof setTotalMemoryDisplay === 'function') {
+    const displayMemory =
+      !Number.isNaN(memorySize) && memorySize > 0
+        ? memorySize
+        : result.totalMemory;
+    if (typeof setTotalMemoryDisplay === "function") {
       setTotalMemoryDisplay(displayMemory);
     }
   },
@@ -405,8 +450,13 @@ const getSegmentationPagingInputs = () => {
   let pageSizeInput = null;
 
   // Check if we're in the segmentation-paging view section
-  const segmentationPagingView = document.getElementById("segmentation-paging-view");
-  if (segmentationPagingView && segmentationPagingView.style.display !== "none") {
+  const segmentationPagingView = document.getElementById(
+    "segmentation-paging-view",
+  );
+  if (
+    segmentationPagingView &&
+    segmentationPagingView.style.display !== "none"
+  ) {
     memorySizeInput = segmentationPagingView.querySelector("#memory-size");
     pageSizeInput = segmentationPagingView.querySelector("#page-frame-size");
   }
@@ -428,7 +478,9 @@ const getSegmentationPagingInputs = () => {
     pageSizeInput = document.getElementById("page-frame-size");
   }
 
-  const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
+  const memorySize = memorySizeInput
+    ? parseInt(memorySizeInput.value, 10)
+    : NaN;
   const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
   return { memorySize, pageSize };
 };
@@ -437,7 +489,7 @@ const getSegmentationPagingInputs = () => {
 const updateTotalMemoryDisplaySegmentationPaging = () => {
   const { memorySize } = getSegmentationPagingInputs();
   if (!Number.isNaN(memorySize) && memorySize > 0) {
-    if (typeof setTotalMemoryDisplay === 'function') {
+    if (typeof setTotalMemoryDisplay === "function") {
       setTotalMemoryDisplay(memorySize);
     }
   }
@@ -446,12 +498,24 @@ const updateTotalMemoryDisplaySegmentationPaging = () => {
 // Attach listeners to segmentation-paging-view inputs
 const attachSegmentationPagingInputListeners = () => {
   // Try to find inputs in the segmentation-paging view first
-  const segmentationPagingView = document.getElementById("segmentation-paging-view");
+  const segmentationPagingView = document.getElementById(
+    "segmentation-paging-view",
+  );
   if (segmentationPagingView) {
-    const memorySizeInput = segmentationPagingView.querySelector("#memory-size");
-    if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
-      memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
-      memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+    const memorySizeInput =
+      segmentationPagingView.querySelector("#memory-size");
+    if (
+      memorySizeInput &&
+      !memorySizeInput._segmentation_paging_listener_attached
+    ) {
+      memorySizeInput.addEventListener(
+        "input",
+        updateTotalMemoryDisplaySegmentationPaging,
+      );
+      memorySizeInput.addEventListener(
+        "change",
+        updateTotalMemoryDisplaySegmentationPaging,
+      );
       memorySizeInput._segmentation_paging_listener_attached = true;
     }
   }
@@ -460,44 +524,74 @@ const attachSegmentationPagingInputListeners = () => {
   const mainGrid = document.querySelector(".main-grid.segmentation-paging");
   if (mainGrid) {
     const memorySizeInput = mainGrid.querySelector("#memory-size");
-    if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
-      memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
-      memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+    if (
+      memorySizeInput &&
+      !memorySizeInput._segmentation_paging_listener_attached
+    ) {
+      memorySizeInput.addEventListener(
+        "input",
+        updateTotalMemoryDisplaySegmentationPaging,
+      );
+      memorySizeInput.addEventListener(
+        "change",
+        updateTotalMemoryDisplaySegmentationPaging,
+      );
       memorySizeInput._segmentation_paging_listener_attached = true;
     }
   }
 
   // Fallback to global search
   const memorySizeInput = document.getElementById("memory-size");
-  if (memorySizeInput && !memorySizeInput._segmentation_paging_listener_attached) {
-    memorySizeInput.addEventListener("input", updateTotalMemoryDisplaySegmentationPaging);
-    memorySizeInput.addEventListener("change", updateTotalMemoryDisplaySegmentationPaging);
+  if (
+    memorySizeInput &&
+    !memorySizeInput._segmentation_paging_listener_attached
+  ) {
+    memorySizeInput.addEventListener(
+      "input",
+      updateTotalMemoryDisplaySegmentationPaging,
+    );
+    memorySizeInput.addEventListener(
+      "change",
+      updateTotalMemoryDisplaySegmentationPaging,
+    );
     memorySizeInput._segmentation_paging_listener_attached = true;
   }
 };
 
 // Attach listeners when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', attachSegmentationPagingInputListeners);
+if (document.readyState === "loading") {
+  document.addEventListener(
+    "DOMContentLoaded",
+    attachSegmentationPagingInputListeners,
+  );
 } else {
   attachSegmentationPagingInputListeners();
 }
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   window.PagingSegmentSimulator = PagingSegmentSimulator;
-  window.initializeSegmentationPagingUI = function(processes, totalMemory, pageSize) {
-    PagingSegmentSimulator.initializeSegmentationPagingUI(processes, totalMemory, pageSize);
+  window.initializeSegmentationPagingUI = function (
+    processes,
+    totalMemory,
+    pageSize,
+  ) {
+    PagingSegmentSimulator.initializeSegmentationPagingUI(
+      processes,
+      totalMemory,
+      pageSize,
+    );
   };
-  window.updateSegmentationPagingUI = function(result) {
+  window.updateSegmentationPagingUI = function (result) {
     PagingSegmentSimulator.updateSegmentationPagingUI(result);
   };
-  window.resetSegmentationPagingUI = function() {
+  window.resetSegmentationPagingUI = function () {
     PagingSegmentSimulator.resetSegmentationPagingUI();
   };
   window.getSegmentationPagingInputs = getSegmentationPagingInputs;
-  window.attachSegmentationPagingInputListeners = attachSegmentationPagingInputListeners;
+  window.attachSegmentationPagingInputListeners =
+    attachSegmentationPagingInputListeners;
 }
 
-if (typeof module !== 'undefined' && module.exports) {
+if (typeof module !== "undefined" && module.exports) {
   module.exports = { PagingSegmentSimulator };
 }

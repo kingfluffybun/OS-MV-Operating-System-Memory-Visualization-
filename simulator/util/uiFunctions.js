@@ -77,8 +77,7 @@ const getProcessSizes = () => {
   // Check which view is active - Segmentation (in index.html), Paging, Standard,
   // or standalone simulation-Segmentation.html
   if (segPagingView && segPagingView.style.display === "grid") {
-    activeProcessContainer =
-      segPagingView.querySelector(".process-container");
+    activeProcessContainer = segPagingView.querySelector(".process-container");
   } else if (segmentationView && segmentationView.style.display === "grid") {
     // Segmentation section inside index.html
     activeProcessContainer =
@@ -242,10 +241,10 @@ const updateStatistics = (stats) => {
     segPagingView && segPagingView.style.display === "grid"
       ? segPagingView
       : segmentationView && segmentationView.style.display === "grid"
-      ? segmentationView
-      : pagingView && pagingView.style.display === "grid"
-        ? pagingView
-        : standardView;
+        ? segmentationView
+        : pagingView && pagingView.style.display === "grid"
+          ? pagingView
+          : standardView;
 
   const query = (id) => {
     const el = activeView
@@ -278,8 +277,13 @@ const setTotalMemoryDisplay = (total) => {
   let totalMemoryEl = null;
 
   // Check if segmentation-paging view is active
-  const segmentationPagingView = document.getElementById("segmentation-paging-view");
-  if (segmentationPagingView && segmentationPagingView.style.display !== "none") {
+  const segmentationPagingView = document.getElementById(
+    "segmentation-paging-view",
+  );
+  if (
+    segmentationPagingView &&
+    segmentationPagingView.style.display !== "none"
+  ) {
     totalMemoryEl = segmentationPagingView.querySelector("#total-memory-value");
   }
 
@@ -334,10 +338,10 @@ function resetConsole() {
     segPagingView && segPagingView.style.display === "grid"
       ? segPagingView
       : segmentationView && segmentationView.style.display === "grid"
-      ? segmentationView
-      : pagingView && pagingView.style.display === "grid"
-        ? pagingView
-        : standardView;
+        ? segmentationView
+        : pagingView && pagingView.style.display === "grid"
+          ? pagingView
+          : standardView;
 
   const consoleContainer = activeView.querySelector(".console .container");
 
