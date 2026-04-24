@@ -1296,7 +1296,6 @@ const runStep = () => {
 
     // Update stats on first allocation
     if (simulationState.pageAllocationIndex === 0) {
-      simulationState.stats.allocatedSize += size;
       simulationState.stats.successfulAllocations += 1;
       simulationState.stats.intFragmentation += stepResult.result.internalFragmentation || 0;
     }
@@ -1317,8 +1316,12 @@ const runStep = () => {
         100
         : 0;
 
+    const dynamicAllocatedSize = Object.values(simulationState.memoryFrames.frames).reduce((sum, frame) => {
+      return sum + (frame.status === "Occupied" ? frame.used : 0);
+    }, 0);
+
     const pagingStats = {
-      allocatedSize: simulationState.stats.allocatedSize,
+      allocatedSize: dynamicAllocatedSize,
       totalFree,
       intFragmentation: simulationState.stats.intFragmentation,
       externalFragmentation: 0,
