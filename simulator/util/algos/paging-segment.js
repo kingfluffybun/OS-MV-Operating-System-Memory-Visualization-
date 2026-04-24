@@ -552,7 +552,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize,
         totalFree,
-        يفة: result.totalInternalFragmentation,
+        intFragmentation: result.totalInternalFragmentation,
         externalFragmentation: 0,
         memoryUtilization:
           result.totalMemory > 0
