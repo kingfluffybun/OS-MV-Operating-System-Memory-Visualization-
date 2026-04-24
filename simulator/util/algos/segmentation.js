@@ -437,7 +437,7 @@ const updateSegmentationDisplay = (status) => {
           // Add segment number
           const segmentNumberDiv = document.createElement("div");
           segmentNumberDiv.id = "segment-number";
-          segmentNumberDiv.textContent = `S${seg.id}`;
+          segmentNumberDiv.textContent = `S${index}`;
           segmentContainer.appendChild(segmentNumberDiv);
 
           // Add segment type info
