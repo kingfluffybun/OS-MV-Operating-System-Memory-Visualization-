@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/output.css">
-    <link rel="stylesheet" href="css/test.css">
+    <link rel="stylesheet" href="../css/output.css">
+    <link rel="stylesheet" href="../css/test.css">
     <title>OS-MV Comparison</title>
-    <script src="util/script.js" defer></script>
-    <script src="util/processFunctions.js" defer></script>
-    <script src="util/comparison.js" defer></script>
-    <script src="../database/db.js" defer></script>
-    <link rel="icon" type="image/x-icon" href="../LOGO/favicon.ico">
+    <script src="../util/script.js" defer></script>
+    <script src="../util/processFunctions.js" defer></script>
+    <script src="../util/comparison.js" defer></script>
+    <script src="../../database/db.js" defer></script>
+    <link rel="icon" type="image/x-icon" href="../../LOGO/favicon.ico">
 </head>
-<body onload="hub()">
+<body onload="hub()" >
     
     <div id="sidebar-container"></div>
 
@@ -22,7 +22,7 @@
         </button>
         <div class="main-container">
             <h2>Comparison Mode - Input Configuration</h2> <br>
-            <form id="simulation-Option" onsubmit="startSimulation(event)">
+            <form id="simulation-Option" onsubmit="startSimulationCompare(event)">
                 <div class="comparison-option-container">
                     <div class="global-setting" style="grid-column: span 2;">
                         <h3>Global Setting</h3>

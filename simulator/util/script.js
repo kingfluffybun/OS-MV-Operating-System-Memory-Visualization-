@@ -54,7 +54,7 @@ function showMenu() {
   // Check which page is user on
   const isAdminPage = currentPath.includes('/admin-dashboard/');
   const isSimulator = currentPath.includes('/simulator/algorithm/');
-  const isComparisonPage = currentPath.includes('/simulator/comparison.html');
+  const isComparisonPage = currentPath.includes('/simulator/compare/index.html') || currentPath.includes('/simulator/compare/simulation/');
   const isFrontPage = currentPath.includes('/simulator/index.html') || currentPath.endsWith('/simulator/');
 
   // Admin Menu
