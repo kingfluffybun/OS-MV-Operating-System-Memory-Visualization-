@@ -68,18 +68,18 @@ const sidebarLinks = () => {
 }
 
 function initSidebarFunctions() {
-  const toggleButton = document.getElementById("toggle-btn");
+  const toggleButtons = document.querySelectorAll("#toggle-btn");
   const sidebar = document.getElementById("sidebar");
   const logo = document.getElementById("logo");
   const logoH1 = document.getElementById("h1");
 
   window.sidebar = sidebar;
-  window.toggleButton = toggleButton;
+  window.toggleButtons = toggleButtons;
   window.logo = logo;
   window.logoH1 = logoH1;
 
   console.log("Sidebar elements found: ", {
-    toggleButton: !!toggleButton,
+    toggleButtonCount: toggleButtons.length,
     sidebar: !!sidebar,
     logo: !!logo,
     logoH1: !!logoH1
@@ -88,9 +88,10 @@ function initSidebarFunctions() {
   // Restore sidebar state from localStorage
   restoreSidebarState();
 
-  if (toggleButton) {
-    toggleButton.addEventListener("click", toggleSideBar);
-  }
+  // Attach event listener to ALL toggle buttons
+  toggleButtons.forEach(button => {
+    button.addEventListener("click", toggleSideBar);
+  });
 }
 
 const restoreSidebarState = () => {
@@ -122,14 +123,26 @@ const restoreSidebarState = () => {
 const toggleSideBar = () => {
   const standardView = document.getElementById('standard-view');
   const pagingView = document.getElementById('paging-view');
+  const segmentationView = document.getElementById('segmentation-view');
   const homeView = document.getElementById('home-view');
-  const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : (homeView || standardView);
 
-  // Fallback to window references or direct DOM query for admin-dashboard pages
-  const sidebar = window.sidebar || (activeView && activeView.getElementById("sidebar")) || document.getElementById("sidebar");
-  const toggleButton = window.toggleButton || (activeView && activeView.querySelector('#toggle-btn')) || document.getElementById("toggle-btn");
-  const logo = window.logo || (activeView && activeView.getElementById("logo")) || document.getElementById("logo");
-  const logoH1 = window.logoH1 || (activeView && activeView.getElementById("h1")) || document.getElementById("h1");
+  // Determine which view is currently visible
+  let activeView = null;
+  if (segmentationView && segmentationView.style.display !== 'none') {
+    activeView = segmentationView;
+  } else if (pagingView && pagingView.style.display !== 'none') {
+    activeView = pagingView;
+  } else if (homeView && homeView.style.display !== 'none') {
+    activeView = homeView;
+  } else if (standardView && standardView.style.display !== 'none') {
+    activeView = standardView;
+  }
+
+  // Get the toggle button from the currently visible view
+  const toggleButton = activeView ? activeView.querySelector('#toggle-btn') : document.getElementById("toggle-btn");
+  const sidebar = window.sidebar || document.getElementById("sidebar");
+  const logo = window.logo || document.getElementById("logo");
+  const logoH1 = window.logoH1 || document.getElementById("h1");
   const logoP = logo && logo.querySelector("p");
 
   if (sidebar) sidebar.classList.toggle("close");
