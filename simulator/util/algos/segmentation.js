@@ -217,7 +217,8 @@ let segmentationState = {
   isRunning: false,
   allocatedSegments: [],
   currentSegmentIndex: 0,
-  currentProcessBreakdown: null
+  currentProcessBreakdown: null,
+  currentAllocatedSegmentId: null
 };
 
 const getProcessColors = (processName) => {
@@ -235,6 +236,30 @@ const getProcessColors = (processName) => {
     bg: processEl.getAttribute('data-bg') || defaultColors.bg,
     border: processEl.getAttribute('data-border') || defaultColors.border,
   };
+};
+
+const followAllocatedSegment = (segmentId) => {
+  if (!segmentId) return;
+
+  document
+    .querySelectorAll(".physical-memory-container .allocated-segments.current")
+    .forEach((seg) => {
+      seg.classList.remove("current");
+      seg.style.outline = "";
+      seg.style.boxShadow = "";
+    });
+
+  const segEl = document.getElementById(`segment-${segmentId}`);
+  if (segEl) {
+    segEl.classList.add("current");
+    segEl.style.outline = "2px solid var(--primary-color)";
+    segEl.style.boxShadow = "0 0 0 1px rgba(76, 175, 80, 0.2)";
+    segEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center",
+    });
+  }
 };
 
 const getSegmentationInputs = () => {
@@ -277,6 +302,7 @@ const initializeSegmentationUI = (memory, processes = []) => {
   segmentationState.allocatedSegments = [];
   segmentationState.currentSegmentIndex = 0;
   segmentationState.currentProcessBreakdown = null;
+  segmentationState.currentAllocatedSegmentId = null;
   
   resetSegmentationUI();
   const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
@@ -485,6 +511,10 @@ const updatePhysicalMemoryDisplay = (status) => {
           const PX_PER_KB = 1;
           segDiv.style.height = `${(seg.size * PX_PER_KB) + 48}px`;
           segDiv.className = "allocated-segments";
+          segDiv.id = `segment-${seg.id}`;
+          if (seg.id === segmentationState.currentAllocatedSegmentId) {
+            segDiv.classList.add("current");
+          }
           segDiv.style.position = `relative`;
           segDiv.style.backgroundColor = bg;
           segDiv.style.borderBottom = `4px solid ${border}`;
@@ -537,6 +567,9 @@ const updatePhysicalMemoryDisplay = (status) => {
     
     container.innerHTML = "";
     container.appendChild(memDiv);
+    
+    // Highlight and scroll to current segment
+    followAllocatedSegment(segmentationState.currentAllocatedSegmentId);
   } catch (error) {
     console.error('Error updating physical memory display:', error);
   }
@@ -680,6 +713,7 @@ const allocateNextProcess = () => {
   const result = memorySimulator.segmentationStepSingle(segmentationState.memory, processName, segmentType, segmentSize);
   segmentationState.results[`${processName}-${segmentType}`] = result.result;
   segmentationState.allocatedSegments.push(result.result);
+  segmentationState.currentAllocatedSegmentId = result.result.segment.id;
 
   const waitForNextProcess = segmentationState.currentSegmentIndex >= 3;
 
@@ -712,6 +746,7 @@ const resetSegmentation = () => {
   segmentationState.isRunning = false;
   segmentationState.currentSegmentIndex = 0;
   segmentationState.currentProcessBreakdown = null;
+  segmentationState.currentAllocatedSegmentId = null;
   
   resetSegmentationUI();
   const segmentationProcessContainer = document.querySelector('#segmentation-view .process-container') || document.querySelector('.main-grid.segmentation .process-container');
