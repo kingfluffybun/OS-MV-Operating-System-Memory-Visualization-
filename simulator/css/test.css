@@ -448,6 +448,7 @@ button:disabled svg {
                             display: flex;
                             justify-content: space-between;
                             padding: 12px;
+                            font-size: 12px;
                         }
                         > .segment-pages {
                             display: flex;
