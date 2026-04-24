@@ -103,7 +103,9 @@ const PagingSegmentSimulator = {
     const allocatedFrames = [];
     const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
 
-    console.log(`Allocating ${pages.length} pages for ${processName} - ${segmentType}`);
+    console.log(
+      `Allocating ${pages.length} pages for ${processName} - ${segmentType}`,
+    );
 
     for (const page of pages) {
       const freeFrame = framesArray.find((frame) => frame.status === "Free");
@@ -126,7 +128,7 @@ const PagingSegmentSimulator = {
       freeFrame.pageIndex = page.pageIndex;
       freeFrame.used = page.size;
       page.frameId = freeFrame.frameId || freeFrame.id; // Support both frameId and id
-      
+
       allocation.push({
         processName,
         segmentType,
@@ -137,7 +139,9 @@ const PagingSegmentSimulator = {
       allocatedFrames.push(freeFrame);
     }
 
-    console.log(`Successfully allocated ${allocation.length} frames for ${segmentType}`);
+    console.log(
+      `Successfully allocated ${allocation.length} frames for ${segmentType}`,
+    );
     return { success: true, allocation };
   },
 
@@ -191,7 +195,7 @@ const PagingSegmentSimulator = {
         Code: breakdown.code,
         Heap: breakdown.heap,
         Data: breakdown.data,
-        Stack: breakdown.stack
+        Stack: breakdown.stack,
       })
         .map((segmentSize) => Math.ceil(segmentSize / pageSize))
         .reduce((total, count) => total + count, 0);
@@ -205,7 +209,7 @@ const PagingSegmentSimulator = {
           Code: breakdown.code,
           Heap: breakdown.heap,
           Data: breakdown.data,
-          Stack: breakdown.stack
+          Stack: breakdown.stack,
         }).forEach(([segmentType, segmentSize]) => {
           const { pages, internalFragmentation } = this.segmentToPages(
             segmentSize,
@@ -288,11 +292,22 @@ const PagingSegmentSimulator = {
     const { processes, memory, processResults, memorySize, pageSize } = state;
     if (!memory || !memory.frames) return null;
 
-    const framesArray = Array.isArray(memory.frames) ? memory.frames : Object.values(memory.frames);
-    const usedFrames = framesArray.filter((frame) => frame.status === "Occupied").length;
-    const freeFrames = framesArray.filter((frame) => frame.status === "Free").length;
-    const totalInternalFragmentation = processResults.reduce((sum, proc) => sum + (proc.internalFragmentation || 0), 0);
-    const allocatedProcesses = processResults.filter(p => p.status === 'Allocated').length;
+    const framesArray = Array.isArray(memory.frames)
+      ? memory.frames
+      : Object.values(memory.frames);
+    const usedFrames = framesArray.filter(
+      (frame) => frame.status === "Occupied",
+    ).length;
+    const freeFrames = framesArray.filter(
+      (frame) => frame.status === "Free",
+    ).length;
+    const totalInternalFragmentation = processResults.reduce(
+      (sum, proc) => sum + (proc.internalFragmentation || 0),
+      0,
+    );
+    const allocatedProcesses = processResults.filter(
+      (p) => p.status === "Allocated",
+    ).length;
 
     return {
       totalMemory: memorySize,
@@ -309,15 +324,21 @@ const PagingSegmentSimulator = {
   },
 
   getSegmentContainer() {
-    return document.querySelector("#segmentation-paging-view .segmentation-paging");
+    return document.querySelector(
+      "#segmentation-paging-view .segmentation-paging",
+    );
   },
 
   getFramesContainer() {
-    return document.querySelector('#segmentation-paging-view .frames-container');
+    return document.querySelector(
+      "#segmentation-paging-view .frames-container",
+    );
   },
 
   getPageTableBody() {
-    return document.querySelector("#segmentation-paging-view #seg-paging-table-body");
+    return document.querySelector(
+      "#segmentation-paging-view #seg-paging-table-body",
+    );
   },
 
   resetSegmentationPagingUI() {
@@ -421,13 +442,14 @@ const PagingSegmentSimulator = {
 
         let pagesHtml = "";
         segment.pages.forEach((page) => {
-          const isCurrent = currentAlloc.processName === process.processName &&
-                            currentAlloc.segmentType === segment.segmentType &&
-                            currentAlloc.pageIndex === page.pageIndex;
+          const isCurrent =
+            currentAlloc.processName === process.processName &&
+            currentAlloc.segmentType === segment.segmentType &&
+            currentAlloc.pageIndex === page.pageIndex;
           const currentClass = isCurrent ? " current" : "";
-          
+
           pagesHtml += `
-            <div class="page" id="seg-page-${process.processName.replace(/\s+/g, '-')}-${segment.segmentType}-${page.pageIndex}">
+            <div class="page" id="seg-page-${process.processName.replace(/\s+/g, "-")}-${segment.segmentType}-${page.pageIndex}">
               <p id="page-number">P${page.pageIndex}</p>
               <div class="page-content${currentClass}" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">
                 <p>${process.processName} - ${segment.segmentType}</p>
@@ -456,9 +478,11 @@ const PagingSegmentSimulator = {
       });
     });
 
-    const framesArray = Array.isArray(result.memory.frames) ? result.memory.frames : Object.values(result.memory.frames);
-    let framesHtml = '';
-    let tableRowsHtml = '';
+    const framesArray = Array.isArray(result.memory.frames)
+      ? result.memory.frames
+      : Object.values(result.memory.frames);
+    let framesHtml = "";
+    let tableRowsHtml = "";
 
     // Build table rows based on allocation (logical to physical mapping)
     result.processResults.forEach((process) => {
@@ -470,7 +494,7 @@ const PagingSegmentSimulator = {
               <td>${process.processName}</td>
               <td>${segment.segmentType}</td>
               <td>Page ${page.pageIndex}</td>
-              <td>${page.frameId !== null ? 'Frame ' + page.frameId : '-'}</td>
+              <td>${page.frameId !== null ? "Frame " + page.frameId : "-"}</td>
             </tr>`;
         });
       });
@@ -482,16 +506,16 @@ const PagingSegmentSimulator = {
 
     for (let i = 0; i < framesArray.length; i++) {
       const frame = framesArray[i];
-      const frameId = frame.frameId || frame.id || (i + 1);
-      let frameContent = '';
-      
-      if (frame.status === 'Occupied') {
+      const frameId = frame.frameId || frame.id || i + 1;
+      let frameContent = "";
+
+      if (frame.status === "Occupied") {
         const isCurrent = currentAlloc.frameId === frameId;
         const currentClass = isCurrent ? " current" : "";
-        
+
         let bg = "#CAFFBF"; // Fallback color
         let border = "#98BF8F";
-        
+
         try {
           const colorPair = this.getProcessColor(frame.processName);
           if (colorPair) {
@@ -504,12 +528,10 @@ const PagingSegmentSimulator = {
 
         frameContent = `
           <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
-            <p>${frame.processName || 'Unknown'} - ${frame.segmentType || 'Page'}</p>
-            <p>Page ${frame.pageIndex !== null ? frame.pageIndex : '?'}</p>
+            <p>${frame.processName || "Unknown"} - ${frame.segmentType || "Page"}</p>
+            <p>Page ${frame.pageIndex !== null ? frame.pageIndex : "?"}</p>
             <p>${frame.size} KB</p>
           </div>`;
-        
-
       } else {
         frameContent = `
           <div class="frame-content" style="background-color: #fff; border-bottom-color: #ccc">
@@ -537,11 +559,11 @@ const PagingSegmentSimulator = {
       //   appendConsoleMessage(`DEBUG: DOM updated successfully. Container now has ${targetContainer.children.length} elements.`);
       // }
     } else {
-      if (typeof appendConsoleMessage === 'function') {
+      if (typeof appendConsoleMessage === "function") {
         appendConsoleMessage(`ERROR: Could not find frames container in DOM!`);
       }
     }
-    
+
     if (tableBody) {
       tableBody.innerHTML = tableRowsHtml;
     }
@@ -571,8 +593,10 @@ const PagingSegmentSimulator = {
 
     if (currentAlloc && currentAlloc.frameId !== undefined) {
       setTimeout(() => {
-        const currentEls = document.querySelectorAll('.segmentation-paging .page-content.current, .simulation-segmentation .frame-content.current');
-        currentEls.forEach(el => {
+        const currentEls = document.querySelectorAll(
+          ".segmentation-paging .page-content.current, .simulation-segmentation .frame-content.current",
+        );
+        currentEls.forEach((el) => {
           el.scrollIntoView({
             behavior: "smooth",
             block: "center",
