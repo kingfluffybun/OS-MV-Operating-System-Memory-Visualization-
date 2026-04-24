@@ -623,28 +623,38 @@ const updateSegmentationTable = () => {
       const processSegments = processGroups[processName];
       
       if (processName === currentProcessName && segmentationState.currentProcessBreakdown) {
-        // Show breakdown for current process
-        const segmentTypes = [
-          { type: 'Code', size: segmentationState.currentProcessBreakdown.code || 0 },
-          { type: 'Heap', size: segmentationState.currentProcessBreakdown.heap || 0 },
-          { type: 'Data', size: segmentationState.currentProcessBreakdown.data || 0 },
-          { type: 'Stack', size: segmentationState.currentProcessBreakdown.stack || 0 }
-        ];
+        // Show allocated segments for this process with actual base/limit
+        processSegments.forEach(seg => {
+          const row = document.createElement("tr");
+          const { bg, border } = getProcessColors(seg.name);
+          row.style.borderLeft = `8px solid ${bg}`;
+          row.innerHTML = `
+            <td>${seg.name}</td>
+            <td>${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</td>
+            <td>${seg.base}</td>
+            <td>${seg.end}</td>
+          `;
+          tableBody.appendChild(row);
+        });
         
-        segmentTypes.forEach((segmentType, index) => {
-          if (segmentType.size > 0) {
+        // Show remaining segments to be allocated with -
+        const segmentTypes = ['code', 'heap', 'data', 'stack'];
+        for (let i = segmentationState.currentSegmentIndex; i < 4; i++) {
+          const type = segmentTypes[i];
+          const size = segmentationState.currentProcessBreakdown[type];
+          if (size > 0) {
             const row = document.createElement("tr");
             const { bg, border } = getProcessColors(processName);
             row.style.borderLeft = `8px solid ${bg}`;
             row.innerHTML = `
               <td>${processName}</td>
-              <td>${segmentType.type}</td>
+              <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
               <td>-</td>
               <td>-</td>
             `;
             tableBody.appendChild(row);
           }
-        });
+        }
       } else {
         // Show allocated segments for completed processes
         processSegments.forEach(seg => {
