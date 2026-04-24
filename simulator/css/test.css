@@ -250,8 +250,8 @@ button:disabled svg {
         }
         .block-group-middle {
             border-radius: 0;
-            margin-right: -10px;
-            margin-left: -10px;
+            /* margin-right: -10px; */
+            /* margin-left: -10px; */
             z-index: 1;
         }
         .block-group-last {
