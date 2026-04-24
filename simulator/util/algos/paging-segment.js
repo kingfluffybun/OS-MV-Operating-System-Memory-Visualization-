@@ -140,6 +140,34 @@ const PagingSegmentSimulator = {
     return { success: true, allocation };
   },
 
+  // Allocate a single page to a free frame.
+  allocatePageStepSingle(frames, processName, segmentType, page) {
+    const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
+    const freeFrame = framesArray.find((frame) => frame.status === "Free");
+
+    if (!freeFrame) {
+      return { success: false };
+    }
+
+    freeFrame.status = "Occupied";
+    freeFrame.processName = processName;
+    freeFrame.segmentType = segmentType;
+    freeFrame.pageIndex = page.pageIndex;
+    freeFrame.used = page.size;
+    page.frameId = freeFrame.frameId || freeFrame.id;
+
+    return {
+      success: true,
+      allocation: {
+        processName,
+        segmentType,
+        pageIndex: page.pageIndex,
+        pageSize: page.size,
+        frameId: page.frameId,
+      },
+    };
+  },
+
   // Simulate segmentation with paging for a list of processes.
   simulate(processes, totalMemory = 128, pageSize = 4) {
     const memory = this.createFrames(totalMemory, pageSize);
@@ -351,14 +379,14 @@ const PagingSegmentSimulator = {
     const framesContainer = this.getFramesContainer();
     const tableBody = this.getPageTableBody();
 
-    if (!segContainer || !framesContainer || !tableBody || !result) {
-      console.warn("UI Containers or Result missing:", { segContainer, framesContainer, tableBody, result });
-      return;
-    }
+    // if (!segContainer || !framesContainer || !tableBody || !result) {
+    //   console.warn("UI Containers or Result missing:", { segContainer, framesContainer, tableBody, result });
+    //   return;
+    // }
 
-    if (typeof appendConsoleMessage === 'function') {
-      appendConsoleMessage(`DEBUG: Rendering ${result.processResults.length} processes and ${result.memory.frames.length} frames.`);
-    }
+    // if (typeof appendConsoleMessage === 'function') {
+    //   appendConsoleMessage(`DEBUG: Rendering ${result.processResults.length} processes and ${result.memory.frames.length} frames.`);
+    // }
 
     segContainer.innerHTML = "";
     framesContainer.innerHTML = "";
@@ -424,9 +452,9 @@ const PagingSegmentSimulator = {
     let framesHtml = '';
     let tableRowsHtml = '';
 
-    if (typeof appendConsoleMessage === 'function') {
-      appendConsoleMessage(`DEBUG: Processing ${framesArray.length} frames...`);
-    }
+    // if (typeof appendConsoleMessage === 'function') {
+    //   appendConsoleMessage(`DEBUG: Processing ${framesArray.length} frames...`);
+    // }
 
     for (let i = 0; i < framesArray.length; i++) {
       const frame = framesArray[i];
@@ -476,9 +504,9 @@ const PagingSegmentSimulator = {
         </div>`;
     }
 
-    if (typeof appendConsoleMessage === 'function') {
-      appendConsoleMessage(`DEBUG: HTML build complete (${framesHtml.length} chars). Applying to DOM...`);
-    }
+    // if (typeof appendConsoleMessage === 'function') {
+    //   appendConsoleMessage(`DEBUG: HTML build complete (${framesHtml.length} chars). Applying to DOM...`);
+    // }
 
     const targetContainer = document.querySelector('.simulation-segmentation #frames-container') || 
                             document.querySelector('.simulation-segmentation .frames-container') ||
@@ -486,9 +514,9 @@ const PagingSegmentSimulator = {
 
     if (targetContainer) {
       targetContainer.innerHTML = framesHtml;
-      if (typeof appendConsoleMessage === 'function') {
-        appendConsoleMessage(`DEBUG: DOM updated successfully. Container now has ${targetContainer.children.length} elements.`);
-      }
+      // if (typeof appendConsoleMessage === 'function') {
+      //   appendConsoleMessage(`DEBUG: DOM updated successfully. Container now has ${targetContainer.children.length} elements.`);
+      // }
     } else {
       if (typeof appendConsoleMessage === 'function') {
         appendConsoleMessage(`ERROR: Could not find frames container in DOM!`);
