@@ -1362,7 +1362,9 @@ const runPlay = () => {
 
     const standardView = document.getElementById('standard-view');
     const pagingView = document.getElementById('paging-view');
-    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+    const segmentationView = document.getElementById('segmentation-view');
+    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView :
+    (segmentationView && segmentationView.style.display === 'grid') ? segmentationView : standardView;
 
     const playBtn = activeView ? activeView.querySelector("#play-btn") : document.querySelector("#play-btn");
     const stopBtn = activeView ? activeView.querySelector("#stop-btn") : document.querySelector("#stop-btn");
@@ -1477,7 +1479,7 @@ const runReset = () => {
       randomizeBtn.style.display = "";
     }
 
-    const addProcessBtn = document.querySelector("#add-process-btn");
+    const addProcessBtn = activeView.querySelector("#add-process-btn");
     if (addProcessBtn) {
         addProcessBtn.disabled = false;
     }
@@ -1521,6 +1523,13 @@ function reEnableSimulationButtons() {
     randomizeBtn.style.cursor = "pointer";
   }
 
+  const addProcessBtn = activeView.querySelector('#add-process-btn');
+  if (addProcessBtn) {
+    addProcessBtn.disabled = false;
+    addProcessBtn.style.opacity = "1";
+    addProcessBtn.style.cursor = "pointer";
+  }
+
   // Note: add block button is NOT re-enabled here - it only reappears when reset is clicked
 
   // Re-enable process action buttons
@@ -1535,9 +1544,6 @@ function reEnableSimulationButtons() {
     btn.style.opacity = "1";
     btn.style.cursor = "pointer";
   });
-
-  const addProcessBtn = document.getElementById('add-process-btn');
-  if (addProcessBtn) addProcessBtn.disabled = false;
 
   // Re-attach listeners to ensure they work
   attachSimulationListeners();
