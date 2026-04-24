@@ -1,13 +1,16 @@
 // ========== UI HELPERS ==========
 function appendConsoleMessage(message) {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const segmentationView = document.getElementById("segmentation-view");
 
   let activeView = null;
-  if (standardView && standardView.style.display === 'grid') activeView = standardView;
-  if (pagingView && pagingView.style.display === 'grid') activeView = pagingView;
-  if (segmentationView && segmentationView.style.display === 'grid') activeView = segmentationView;
+  if (standardView && standardView.style.display === "grid")
+    activeView = standardView;
+  if (pagingView && pagingView.style.display === "grid")
+    activeView = pagingView;
+  if (segmentationView && segmentationView.style.display === "grid")
+    activeView = segmentationView;
 
   let consoleContainer = null;
 
@@ -30,49 +33,63 @@ function appendConsoleMessage(message) {
 appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
 
 function initPagingConsole() {
-  const pagingView = document.getElementById('paging-view');
+  const pagingView = document.getElementById("paging-view");
   if (!pagingView) return;
 
-  const consoleContainer = pagingView.querySelector('.console .container');
+  const consoleContainer = pagingView.querySelector(".console .container");
   if (!consoleContainer) return;
 
-  consoleContainer.innerHTML = '';
+  consoleContainer.innerHTML = "";
 
-  appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
+  appendConsoleMessage(
+    "System Ready. Add processes/partitions or click Start.",
+  );
 }
 
 function initSegmentationConsole() {
-  const segmentationView = document.getElementById('segmentation-view');
+  const segmentationView = document.getElementById("segmentation-view");
   if (!segmentationView) return;
 
-  const consoleContainer = segmentationView.querySelector('.console .container');
+  const consoleContainer = segmentationView.querySelector(
+    ".console .container",
+  );
   if (!consoleContainer) return;
 
-  consoleContainer.innerHTML = '';
+  consoleContainer.innerHTML = "";
 
-  appendConsoleMessage("System Ready. Add processes/partitions or click Start.");
+  appendConsoleMessage(
+    "System Ready. Add processes/partitions or click Start.",
+  );
 }
 
 const getProcessSizes = () => {
-  const standardView = document.getElementById('standard-view');
-  const pagingView = document.getElementById('paging-view');
-  const segmentationView = document.getElementById('segmentation-view');
-  const mainGrid = document.querySelector('.main-grid');
-  
+  const standardView = document.getElementById("standard-view");
+  const pagingView = document.getElementById("paging-view");
+  const segmentationView = document.getElementById("segmentation-view");
+  const mainGrid = document.querySelector(".main-grid");
+
   let activeProcessContainer = null;
-  
+
   // Check which view is active - Segmentation (in index.html), Paging, Standard,
   // or standalone simulation-Segmentation.html
-  if (segmentationView && segmentationView.style.display === 'grid') {
+  if (segmentationView && segmentationView.style.display === "grid") {
     // Segmentation section inside index.html
-    activeProcessContainer = segmentationView.querySelector('.process-container');
-  } else if (mainGrid && mainGrid.classList.contains('segmentation') && !standardView && !pagingView) {
+    activeProcessContainer =
+      segmentationView.querySelector(".process-container");
+  } else if (
+    mainGrid &&
+    mainGrid.classList.contains("segmentation") &&
+    !standardView &&
+    !pagingView
+  ) {
     // Standalone segmentation page (simulation-Segmentation.html)
-    activeProcessContainer = mainGrid.querySelector('.process-container');
-  } else if (pagingView && pagingView.style.display === 'grid') {
-    activeProcessContainer = pagingView.querySelector('.process-container');
+    activeProcessContainer = mainGrid.querySelector(".process-container");
+  } else if (pagingView && pagingView.style.display === "grid") {
+    activeProcessContainer = pagingView.querySelector(".process-container");
   } else {
-    activeProcessContainer = standardView ? standardView.querySelector('.process-container') : processContainer;
+    activeProcessContainer = standardView
+      ? standardView.querySelector(".process-container")
+      : processContainer;
   }
 
   if (!activeProcessContainer) return [];
@@ -131,19 +148,26 @@ const updateBlockVisuals = (results) => {
 
     const currentStatusLabel = block.querySelector(".block-status");
     const processTextContent = currentStatusLabel?.textContent?.trim();
-    
+
     let currentAllocation = null;
     if (processTextContent && processTextContent.startsWith("Process")) {
       currentAllocation = [processTextContent, results[processTextContent]];
     }
-    
+
     if (!currentAllocation) {
-      const blockPos = Array.from(simulationContainer.querySelectorAll(".block"))
-        .filter((b) => !b.classList.contains("block--split-free") && !b.classList.contains("block--fixed-waste") && !b.id.startsWith("block-split-"))
-        .indexOf(block) + 1;
-      
+      const blockPos =
+        Array.from(simulationContainer.querySelectorAll(".block"))
+          .filter(
+            (b) =>
+              !b.classList.contains("block--split-free") &&
+              !b.classList.contains("block--fixed-waste") &&
+              !b.id.startsWith("block-split-"),
+          )
+          .indexOf(block) + 1;
+
       currentAllocation = Object.entries(results).find(
-        ([_, res]) => res.status === "Allocated" && parseInt(res.block, 10) === blockPos,
+        ([_, res]) =>
+          res.status === "Allocated" && parseInt(res.block, 10) === blockPos,
       );
     }
 
@@ -179,7 +203,11 @@ const updateBlockVisuals = (results) => {
         const titleEl = block.querySelector("p");
         if (titleEl) {
           const isSplit = block.id.startsWith("block-split-");
-          if (isSplit || block.classList.contains("block-group-middle") || block.classList.contains("block-group-last")) {
+          if (
+            isSplit ||
+            block.classList.contains("block-group-middle") ||
+            block.classList.contains("block-group-last")
+          ) {
             titleEl.textContent = "";
           } else {
             titleEl.textContent = `Block ${result.displayBlock}`;
@@ -202,20 +230,26 @@ const updateStatistics = (stats) => {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
-  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
-                     (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const activeView =
+    segmentationView && segmentationView.style.display === "grid"
+      ? segmentationView
+      : pagingView && pagingView.style.display === "grid"
+        ? pagingView
+        : standardView;
 
   const query = (id) => {
-    const el = activeView ? activeView.querySelector('#' + id) : document.getElementById(id);
+    const el = activeView
+      ? activeView.querySelector("#" + id)
+      : document.getElementById(id);
     return el || document.getElementById(id);
   };
 
-  const allocatedEl = query('allocated-value');
-  const totalFreeEl = query('total-free-value');
-  const internalFragEl = query('internal-frag-value');
-  const externalFragEl = query('external-frag-value');
-  const utilEl = query('util-value');
-  const successEl = query('success-rate-value');
+  const allocatedEl = query("allocated-value");
+  const totalFreeEl = query("total-free-value");
+  const internalFragEl = query("internal-frag-value");
+  const externalFragEl = query("external-frag-value");
+  const utilEl = query("util-value");
+  const successEl = query("success-rate-value");
 
   if (allocatedEl)
     allocatedEl.textContent = `${Math.round(stats.allocatedSize)} KB`;
@@ -232,29 +266,29 @@ const updateStatistics = (stats) => {
 const setTotalMemoryDisplay = (total) => {
   // Try to find the element in the active view (paging/segmentation/standard)
   let totalMemoryEl = null;
-  
+
   // Check if paging view is active
   const pagingView = document.getElementById("paging-view");
-  if (pagingView && pagingView.style.display !== 'none') {
+  if (pagingView && pagingView.style.display !== "none") {
     totalMemoryEl = pagingView.querySelector("#total-memory-value");
   }
-  
+
   // Check if segmentation view is active
   if (!totalMemoryEl) {
     const segmentationView = document.getElementById("segmentation-view");
-    if (segmentationView && segmentationView.style.display !== 'none') {
+    if (segmentationView && segmentationView.style.display !== "none") {
       totalMemoryEl = segmentationView.querySelector("#total-memory-value");
     }
   }
-  
+
   // Check if standard view is active
   if (!totalMemoryEl) {
     const standardView = document.getElementById("standard-view");
-    if (standardView && standardView.style.display !== 'none') {
+    if (standardView && standardView.style.display !== "none") {
       totalMemoryEl = standardView.querySelector("#total-memory-value");
     }
   }
-  
+
   // Check standalone paging page (simulation-Paging.html)
   if (!totalMemoryEl) {
     const mainGrid = document.querySelector(".main-grid.paging");
@@ -262,12 +296,12 @@ const setTotalMemoryDisplay = (total) => {
       totalMemoryEl = mainGrid.querySelector("#total-memory-value");
     }
   }
-  
+
   // Fallback to global search
   if (!totalMemoryEl) {
     totalMemoryEl = document.getElementById("total-memory-value");
   }
-  
+
   if (totalMemoryEl) {
     totalMemoryEl.textContent = `${Math.round(total)} KB`;
   }
@@ -277,8 +311,12 @@ function resetConsole() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
-  const activeView = (segmentationView && segmentationView.style.display === "grid") ? segmentationView :
-                     (pagingView && pagingView.style.display === "grid") ? pagingView : standardView;
+  const activeView =
+    segmentationView && segmentationView.style.display === "grid"
+      ? segmentationView
+      : pagingView && pagingView.style.display === "grid"
+        ? pagingView
+        : standardView;
 
   const consoleContainer = activeView.querySelector(".console .container");
 

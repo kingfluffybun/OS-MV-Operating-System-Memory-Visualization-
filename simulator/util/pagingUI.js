@@ -10,14 +10,14 @@ const getPagingInputs = () => {
   // Try to find inputs in the paging view first
   let pageSizeInput = null;
   let memorySizeInput = null;
-  
+
   // Check if we're in the paging view section
   const pagingView = document.getElementById("paging-view");
-  if (pagingView && pagingView.style.display !== 'none') {
+  if (pagingView && pagingView.style.display !== "none") {
     pageSizeInput = pagingView.querySelector("#page-frame-size");
     memorySizeInput = pagingView.querySelector("#memory-size");
   }
-  
+
   // Check standalone paging page (simulation-Paging.html)
   if (!memorySizeInput) {
     const mainGrid = document.querySelector(".main-grid.paging");
@@ -26,7 +26,7 @@ const getPagingInputs = () => {
       memorySizeInput = mainGrid.querySelector("#memory-size");
     }
   }
-  
+
   // Fallback to any element with those IDs
   if (!pageSizeInput) {
     pageSizeInput = document.getElementById("page-frame-size");
@@ -34,9 +34,11 @@ const getPagingInputs = () => {
   if (!memorySizeInput) {
     memorySizeInput = document.getElementById("memory-size");
   }
-  
+
   const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
-  const memorySize = memorySizeInput ? parseInt(memorySizeInput.value, 10) : NaN;
+  const memorySize = memorySizeInput
+    ? parseInt(memorySizeInput.value, 10)
+    : NaN;
   return { pageSize, memorySize };
 };
 
@@ -54,7 +56,7 @@ const resetPagingUI = () => {
   if (pagesContainer) pagesContainer.innerHTML = "";
   if (framesContainer) framesContainer.innerHTML = "";
   if (pageTableBody) pageTableBody.innerHTML = "";
-  
+
   // Reset paging state
   pagingState = {
     allPages: {},
@@ -68,11 +70,11 @@ const initializePagingUI = (memoryFrames, processes = []) => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
 
-  // Display total memory at initialization
-  if (memoryFrames && memoryFrames.count && memoryFrames.frameSize) {
-    const totalMemory = memoryFrames.count * memoryFrames.frameSize;
-    if (typeof setTotalMemoryDisplay === 'function') {
-      setTotalMemoryDisplay(totalMemory);
+  // Display total memory at initialization using the actual memory size input
+  const { memorySize } = getPagingInputs();
+  if (!Number.isNaN(memorySize) && memorySize > 0) {
+    if (typeof setTotalMemoryDisplay === "function") {
+      setTotalMemoryDisplay(memorySize);
     }
   }
 
@@ -101,10 +103,10 @@ const initializePagingUI = (memoryFrames, processes = []) => {
   // 2. Pre-display all pages upfront for each process
   if (pagesContainer) {
     pagesContainer.innerHTML = "";
-    
+
     // Get process sizes and page size
     const { pageSize } = getPagingInputs();
-    
+
     if (!processes || processes.length === 0 || !pageSize || pageSize <= 0) {
       pagesContainer.innerHTML = `<div class="page page--placeholder"><p>Waiting for allocation</p></div>`;
       return;
@@ -142,7 +144,6 @@ const initializePagingUI = (memoryFrames, processes = []) => {
         spacer.style.minHeight = "12px";
         pagesContainer.appendChild(spacer);
       }
-
     });
   }
 };
@@ -161,14 +162,14 @@ const updatePagingUI = (memoryFrames) => {
   const pagesContainer = document.querySelector(".pages-container");
   const framesContainer = document.querySelector(".frames-container");
   const tableContainer = document.querySelector("#page-table-body");
-  
+
   if (!memoryFrames) return;
 
-  // Ensure total memory is displayed
-  if (memoryFrames.count && memoryFrames.frameSize) {
-    const totalMemory = memoryFrames.count * memoryFrames.frameSize;
-    if (typeof setTotalMemoryDisplay === 'function') {
-      setTotalMemoryDisplay(totalMemory);
+  // Ensure total memory is displayed using the actual memory size input
+  const { memorySize } = getPagingInputs();
+  if (!Number.isNaN(memorySize) && memorySize > 0) {
+    if (typeof setTotalMemoryDisplay === "function") {
+      setTotalMemoryDisplay(memorySize);
     }
   }
 
@@ -190,7 +191,7 @@ const updatePagingUI = (memoryFrames) => {
         statusLabel = `${frame.process}`;
         const colors = getProcessColor(frame.process);
         // usageInfo = `<p><strong>${frame.used}</strong>&nbsp;/&nbsp;${frame.size} KB</p>`;
-        
+
         frameEl.innerHTML = `
           <p id="frame-number">F${frame.id}</p>
           <div class="frame-content" style="grid-template-columns: repeat(3, 1fr);">
@@ -199,7 +200,7 @@ const updatePagingUI = (memoryFrames) => {
             ${usageInfo}
           </div>
         `;
-        
+
         const contentDiv = frameEl.querySelector(".frame-content");
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
@@ -218,7 +219,7 @@ const updatePagingUI = (memoryFrames) => {
           </div>
         `;
       }
-      
+
       framesContainer.appendChild(frameEl);
     });
   }
@@ -226,14 +227,16 @@ const updatePagingUI = (memoryFrames) => {
   // 2. Update Virtual Pages (Left Side) - Show frame assignments as they happen
   if (pagesContainer) {
     const pageElements = pagesContainer.querySelectorAll(".page");
-    
+
     pageElements.forEach((pageEl) => {
       const pageId = pageEl.id; // format: "page-process_1-0"
       if (!pageId) return;
-      
+
       const parts = pageId.replace("page-", "").split("-");
       const pageNumStr = parts[parts.length - 1];
-      const procName = pageId.replace("page-", "").replace(`-${pageNumStr}`, "");
+      const procName = pageId
+        .replace("page-", "")
+        .replace(`-${pageNumStr}`, "");
       const pageNum = parseInt(pageNumStr);
 
       // Find the frame that has this process and page
@@ -247,7 +250,7 @@ const updatePagingUI = (memoryFrames) => {
       if (allocatedFrame) {
         // Page has been allocated - show process name and memory usage
         const { pageSize } = getPagingInputs();
-        
+
         pageEl.innerHTML = `
           <p id="page-number">P${pageNum}</p>
           <div class="page-content">
@@ -255,7 +258,7 @@ const updatePagingUI = (memoryFrames) => {
             <p>${allocatedFrame.used}KB</p>
           </div>
         `;
-        
+
         const colors = getProcessColor(procName);
         const contentDiv = pageEl.querySelector(".page-content");
         if (contentDiv) {
@@ -272,11 +275,13 @@ const updatePagingUI = (memoryFrames) => {
 
     const frameToPageMap = {};
     const getNum = (val) => parseInt(String(val).replace(/\D/g, "")) || 0;
-    
 
     Object.values(memoryFrames.frames).forEach((frame) => {
       if (frame.status === "Occupied") {
-        frameToPageMap[frame.id] = { proc: frame.process, page: frame.page - 1 };
+        frameToPageMap[frame.id] = {
+          proc: frame.process,
+          page: frame.page - 1,
+        };
       }
     });
 
@@ -303,14 +308,15 @@ const updatePagingUI = (memoryFrames) => {
   }
 };
 
-
 const followAllocatedFrame = (frameId) => {
   if (!frameId) return;
   const frameEl = document.getElementById(`frame-${frameId}`);
   if (!frameEl) return;
 
   document
-    .querySelectorAll(".frames-container .frame .frame-content.current, .pages-container .page .page-content.current")
+    .querySelectorAll(
+      ".frames-container .frame .frame-content.current, .pages-container .page .page-content.current",
+    )
     .forEach((content) => content.classList.remove("current"));
 
   const contentEl = frameEl.querySelector(".frame-content");
@@ -325,7 +331,7 @@ const followAllocatedFrame = (frameId) => {
 
   // Get corresponding page
   if (frameEl.dataset.process && frameEl.dataset.page) {
-    const procName = frameEl.dataset.process.replace('process_', 'Process ');
+    const procName = frameEl.dataset.process.replace("process_", "Process ");
     const pageNum = parseInt(frameEl.dataset.page) - 1; // frame.page is 1-based, pageNum is 0-based
     const pageEl = document.getElementById(`page-${procName}-${pageNum}`);
     if (pageEl) {
@@ -359,3 +365,51 @@ const followAllocatedFrame = (frameId) => {
 // framesContainer.addEventListener('scroll', () => {
 //     pagesContainer.scrollTop = framesContainer.scrollTop;
 // });
+
+// ===== REAL-TIME TOTAL MEMORY UPDATE =====
+const updateTotalMemoryDisplay = () => {
+  const { memorySize } = getPagingInputs();
+  if (!Number.isNaN(memorySize) && memorySize > 0) {
+    if (typeof setTotalMemoryDisplay === "function") {
+      setTotalMemoryDisplay(memorySize);
+    }
+  }
+};
+
+// Attach listeners to paging-view inputs
+const attachPagingInputListeners = () => {
+  // Try to find inputs in the paging view first
+  const pagingView = document.getElementById("paging-view");
+  if (pagingView) {
+    const memorySizeInput = pagingView.querySelector("#memory-size");
+    if (memorySizeInput) {
+      memorySizeInput.addEventListener("input", updateTotalMemoryDisplay);
+      memorySizeInput.addEventListener("change", updateTotalMemoryDisplay);
+    }
+  }
+
+  // Try standalone paging page (simulation-Paging.html)
+  const mainGrid = document.querySelector(".main-grid.paging");
+  if (mainGrid) {
+    const memorySizeInput = mainGrid.querySelector("#memory-size");
+    if (memorySizeInput) {
+      memorySizeInput.addEventListener("input", updateTotalMemoryDisplay);
+      memorySizeInput.addEventListener("change", updateTotalMemoryDisplay);
+    }
+  }
+
+  // Fallback to global search
+  const memorySizeInput = document.getElementById("memory-size");
+  if (memorySizeInput && !memorySizeInput._paging_listener_attached) {
+    memorySizeInput.addEventListener("input", updateTotalMemoryDisplay);
+    memorySizeInput.addEventListener("change", updateTotalMemoryDisplay);
+    memorySizeInput._paging_listener_attached = true;
+  }
+};
+
+// Attach listeners when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", attachPagingInputListeners);
+} else {
+  attachPagingInputListeners();
+}
