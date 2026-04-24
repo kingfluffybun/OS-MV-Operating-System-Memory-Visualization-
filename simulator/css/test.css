@@ -250,8 +250,8 @@ button:disabled svg {
         }
         .block-group-middle {
             border-radius: 0;
-            margin-right: -10px;
-            margin-left: -10px;
+            /* margin-right: -10px; */
+            /* margin-left: -10px; */
             z-index: 1;
         }
         .block-group-last {
@@ -619,7 +619,12 @@ button:disabled svg {
 }
 
 .frames-container .frame .frame-content.current,
-.pages-container .page .frame-content.current {
+.pages-container .page .page-content.current {
+    outline: 2px solid var(--primary-color);
+    box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
+}
+
+.segmentation-container .segments.current {
     outline: 2px solid var(--primary-color);
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2);
 }

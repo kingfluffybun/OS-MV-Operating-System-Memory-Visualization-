@@ -189,6 +189,10 @@ const updatePagingUI = (memoryFrames) => {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
         }
+
+        // Set data attributes for followAllocatedFrame
+        frameEl.dataset.process = frame.process;
+        frameEl.dataset.page = frame.page;
       } else {
         frameEl.innerHTML = `
           <p id="frame-number">F${frame.id}</p>
@@ -290,7 +294,7 @@ const followAllocatedFrame = (frameId) => {
   if (!frameEl) return;
 
   document
-    .querySelectorAll(".frames-container .frame .frame-content.current, .pages-container .page .frame-content.current")
+    .querySelectorAll(".frames-container .frame .frame-content.current, .pages-container .page .page-content.current")
     .forEach((content) => content.classList.remove("current"));
 
   const contentEl = frameEl.querySelector(".frame-content");
@@ -303,16 +307,13 @@ const followAllocatedFrame = (frameId) => {
     });
   }
 
-  const pageMatch = contentEl
-    ? contentEl.querySelector("p")?.textContent?.trim().match(/^(.+?)\s*-\s*Page\s*(\d+)$/)
-    : null;
-
-  if (pageMatch) {
-    const procName = pageMatch[1];
-    const pageNum = Number(pageMatch[2]);
+  // Get corresponding page
+  if (frameEl.dataset.process && frameEl.dataset.page) {
+    const procName = frameEl.dataset.process.replace('process_', 'Process ');
+    const pageNum = parseInt(frameEl.dataset.page) - 1; // frame.page is 1-based, pageNum is 0-based
     const pageEl = document.getElementById(`page-${procName}-${pageNum}`);
     if (pageEl) {
-      const pageContent = pageEl.querySelector(".frame-content");
+      const pageContent = pageEl.querySelector(".page-content");
       if (pageContent) {
         pageContent.classList.add("current");
         pageEl.scrollIntoView({

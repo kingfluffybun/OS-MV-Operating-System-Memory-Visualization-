@@ -343,12 +343,18 @@ const updateSegmentationDisplay = (status) => {
     const container = document.querySelector(".segmentation-container");
     if (!container) return;
     
+    // Clear previous current highlights
+    document.querySelectorAll(".segmentation-container .segments.current").forEach(seg => seg.classList.remove("current"));
+    
     container.innerHTML = "";
     
     if (!status || !status.allocated || status.allocated.length === 0) {
       container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No segments allocated</div>';
       return;
     }
+    
+    // Get current allocated segment from current memory status
+    const currentSeg = status.allocated.find(seg => seg.id === segmentationState.currentAllocatedSegmentId);
     
     // Group segments by process name
     const processGroups = {};
@@ -400,7 +406,7 @@ const updateSegmentationDisplay = (status) => {
             const PX_PER_KB = 1;
             infoDiv.style.height = `${(segmentType.size * PX_PER_KB) + 48}px`;
             infoDiv.style.display = "flex";
-            infoDiv.className = "segments";
+            infoDiv.className = "segments" + (currentSeg && currentSeg.name === processName && currentSeg.type.toLowerCase() === segmentType.type.toLowerCase() ? " current" : "");
             infoDiv.style.backgroundColor = bg;
             infoDiv.style.borderBottom = `4px solid ${border}`;
             
@@ -445,7 +451,7 @@ const updateSegmentationDisplay = (status) => {
           const PX_PER_KB = 1;
           infoDiv.style.height = `${(seg.size * PX_PER_KB) + 48}px`;
           infoDiv.style.display = "flex";
-          infoDiv.className = "segments";
+          infoDiv.className = "segments" + (seg.id === segmentationState.currentAllocatedSegmentId ? " current" : "");
           infoDiv.style.backgroundColor = bg;
           infoDiv.style.borderBottom = `4px solid ${border}`;
           
@@ -475,6 +481,15 @@ const updateSegmentationDisplay = (status) => {
       
       container.appendChild(processDiv);
     });
+
+    const currentSegEl = container.querySelector('.segments.current');
+    if (currentSegEl) {
+      currentSegEl.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+        inline: 'center'
+      });
+    }
   } catch (error) {
     console.error('Error updating segmentation display:', error);
   }
@@ -608,28 +623,38 @@ const updateSegmentationTable = () => {
       const processSegments = processGroups[processName];
       
       if (processName === currentProcessName && segmentationState.currentProcessBreakdown) {
-        // Show breakdown for current process
-        const segmentTypes = [
-          { type: 'Code', size: segmentationState.currentProcessBreakdown.code || 0 },
-          { type: 'Heap', size: segmentationState.currentProcessBreakdown.heap || 0 },
-          { type: 'Data', size: segmentationState.currentProcessBreakdown.data || 0 },
-          { type: 'Stack', size: segmentationState.currentProcessBreakdown.stack || 0 }
-        ];
+        // Show allocated segments for this process with actual base/limit
+        processSegments.forEach(seg => {
+          const row = document.createElement("tr");
+          const { bg, border } = getProcessColors(seg.name);
+          row.style.borderLeft = `8px solid ${bg}`;
+          row.innerHTML = `
+            <td>${seg.name}</td>
+            <td>${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</td>
+            <td>${seg.base}</td>
+            <td>${seg.end}</td>
+          `;
+          tableBody.appendChild(row);
+        });
         
-        segmentTypes.forEach((segmentType, index) => {
-          if (segmentType.size > 0) {
+        // Show remaining segments to be allocated with -
+        const segmentTypes = ['code', 'heap', 'data', 'stack'];
+        for (let i = segmentationState.currentSegmentIndex; i < 4; i++) {
+          const type = segmentTypes[i];
+          const size = segmentationState.currentProcessBreakdown[type];
+          if (size > 0) {
             const row = document.createElement("tr");
             const { bg, border } = getProcessColors(processName);
             row.style.borderLeft = `8px solid ${bg}`;
             row.innerHTML = `
               <td>${processName}</td>
-              <td>${segmentType.type}</td>
+              <td>${type.charAt(0).toUpperCase() + type.slice(1)}</td>
               <td>-</td>
               <td>-</td>
             `;
             tableBody.appendChild(row);
           }
-        });
+        }
       } else {
         // Show allocated segments for completed processes
         processSegments.forEach(seg => {
