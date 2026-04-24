@@ -1827,11 +1827,13 @@ function simulatorLoad() {
   } else if (selectedAlgo && selectedAlgo.toLowerCase() === "seg-paging") {
     if (segPagingView) {
       segPagingView.style.display = 'grid';
-      attachSimulationListeners();
-      if (typeof initializeSegmentationPagingUI === 'function') {
-        // Initialize with default values if not already set
-        initializeSegmentationPagingUI([], 128, 4);
-      }
+      loadSegmentationPagingScript(function () {
+        attachSimulationListeners();
+        if (typeof initializeSegmentationPagingUI === 'function') {
+          // Initialize with default values if not already set
+          initializeSegmentationPagingUI([], 128, 4);
+        }
+      });
     }
   } else {
     if (standardView) {
@@ -1901,6 +1903,46 @@ function loadSegmentationScript(callback) {
     if (callback) callback();
   };
   document.head.appendChild(script);
+}
+
+function loadSegmentationPagingScript(callback) {
+  if (window.segPagingScriptLoaded) {
+    console.log("Seg-Paging script already loaded");
+    if (callback) callback();
+    return;
+  }
+
+  let loadedCount = 0;
+  const totalScripts = 2;
+
+  const checkLoaded = function () {
+    loadedCount++;
+    console.log('Script loaded:', loadedCount, 'of', totalScripts);
+    if (loadedCount === totalScripts) {
+      window.segPagingScriptLoaded = true;
+      attachSimulationListeners();
+      if (callback) callback();
+    }
+  };
+
+  const script1 = document.createElement('script');
+  script1.src = "../util/algos/paging-segment.js";
+  script1.onload = checkLoaded;
+  script1.onerror = function () {
+    console.error("Failed to load paging-segment.js");
+    checkLoaded();
+  };
+
+  const script2 = document.createElement('script');
+  script2.src = "../util/pagingUI.js";
+  script2.onload = checkLoaded;
+  script2.onerror = function () {
+    console.error("Failed to load pagingUI.js");
+    checkLoaded();
+  };
+
+  document.head.appendChild(script1);
+  document.head.appendChild(script2);
 }
 
 function loadDefaultScript(selectedAlgo, selectedPartition) {
