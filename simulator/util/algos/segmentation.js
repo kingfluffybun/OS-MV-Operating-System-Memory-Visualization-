@@ -38,21 +38,38 @@ class SegmentationMemory {
   allocate(name, size) {
     if (!name || size <= 0) throw new Error("invalid allocation");
     const breakdown = SegmentationMemory.breakdownSize(size);
-    const segments = [];
     const segmentTypes = ["code", "heap", "data", "stack"];
-    segmentTypes.forEach((type) => {
+    
+    // Save state for rollback
+    const originalSegments = [...this.segments];
+    const originalNextId = this.nextId;
+    const newSegments = [];
+    let possible = true;
+
+    for (const type of segmentTypes) {
       const segSize = breakdown[type];
       if (segSize > 0) {
         const base = this._findHole(segSize);
         if (base >= 0) {
           const seg = new Segment(this.nextId++, name, type, base, segSize);
           this.segments.push(seg);
-          segments.push(seg);
+          this.segments.sort((a, b) => a.base - b.base);
+          newSegments.push(seg);
+        } else {
+          possible = false;
+          break;
         }
       }
-    });
-    this.segments.sort((a, b) => a.base - b.base);
-    return segments.length > 0 ? segments[0] : null; // return first segment or null
+    }
+
+    if (!possible) {
+      // Rollback all segments for this process if even one fails
+      this.segments = originalSegments;
+      this.nextId = originalNextId;
+      return null;
+    }
+
+    return newSegments.length > 0 ? newSegments[0] : null;
   }
 
   allocateSegment(name, type, size) {
@@ -875,28 +892,56 @@ const allocateNextProcess = () => {
   );
   segmentationState.results[`${processName}-${segmentType}`] = result.result;
   segmentationState.allocatedSegments.push(result.result);
-  segmentationState.currentAllocatedSegmentId = result.result.segment.id;
 
-  const waitForNextProcess = segmentationState.currentSegmentIndex >= 3;
+  if (result.result.segment) {
+    segmentationState.currentAllocatedSegmentId = result.result.segment.id;
 
-  segmentationState.currentSegmentIndex++;
-  if (segmentationState.currentSegmentIndex >= 4) {
+    const waitForNextProcess = segmentationState.currentSegmentIndex >= 3;
+
+    segmentationState.currentSegmentIndex++;
+    if (segmentationState.currentSegmentIndex >= 4) {
+      segmentationState.currentProcessIndex++;
+      segmentationState.currentSegmentIndex = 0;
+      segmentationState.currentProcessBreakdown = null;
+    }
+
+    updateSegmentationUI();
+
+    return {
+      processName,
+      processIndex,
+      segmentType,
+      segmentSize,
+      status: result.result.status,
+      allocated: result.result.status === "Allocated",
+      completedProcess: waitForNextProcess,
+    };
+  } else {
+    // FAILED: Rollback any segments of this process already allocated
+    segmentationState.currentAllocatedSegmentId = null;
+
+    // Remove all segments with this processName from memory
+    while (segmentationState.memory.deallocate(processName)) {
+      // Continue until all segments for this process are deallocated
+    }
+
+    // Skip the rest of this process and mark as completed (failed)
     segmentationState.currentProcessIndex++;
     segmentationState.currentSegmentIndex = 0;
     segmentationState.currentProcessBreakdown = null;
+
+    updateSegmentationUI();
+
+    return {
+      processName,
+      processIndex,
+      segmentType,
+      segmentSize,
+      status: "Unallocated",
+      allocated: false,
+      completedProcess: true,
+    };
   }
-
-  updateSegmentationUI();
-
-  return {
-    processName,
-    processIndex,
-    segmentType,
-    segmentSize,
-    status: result.result.status,
-    allocated: result.result.status === "Allocated",
-    completedProcess: waitForNextProcess,
-  };
 };
 
 const resetSegmentation = () => {
