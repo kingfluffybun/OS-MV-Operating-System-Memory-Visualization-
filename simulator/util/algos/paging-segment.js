@@ -526,7 +526,7 @@ const PagingSegmentSimulator = {
           <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
             <p>${frame.processName || "Unknown"} - ${frame.segmentType || "Page"}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : "?"}</p>
-            <p>${frame.size} KB</p>
+            <p>${frame.used} KB</p>
           </div>`;
       } else {
         frameContent = `
