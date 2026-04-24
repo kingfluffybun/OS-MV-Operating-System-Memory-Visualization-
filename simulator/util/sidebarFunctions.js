@@ -27,7 +27,7 @@ async function loadSidebar() {
   }
 
   try {
-    const response = await fetch("../../../sidebar/sidebar.html");
+    const response = await fetch("../../sidebar/sidebar.html");
     const data = await response.text();
     container.innerHTML = data;
     console.log("Sidebar loaded successfully");
@@ -41,9 +41,8 @@ const getBasePath = () => {
 
   if (path.includes('/admin-dashboard/')) return '../';
   if (path.includes('/simulator/algorithm/')) return '../../';
-  if (path.includes('/simulator/compare/simulation/')) return '../../../';
-  if (path.includes('/simulator/compare/')) return '../../';
   if (path.includes('/simulator/')) return '../';
+  if (path.includes('/simulator/comparison.html')) return '../';
   return './';
 }
 
@@ -52,9 +51,9 @@ const sidebarLinks = () => {
 
   const linkMap = [
     {id: 'menu-dashboard', path: 'simulator/index.html'},
-    {id: 'comparison-mode', path: 'simulator/compare/index.html'}, // for comparison mode
     {id: 'menu-admin-dashboard', path: 'admin-dashboard/index.html'},
     {id: 'menu-back-simulator', path: 'simulator/index.html'}, // for admin dashboard
+    {id: 'comparison-mode', path: 'simulator/comparison.html'}, // for comparison mode
   ];
 
   linkMap.forEach(item => {
