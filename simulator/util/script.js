@@ -162,11 +162,14 @@ function attachProcessListeners() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");
   const segmentationView = document.getElementById("segmentation-view");
+  const segPagingView = document.getElementById("segmentation-paging-view");
   // Also handle standalone simulator pages such as simulation-Segmentation.html or simulation-Segmentation-Paging.html
   const mainGrid = document.querySelector(".main-grid") || document.querySelector(".main-grid.segmentation");
 
   let activeView = null;
-  if (pagingView && pagingView.style.display === "grid") {
+  if (segPagingView && segPagingView.style.display === "grid") {
+    activeView = segPagingView;
+  } else if (pagingView && pagingView.style.display === "grid") {
     activeView = pagingView;
   } else if (segmentationView && segmentationView.style.display === "grid") {
     activeView = segmentationView;
@@ -196,7 +199,18 @@ function attachProcessListeners() {
       const size = parseInt(sizeInput ? sizeInput.value : 0, 10);
       if (!size || size <= 0) return;
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        const segPagingContainer = activeView.querySelector(".process-container");
+        if (!segPagingContainer) return;
+        const nextId = segPagingContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        segPagingContainer.appendChild(newProcess);
+        if (sizeInput) sizeInput.value = '';
+        segPagingContainer.scrollTo({
+          top: segPagingContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      } else if (isPagingMode()) {
         const pagingprocessContainer = activeView.querySelector(".process-container");
         if (!pagingprocessContainer) return;
         const nextId = pagingprocessContainer.querySelectorAll(".process").length + 1;
@@ -233,7 +247,10 @@ function attachProcessListeners() {
     newRandomizeBtn.addEventListener("click", function () {
       let min, max;
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        min = 4;
+        max = 8;
+      } else if (isPagingMode()) {
         min = 3;
         max = 6;
       } else if (isSegmentationMode()) {
@@ -246,7 +263,17 @@ function attachProcessListeners() {
 
       const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
 
-      if (isPagingMode()) {
+      if (isSegmentationPagingMode()) {
+        const segPagingContainer = activeView.querySelector(".process-container");
+        if (!segPagingContainer) return;
+        const nextId = segPagingContainer.querySelectorAll(".process").length + 1;
+        const newProcess = createProcessElement(nextId, size);
+        segPagingContainer.appendChild(newProcess);
+        segPagingContainer.scrollTo({
+          top: segPagingContainer.scrollHeight,
+          behavior: "smooth",
+        });
+      } else if (isPagingMode()) {
         const pagingProcessContainer = activeView.querySelector(".process-container");
         if (!pagingProcessContainer) return;
         const nextId = pagingProcessContainer.querySelectorAll(".process").length + 1;
@@ -553,7 +580,7 @@ const prepareSimulation = () => {
 
   // Stamp the original size on every block element NOW, before any step shrinks them.
   // resetBlocksUI reads this to restore the display on reset.
-  if (!isPaging && !isSegmentation && simulationContainer) {
+  if (!isPaging && !isSegmentation && !isSegmentationPaging && simulationContainer) {
     simulationContainer.querySelectorAll(".block").forEach((block) => {
       const sizeEl =
         block.querySelector(".block-size-value") || block.querySelector("h2");
@@ -582,6 +609,8 @@ const prepareSimulation = () => {
     initializePagingUI(simulationState.memoryFrames, processes);
   } else if (isSegmentation) {
     updateSegmentationStatistics();
+  } else if (isSegmentationPaging) {
+    // Handled previously
   } else {
     setTotalMemoryDisplay(
       memorySimulator.totalMemory(simulationState.memoryHead),
@@ -601,7 +630,7 @@ const prepareSimulation = () => {
   highlightCurrentProcess();
 
   // Only disable controls for standard fixed/dynamic partition modes
-  if (!isPaging && !isSegmentation) {
+  if (!isPaging && !isSegmentation && !isSegmentationPaging) {
     const addBtn = document.getElementById('add-block-btn');
     if (addBtn) addBtn.style.display = 'none';
 
@@ -1430,12 +1459,11 @@ const runPlay = () => {
       playInterval = null;
     }
 
-    const standardView = document.getElementById('standard-view');
-    const pagingView = document.getElementById('paging-view');
-    const activeView = (pagingView && pagingView.style.display === 'grid') ? pagingView : standardView;
+    const activeView = getActiveView();
+    if (!activeView) return;
 
-    const playBtn = document.querySelector("#play-btn");
-    const stopBtn = document.querySelector("#stop-btn");
+    const playBtn = activeView.querySelector("#play-btn");
+    const stopBtn = activeView.querySelector("#stop-btn");
 
     playBtn.style.display = `none`;
     stopBtn.style.display = `flex`;
