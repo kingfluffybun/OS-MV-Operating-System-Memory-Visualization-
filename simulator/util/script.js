@@ -219,7 +219,7 @@ function attachProcessListeners() {
       if (isPagingMode()) {
         min = 3;
         max = 6;
-      } else if (isSegmentationMode) {
+      } else if (isSegmentationMode()) {
         min = 6;
         max = 8;
       } else {
