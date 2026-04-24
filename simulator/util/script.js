@@ -632,19 +632,18 @@ const prepareSimulation = () => {
   currentStep = 0;
   highlightCurrentProcess();
 
-  // Only disable controls for standard fixed/dynamic partition modes
+  // Only disable memory block controls for standard fixed/dynamic partition modes
   if (!isPaging && !isSegmentation && !isSegmentationPaging) {
     const addBtn = document.getElementById('add-block-btn');
     if (addBtn) addBtn.style.display = 'none';
-
-    const randomizeBtn = document.getElementById('randomize-value');
-    if (randomizeBtn) randomizeBtn.disabled = true;
-    const addProcessBtn = document.getElementById('add-process-btn');
-    if (addProcessBtn) addProcessBtn.disabled = true;
-
-    document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
     disableMemoryBlockControls();
   }
+
+  // Disable process controls for ALL modes
+  document.querySelectorAll('#randomize-value').forEach((btn) => (btn.disabled = true));
+  document.querySelectorAll('#add-process-btn').forEach((btn) => (btn.disabled = true));
+  document.querySelectorAll('.process-action').forEach((action) => (action.style.display = 'none'));
+
   return true;
 };
 
