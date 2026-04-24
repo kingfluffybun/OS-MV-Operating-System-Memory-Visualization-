@@ -329,6 +329,24 @@ const setTotalMemoryDisplay = (total) => {
   }
 };
 
+const followAllocatedBlock = (blockId) => {
+  if (!blockId || blockId === "None") return;
+
+  // Try finding a split block first, then a regular block
+  let blockEl = document.getElementById(`block-split-${blockId}`);
+  if (!blockEl) {
+    blockEl = document.getElementById(`block-${blockId}`);
+  }
+
+  if (blockEl && blockEl.scrollIntoView) {
+    blockEl.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+      inline: "center",
+    });
+  }
+};
+
 function resetConsole() {
   const standardView = document.getElementById("standard-view");
   const pagingView = document.getElementById("paging-view");

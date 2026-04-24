@@ -1498,6 +1498,10 @@ const runStep = () => {
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
 
+  if (finalResult && finalResult.status === "Allocated") {
+    followAllocatedBlock(finalResult.block);
+  }
+
   simulationState.currentIndex += 1;
   if (simulationState.currentIndex >= simulationState.processes.length) {
     appendConsoleMessage("Simulation complete");
