@@ -80,7 +80,7 @@ const memorySimulator = {
       totalMemory,
       allocatedSize,
       totalFree,
-      intFragmentation: stats.intFragmentation,
+      internalFragmentation: stats.internalFragmentation,
       externalFragmentation,
       memoryUtilization,
       successRate,
@@ -92,7 +92,7 @@ const memorySimulator = {
     const stats = {
       allocatedSize: 0,
       successfulAllocations: 0,
-      intFragmentation: 0,
+      internalFragmentation: 0,
     };
     const results = {};
 
@@ -107,7 +107,7 @@ const memorySimulator = {
       }
 
       if (bestBlock) {
-        stats.intFragmentation += bestBlock.size - size;
+        stats.internalFragmentation += bestBlock.size - size;
         stats.allocatedSize += size;
         stats.successfulAllocations++;
         bestBlock.status = "Occupied";
@@ -129,7 +129,7 @@ const memorySimulator = {
     const stats = {
       allocatedSize: 0,
       successfulAllocations: 0,
-      intFragmentation: 0,
+      internalFragmentation: 0,
     };
     const results = {};
 
@@ -151,6 +151,7 @@ const memorySimulator = {
 
       if (bestBlock) {
         const originalLabel = bestBlock.originalLabel ?? bestBlock.id;
+        stats.internalFragmentation += bestBlock.size - size;
         const leftover = bestBlock.size - size;
 
         // Allocate the block

@@ -80,7 +80,7 @@ const memorySimulator = {
       totalMemory,
       allocatedSize,
       totalFree,
-      intFragmentation: stats.intFragmentation,
+      internalFragmentation: stats.internalFragmentation,
       externalFragmentation,
       memoryUtilization,
       successRate,
@@ -118,7 +118,7 @@ const memorySimulator = {
 
     let maxBlockId = 0;
     for (let node = head; node; node = node.next) {
-      let logicalId = node.parentId || node.id;
+      let logicalId = node.originalLabel || node.parentId || node.id;
       if (logicalId > maxBlockId) maxBlockId = logicalId;
     }
 
@@ -137,7 +137,7 @@ const memorySimulator = {
           id: newBlockId,
           size: node.size,
           status: "Occupied",
-          parentId: node.parentId || node.id,
+          originalLabel: node.originalLabel || node.parentId || node.id,
           next: null,
         };
 
@@ -164,7 +164,7 @@ const memorySimulator = {
         id: newBlockId,
         size: freeTotal,
         status: "Free",
-        parentId: maxBlockId + 1,
+        originalLabel: maxBlockId + 1,
         next: null,
       };
 
@@ -212,7 +212,7 @@ const memorySimulator = {
       };
     }
 
-    const originalLabel = firstBlock.originalLabel ?? firstBlock.id;
+    const originalLabel = firstBlock.originalLabel ?? firstBlock.parentId ?? firstBlock.id;
     const leftover = firstBlock.size - processSize;
     firstBlock.size = processSize;
     firstBlock.status = "Occupied";

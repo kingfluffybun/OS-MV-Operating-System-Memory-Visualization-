@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="css/output.css">
+    <title>OS-MV Dashboard</title>
+    <script src="util/script.js" defer></script>
+    <script src="../database/db.js" defer></script>
+    <link rel="icon" type="image/x-icon" href="../LOGO/favicon.ico">
+</head>
+<body onload="hub()">
+
+    <div id="sidebar-container"></div>
+
+    <section class="main" id="home-view">
+        <button id="toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+        </button>
+        <div class="main-container">
+            <h2>Select Memory Allocation Algorithm</h2> <br>
+            <form id="simulation-Option" onsubmit="startSimulation(event)">
+                <div class="contiguous">
+                    <div class="header">
+                        <div style="display: flex; gap: 8px; flex-direction: column;">
+                            <h3>Contiguous</h3>
+                            <p>Stores data in one single, unbroken block.</p>
+                        </div>
+                        <!-- toggle fixed/dynamic -->
+                        <div class="toggle-partition">
+                            <label class="toggle">
+                                <input type="checkbox" class="checkbox" value="isDynamic">
+                                <div class="wrapper">
+                                    <div class="text">
+                                        <span class="fixed">Fixed</span>
+                                        <span class="dynamic">Dynamic</span>
+                                    </div>
+                                    <span class="pill"></span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="contiguous-option">
+                        <!-- First fit -->
+                        <label> 
+                            <input type="radio" name="algo" class="algo-option" value="first-fit">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search-icon lucide-search"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg></div>
+                                <h3>First Fit</h3>
+                                <p>Allocates the first hole encountered that is large enough.</p>
+                            </div>
+                        </label>
+                        <!-- Next fit -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="next-fit">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg></div>
+                                <h3>Next Fit</h3>
+                                <p>Allocates the first hole found starting from the last search.</p>
+                            </div>
+                        </label>
+                        <!-- Best fit -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="best-fit">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-puzzle-icon lucide-puzzle"><path d="M15.39 4.39a1 1 0 0 0 1.68-.474 2.5 2.5 0 1 1 3.014 3.015 1 1 0 0 0-.474 1.68l1.683 1.682a2.414 2.414 0 0 1 0 3.414L19.61 15.39a1 1 0 0 1-1.68-.474 2.5 2.5 0 1 0-3.014 3.015 1 1 0 0 1 .474 1.68l-1.683 1.682a2.414 2.414 0 0 1-3.414 0L8.61 19.61a1 1 0 0 0-1.68.474 2.5 2.5 0 1 1-3.014-3.015 1 1 0 0 0 .474-1.68l-1.683-1.682a2.414 2.414 0 0 1 0-3.414L4.39 8.61a1 1 0 0 1 1.68.474 2.5 2.5 0 1 0 3.014-3.015 1 1 0 0 1-.474-1.68l1.683-1.682a2.414 2.414 0 0 1 3.414 0z"/></svg></div>
+                                <h3>Best Fit</h3>
+                                <p>Allocates the smallest hole that can satisfy the request.</p>
+                            </div>
+                        </label>
+                        <!-- Worst fit -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="worst-fit">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-maximize2-icon lucide-maximize-2"><path d="M15 3h6v6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/><path d="M9 21H3v-6"/></svg></div>
+                                <h3>Worst Fit</h3>
+                                <p>Allocates the largest hole available in the entire list.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <div class="non-contiguous">
+                    <div class="header">
+                        <div style="display: flex; gap: 8px; flex-direction: column;">
+                            <h3>Non-Contiguous</h3>
+                            <p>Breaks data into pieces and fits them into any available memory gaps.</p>
+                        </div>
+                    </div>
+                    <div class="non-contiguous-option">
+                        <!-- Paging -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="Paging">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid3x3-icon lucide-grid-3x3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div>
+                                <h3>Paging</h3>
+                                <p>Divides memory into fixed-size blocks called pages.</p>
+                            </div>
+                        </label>
+                        <!-- Segmentation -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="Segmentation">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-columns3-icon lucide-columns-3"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></div>
+                                <h3>Segmentation</h3>
+                                <p>Divides memory into variable-size blocks based on logic.</p>
+                            </div>
+                        </label>
+                        <!-- Segmentation with Paging -->
+                        <label>
+                            <input type="radio" name="algo" class="algo-option" value="Seg-Paging">
+                            <div class="algo-content">
+                                <div class="algo-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layers2-icon lucide-layers-2"><path d="M13 13.74a2 2 0 0 1-2 0L2.5 8.87a1 1 0 0 1 0-1.74L11 2.26a2 2 0 0 1 2 0l8.5 4.87a1 1 0 0 1 0 1.74z"/><path d="m20 14.285 1.5.845a1 1 0 0 1 0 1.74L13 21.74a2 2 0 0 1-2 0l-8.5-4.87a1 1 0 0 1 0-1.74l1.5-.845"/></svg></div>
+                                <h3>Segmentation with Paging</h3>
+                                <p>Divides logical segments into fixed-size pages.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit">Start Simulation</button>
+            </form>
+        </div>
+        <!-- <div class="input-values">
+            <form action="">
+                <div class="input-block">
+                    <input type="number" name="block" id="block 1" placeholder="Block 1">
+                    <input type="number" name="block" id="block 2" placeholder="Block 2">
+                    <input type="number" name="block" id="block 3" placeholder="Block 3">
+                    <input type="number" name="block" id="block 4" placeholder="Block 4">
+                    <button type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        Add New Block
+                    </button>
+                </div>
+                
+                <div class="input-process">
+                    <input type="number" name="process" id="block 1" placeholder="Process 1">
+                    <input type="number" name="process" id="block 2" placeholder="Process 2">
+                    <input type="number" name="process" id="block 3" placeholder="Process 3">
+                    <input type="number" name="process" id="block 4" placeholder="Process 4">
+                    <button type="button">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                        Add New Process
+                    </button>
+                </div>
+            </form>
+        </div> -->
+
+    </section>
+
+    <!-- Popup Overlay -->
+    <div id="popup-overlay" class="popup-overlay" style="display: none;">
+        <div class="popup-box">
+            <div class="popup-header">
+                <h3 id="popup-title">Title</h3>
+                <button id="popup-close" class="popup-close-btn">&times;</button>
+            </div>
+            <div class="popup-body">
+                <p id="popup-message">Message</p>
+            </div>
+            <div class="popup-footer">
+                <button id="popup-cancel" class="popup-btn popup-btn-cancel">Cancel</button>
+                <button id="popup-confirm" class="popup-btn popup-btn-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
