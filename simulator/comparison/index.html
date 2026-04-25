@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/output.css">
+    <link rel="stylesheet" href="../css/test.css">
+    <title>OS-MV Comparison</title>
+    <script src="../util/script.js" defer></script>
+    <script src="../util/comparison.js" defer></script>
+    <script src="../../database/db.js" defer></script>
+    <link rel="icon" type="image/x-icon" href="../../LOGO/favicon.ico">
+</head>
+<body onload="hub()">
+    
+    <div id="sidebar-container"></div>
+
+    <section class="main" id="home-view">
+        <button id="toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+        </button>
+        <div class="main-container">
+            <h2>Comparison Mode - Input Configuration</h2> <br>
+            <form id="simulation-Option" onsubmit="startComparison(event)">
+                <div class="comparison-option-container">
+                    <div class="global-setting" style="grid-column: span 2;">
+                        <h3>Global Setting</h3>
+                        <div class="global-setting-input">
+                            <div>
+                                <label for="total-memory">Total Memory Size (KB)</label>
+                                <input type="number" id="total-memory" value="1024">
+                                <p>Shared across all 7 algorithms</p>
+                            </div>
+                            <div>
+                                <label for="page-size">Page Size / Frame Size (KB)</label>
+                                <input type="number" id="page-size" value="32">
+                                <p>Used for Paging and Segmentation with Paging</p>
+                            </div>
+                        </div>
+                        <div class="total-memory-info-bar">
+                            <p>1024 KB ÷ 32 KB per Pages = 16 Frames</p>
+                        </div>
+                    </div>
+                    <div class="process-setting">
+                        <h3>Process Setting</h3>
+                        <div class="total-process">
+                            <p>Total Process</p>
+                            <div>
+                                <p id="process-count">No Processes</p>
+                                <p id="process-total-size">0 KB</p>
+                            </div>
+                        </div>
+                        <div class="process-queue">
+                            <div class="container">
+                                <div class="input-prcs">
+                                    <input type="number" id="process-size-input" placeholder="Size (KB)">
+                                    <button type="button" id="add-process-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                    </button>
+                                    <button type="button" id="randomize-process-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
+                                    </button>
+                                </div>
+                                <div class="process-container" id="process-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="partition-setting">
+                        <h3>Partition Setting</h3>
+                        <div class="total-partition">
+                            <div style="display: flex; justify-content:space-between;">
+                                <p>Total Partition Size</p>
+                                <p id="partition-total">0 / 1024 KB (0%)</p>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="partition-fill" id="partition-fill" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="process-queue">
+                            <div class="container">
+                                <div class="input-prcs">
+                                    <input type="number" id="partition-size-input" placeholder="Size (KB)">
+                                    <button type="button" id="add-partition-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                    </button>
+                                    <button type="button" id="randomize-partition-btn">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
+                                    </button>
+                                </div>
+                                <div class="process-container" id="partition-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" style="grid-column: span 2;">Start Simulation</button>
+                </div>
+            </form>
+        </div>
+
+    </section>
+
+    <!-- Popup Overlay -->
+    <div id="popup-overlay" class="popup-overlay" style="display: none;">
+        <div class="popup-box">
+            <div class="popup-header">
+                <h3 id="popup-title">Title</h3>
+                <button id="popup-close" class="popup-close-btn">&times;</button>
+            </div>
+            <div class="popup-body">
+                <p id="popup-message">Message</p>
+            </div>
+            <div class="popup-footer">
+                <button id="popup-cancel" class="popup-btn popup-btn-cancel">Cancel</button>
+                <button id="popup-confirm" class="popup-btn popup-btn-confirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

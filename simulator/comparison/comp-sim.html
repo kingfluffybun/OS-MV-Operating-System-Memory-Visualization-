@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/comparison.css">
     <link rel="stylesheet" href="../css/output.css">
     <link rel="stylesheet" href="../css/test.css">
-    <link rel="stylesheet" href="../css/comparison.css">
     <title>OS-MV</title>
     <link rel="icon" type="image/x-icon" href="../../LOGO/favicon.ico">
     <script src="../util/script.js" defer></script>
+    <script src="../util/comparison.js" defer></script>
+    <script src="../util/comp-sim.js" defer></script>
     <script src="../../database/db.js" defer></script>
 </head>
-<body onload="simulatorLoad()">
+<body>
 
     <div id="sidebar-container"></div>
     
@@ -19,6 +21,8 @@
         <button id="toggle-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
         </button>
+
+        <!-- Controls -->
         <div class="simulation-controls">
             <div>
                 <button id="play-btn">
@@ -37,7 +41,7 @@
                 </button>
             </div>
             <div>
-                <button id="next-btn">
+                <button id="nex-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
                     <p>Next</p>
                 </button>
@@ -52,34 +56,27 @@
                 </div>
             </div>
         </div>
+
+        <!-- Summary -->
         <div class="summary-table">
-            <h3>Summary Table</h3> <br>
-            <table>
-                <tr>
-                    <th>Algorithm</th>
-                    <th>Utilization</th>
-                    <th>Int. Frag.</th>
-                    <th>Ext. Frag.</th>
-                    <th>Success Rate</th>
-                </tr>
-                <tr>
-                    <td>First Fit - Fixed</td>
-                    <td>75%</td>
-                    <td>32 KB</td>
-                    <td>0 KB</td>
-                    <td>75%</td>
-                </tr>
-                <tr>
-                    <td>First Fit - Dynamic</td>
-                    <td>75%</td>
-                    <td>32 KB</td>
-                    <td>0 KB</td>
-                    <td>75%</td>
-                </tr>
+            <h3>Summary Table</h3>
+            <table id="summary-table-body">
+                <thead>
+                    <tr>
+                        <th>Algorithm</th>
+                        <th>Utilization</th>
+                        <th>Int. Frag.</th>
+                        <th>Ext. Frag.</th>
+                        <th>Success Rate</th>
+                    </tr>
+                </thead>
+                <tbody id="summary-body"></tbody>
             </table>
         </div>
-        <div class="contiguous-allocation">
-            <div class="contiguous-algorithm" id="first-fit-fixed">
+
+        <!-- Algorithms -->
+        <div class="contiguous-allocation" id="contiguous-grid">
+            <!-- <div class="contiguous-algorithm" data-algo="first-fit-fixed" id="first-fit-fixed">
                 <div class="algorithm-header">
                     <h3>First Fit</h3>
                     <div class="partition-pill" id="fixed"><p>Fixed</p></div>
@@ -278,10 +275,10 @@
                         <p>100%</p>
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
-        <div class="non-contiguous-allocation">
-            <div class="non-contiguous-algorithm">
+        <div class="non-contiguous-allocation" id="non-contiguous-grid">
+            <!-- <div class="non-contiguous-algorithm">
                 <h3>Paging</h3>
             </div>
             <div class="non-contiguous-algorithm">
@@ -289,7 +286,8 @@
             </div>
             <div class="non-contiguous-algorithm">
                 <h3>Segmentation with Paging</h3>
-            </div>
+            </div> -->
         </div>
     </section>
 </body>
+</html>
