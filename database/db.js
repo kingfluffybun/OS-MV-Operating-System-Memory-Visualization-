@@ -579,7 +579,7 @@ async function loadUsers() {
                 let roleText = isAdmin ? 'Demote' : 'Promote';
                 let newRole = isAdmin ? 'user' : 'admin';
                 let roleBtn = '<button onclick="changeRole(' + user.user_id + ', \'' + newRole + '\')" class="ui-btn role">' + roleText +'</button>';
-                const resetBtn = '<button onclick="resetPassword(' + user.user_id + ')" class="ui-btn reset">Reset Password</button>';
+                const resetBtn = '<button onclick="resetUserPassword(' + user.user_id + ')" class="ui-btn reset">Reset Password</button>';
                 const deleteBtn = '<button onclick="deleteUser(' + user.user_id + ')" class="ui-btn delete">Delete</button>';
                 actionButtons = roleBtn + resetBtn + deleteBtn;
             }
@@ -654,7 +654,7 @@ function executeDelete(userId) {
 }
 
 // Reset password
-function resetPassword(userId) {
+function resetUserPassword(userId) {
         showPopup({
         title: 'Reset User Password',
         message: 'Enter a new password for this user. They will be required to change it on next login.',
@@ -671,7 +671,7 @@ function resetPassword(userId) {
                     confirmText: 'OK',
                     cancelText: null,
                     onConfirm: function() {
-                        resetPassword(userId);
+                        resetUserPassword(userId);
                     }
                 });
                 return;
@@ -737,7 +737,7 @@ async function executePasswordReset(userId, newPassword) {
             confirmText: 'Try Again',
             cancelText: 'Cancel',
             onConfirm: function() {
-                resetPassword(userId);
+                resetUserPassword(userId);
             },
             onCancel: function() {}
         });
