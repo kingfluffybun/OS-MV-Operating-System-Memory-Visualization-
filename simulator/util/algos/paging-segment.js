@@ -189,7 +189,7 @@ const PagingSegmentSimulator = {
   simulate(processes, totalMemory = 128, pageSize = 4) {
     const memory = this.createFrames(totalMemory, pageSize);
     const processResults = [];
-    let totalInternalFrag = 0;
+    let totalinternalFragmentation = 0;
     let allocatedProcesses = 0;
 
     processes.forEach((processSize, processIndex) => {
@@ -197,7 +197,7 @@ const PagingSegmentSimulator = {
       const breakdown = this.breakdownSize(processSize);
       const segments = [];
       let processAllocatable = true;
-      let processInternalFrag = 0;
+      let processinternalFragmentation = 0;
       let processPagesAllocated = [];
 
       Object.entries({
@@ -233,7 +233,7 @@ const PagingSegmentSimulator = {
           processAllocatable = false;
         }
 
-        processInternalFrag += internalFragmentation;
+        processinternalFragmentation += internalFragmentation;
         processPagesAllocated = processPagesAllocated.concat(
           allocationResult.allocation,
         );
@@ -259,7 +259,7 @@ const PagingSegmentSimulator = {
       }
 
       allocatedProcesses += 1;
-      totalInternalFrag += processInternalFrag;
+      totalinternalFragmentation += processinternalFragmentation;
 
       processResults.push({
         processName,
@@ -268,7 +268,7 @@ const PagingSegmentSimulator = {
         breakdown,
         segments,
         pages: processPagesAllocated,
-        internalFragmentation: processInternalFrag,
+        internalFragmentation: processinternalFragmentation,
       });
     });
 
@@ -285,7 +285,7 @@ const PagingSegmentSimulator = {
       frameCount: memory.frames.length,
       usedFrames,
       freeFrames,
-      totalInternalFragmentation: totalInternalFrag,
+      totalinternalFragmentation: totalinternalFragmentation,
       allocatedProcesses,
       totalProcesses: processes.length,
       memory,
@@ -307,10 +307,7 @@ const PagingSegmentSimulator = {
     const freeFrames = framesArray.filter(
       (frame) => frame.status === "Free",
     ).length;
-    const totalInternalFragmentation = processResults.reduce(
-      (sum, proc) => sum + (proc.internalFragmentation || 0),
-      0,
-    );
+    const totalinternalFragmentation = stats ? stats.internalFragmentation || 0 : 0;
     const allocatedProcesses = processResults.filter(
       (p) => p.status === "Allocated",
     ).length;
@@ -321,7 +318,7 @@ const PagingSegmentSimulator = {
       frameCount: framesArray.length,
       usedFrames,
       freeFrames,
-      totalInternalFragmentation,
+      totalinternalFragmentation,
       allocatedProcesses,
       totalProcesses: processes.length,
       memory: { frames: framesArray },
@@ -368,7 +365,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize: 0,
         totalFree: 0,
-        intFragmentation: 0,
+        internalFragmentation: 0,
         externalFragmentation: 0,
         memoryUtilization: 0,
         successRate: 0,
@@ -392,7 +389,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize: 0,
         totalFree: displayMemory,
-        intFragmentation: 0,
+        internalFragmentation: 0,
         externalFragmentation: 0,
         memoryUtilization: 0,
         successRate: 0,
@@ -592,7 +589,7 @@ const PagingSegmentSimulator = {
       updateStatistics({
         allocatedSize,
         totalFree,
-        intFragmentation: result.totalInternalFragmentation,
+        internalFragmentation: result.totalinternalFragmentation,
         externalFragmentation: 0,
         memoryUtilization:
           result.totalMemory > 0
