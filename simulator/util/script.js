@@ -1247,7 +1247,7 @@ const runStep = () => {
           if (allocationResult.success) {
             currentProcess.pages.push(allocationResult.allocation);
             appendConsoleMessage(
-              `${processName} - ${segmentType} Page ${page.pageIndex} mapped to Frame ${page.frameId}.`,
+              `${processName} - ${segmentType} Page ${page.pageIndex} allocated to Frame ${page.frameId}.`,
             );
             simulationState.lastSegPagingAllocation = {
               processName: currentProcess.processName,
