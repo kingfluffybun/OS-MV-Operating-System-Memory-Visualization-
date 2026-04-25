@@ -92,7 +92,7 @@ body {
 }
 #sidebar {
     height: 100vh;
-    width: 280px;
+    width: 28vh;
     position: sticky;
     top: 0;
     align-self: start;
@@ -125,7 +125,8 @@ body {
     align-items: center;
     gap: 1em;
     padding: 12px;
-    font-size: 20px;
+    font-size: 1rem;
+    font-weight: 450;
 }
 #sidebar a p, #sidebar .dropdown-btn p {
     flex-grow: 1;
