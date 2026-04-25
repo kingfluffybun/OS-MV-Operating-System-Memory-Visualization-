@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/output.css">
+    <link rel="stylesheet" href="css/test.css">
     <title>OS-MV Dashboard</title>
     <script src="util/script.js" defer></script>
     <script src="../database/db.js" defer></script>
@@ -17,35 +18,110 @@
         <button id="toggle-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
         </button>
-        <div class="main-container">
-            <h2>WELCOME TO OUR PROJECT! YEHEY!</h2> <br>
-            
+        <div class="main-header">
+            <h1>Welcome to Operating System Memory Visualizer (OS-MV)</h1>
+            <p>Created by Group 3 BSIT-22</p>
         </div>
-        <!-- <div class="input-values">
-            <form action="">
-                <div class="input-block">
-                    <input type="number" name="block" id="block 1" placeholder="Block 1">
-                    <input type="number" name="block" id="block 2" placeholder="Block 2">
-                    <input type="number" name="block" id="block 3" placeholder="Block 3">
-                    <input type="number" name="block" id="block 4" placeholder="Block 4">
-                    <button type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                        Add New Block
-                    </button>
+        <div class="main-container" style="border-bottom: 12px solid var(--primary-color); height: 78vh; overflow-y: auto; display: grid; grid-template-rows: auto auto auto; gap: 16px;">
+            <div>
+                <h2 style="color: var(--primary-color); margin-bottom: 8px;">What is OS-MV?</h2>
+                <p style="line-height: 2;"> <b style="color: var(--primary-color);">OS-MV</b> is a desktop-based memory management visualizer designed to help students and educators understand how
+                    operating systems allocate memory to processes. Memory management is a core concept in operating systems — how memory gets allocated directly affects system performance, efficiency, and stability.
+                    It supports seven allocation algorithms — First Fit, Next Fit, Best Fit, and Worst Fit under contiguous allocation
+                    (both fixed and dynamic partitioning), as well as Paging, Segmentation, and Segmentation with Paging under
+                    non-contiguous allocation.
+                </p>
+            </div>
+            <div>
+                <h2 style="color: var(--primary-color); margin-bottom: 8px;">How to Get Started?</h2>
+                <p  style="line-height: 2; margin-bottom: 8px;">OS-MV is <b style="color: var(--primary-color);">simple to use</b>! Just pick a mode, select an algorithm, add your processes and memory blocks, and hit Play.
+                    Use Next to step through each allocation one at a time, or adjust the speed slider to control how fast the
+                    simulation runs. Reset anytime to start fresh with new inputs.</p>
+                <div class="steps">
+                    <div>
+                        <div class="circle">1</div>
+                        <p><b>Choose a mode</b> — Single Mode for one algorithm, Comparison Mode to run all at once and compare results.</p>
+                    </div>
+                    <div>
+                        <div class="circle">2</div>
+                        <p><b>Pick an algorithm</b> — Select from Contiguous (Fixed or Dynamic) or Non-Contiguous options.</p>
+                    </div>
+                    <div>
+                        <div class="circle">3</div>
+                        <p style="display: flex; align-items: center; gap: 4px;"><b>Add processes</b> — Enter a size in KB and click
+                            <span>
+                                <button type="button" id="add-process-btn" style="border-radius: 4px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+                                </button>
+                            </span>, or use the 
+                            <span>
+                                <button type="button" id="randomize-value" style="border-radius: 4px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-dices-icon lucide-dices"><rect width="12" height="12" x="2" y="10" rx="2" ry="2"/><path d="m17.92 14 3.5-3.5a2.24 2.24 0 0 0 0-3l-5-4.92a2.24 2.24 0 0 0-3 0L10 6"/><path d="M6 18h.01"/><path d="M10 14h.01"/><path d="M15 6h.01"/><path d="M18 9h.01"/></svg>
+                                </button>
+                            </span> button for a random size.</p>
+                    </div>
+                    <div>
+                        <div class="circle">4</div>
+                        <p><b>Configure memory</b> — Add memory blocks or set memory/page size depending on the algorithm.</p>
+                    </div>
+                    <div>
+                        <div class="circle">5</div>
+                        <p><b>Run</b> — Hit Play to run automatically or Next to step through one at a time.</p>
+                    </div>
                 </div>
-                
-                <div class="input-process">
-                    <input type="number" name="process" id="block 1" placeholder="Process 1">
-                    <input type="number" name="process" id="block 2" placeholder="Process 2">
-                    <input type="number" name="process" id="block 3" placeholder="Process 3">
-                    <input type="number" name="process" id="block 4" placeholder="Process 4">
-                    <button type="button">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-plus-icon lucide-plus"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-                        Add New Process
-                    </button>
+            </div>
+            <!-- <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                <div>
+                    <p style="color: var(--primary-color); font-size: 1.5rem; margin-bottom: 4px;"><b>Contiguous Allocation</b></p>
+                    <ul>
+                        <li><b style="color: var(--primary-color);">First Fit</b> — Scans from the beginning and allocates the first block large enough to fit the process.</li>
+                        <li><b style="color: var(--primary-color);">Next Fit</b> — Works like First Fit but resumes scanning from where the last allocation left off.</li>
+                        <li><b style="color: var(--primary-color);">Best Fit</b> — Picks the smallest block that fits, minimizing wasted space.</li>
+                        <li><b style="color: var(--primary-color);">Worst Fit</b> — Picks the largest available block, leaving the biggest possible leftover for future processes.</li>
+                    </ul>
                 </div>
-            </form>
-        </div> -->
+                <div>
+                    <p style="color: var(--primary-color); font-size: 1.5rem; margin-bottom: 4px;"><b>Non-Contiguous Allocation</b></p>
+                    <ul>
+                        <li>Paging — Divides memory into fixed-size frames and breaks processes into equal-sized pages, eliminating external fragmentation entirely.</li>
+                        <li>Segmentation — Divides a process into logical segments like Code, Heap, Data, and Stack, each placed wherever they fit in memory.</li>
+                        <li>Segmentation with Paging — Combines both by dividing segments further into fixed-size pages for more flexible and efficient allocation.</li>
+                    </ul>
+                </div>
+            </div> -->
+            <br>
+            <div style="margin-top: auto;">
+                <div class="group-members">
+                    <div style="margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; border-right: 4px solid var(--primary-color);">
+                        <h2>Made with ❤ by</h2>
+                        <p>Group 3 BSIT-22</p>
+                    </div>
+                    <div>
+                        <p>Bautista, Harvy S.</p>
+                        <p>Bisoy, Gasparov T.</p>
+                        <p>Jumao-as, Hancell A.</p>
+                        <p>Luistro, Kevenly H.</p>
+                    </div>
+                    <div>
+                        <p>Luna, Clarence Jerald G.</p>
+                        <p>Maligaya, Cyril Nero S.</p>
+                        <p>Oliveros, Jenmar</p>
+                        <p>Panti, Christian Patrick T.</p>
+                    </div>
+                    <div>
+                        <p>Parica, Jhon Rick S.</p>
+                        <p>Patriarca, John Rommel T.</p>
+                        <p>Pulo, Andre C</p>
+                        <p>Wamil, Jomari L.</p>
+                    </div>
+                </div>
+            </div>
+            <!-- <div class="marquee-container">
+                <div class="marquee-content">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="visual" viewBox="0 0 7600 600" width="7600" height="600" version="1.1"><rect x="0" y="0" width="7600" height="600" fill="transparent"/><path d="M0 430L79.2 424.8C158.3 419.7 316.7 409.3 475 409.2C633.3 409 791.7 419 950 424.7C1108.3 430.3 1266.7 431.7 1425 428C1583.3 424.3 1741.7 415.7 1900 406.3C2058.3 397 2216.7 387 2375 388C2533.3 389 2691.7 401 2850 407.2C3008.3 413.3 3166.7 413.7 3325 409.3C3483.3 405 3641.7 396 3800 385.7C3958.3 375.3 4116.7 363.7 4275 374.7C4433.3 385.7 4591.7 419.3 4750 424.3C4908.3 429.3 5066.7 405.7 5225 394.8C5383.3 384 5541.7 386 5700 396.5C5858.3 407 6016.7 426 6175 433.2C6333.3 440.3 6491.7 435.7 6650 438C6808.3 440.3 6966.7 449.7 7125 448.3C7283.3 447 7441.7 435 7520.8 429L7600 423L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#4caf50"/><path d="M0 454L79.2 444.8C158.3 435.7 316.7 417.3 475 420C633.3 422.7 791.7 446.3 950 451.3C1108.3 456.3 1266.7 442.7 1425 428.2C1583.3 413.7 1741.7 398.3 1900 389.7C2058.3 381 2216.7 379 2375 376.8C2533.3 374.7 2691.7 372.3 2850 388.8C3008.3 405.3 3166.7 440.7 3325 455.7C3483.3 470.7 3641.7 465.3 3800 458.3C3958.3 451.3 4116.7 442.7 4275 447.5C4433.3 452.3 4591.7 470.7 4750 458.7C4908.3 446.7 5066.7 404.3 5225 394.8C5383.3 385.3 5541.7 408.7 5700 408.2C5858.3 407.7 6016.7 383.3 6175 377.8C6333.3 372.3 6491.7 385.7 6650 389.5C6808.3 393.3 6966.7 387.7 7125 385C7283.3 382.3 7441.7 382.7 7520.8 382.8L7600 383L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#48a64c"/><path d="M0 448L79.2 450.7C158.3 453.3 316.7 458.7 475 461.7C633.3 464.7 791.7 465.3 950 468.7C1108.3 472 1266.7 478 1425 471.5C1583.3 465 1741.7 446 1900 444.7C2058.3 443.3 2216.7 459.7 2375 456.7C2533.3 453.7 2691.7 431.3 2850 429C3008.3 426.7 3166.7 444.3 3325 444.7C3483.3 445 3641.7 428 3800 418.2C3958.3 408.3 4116.7 405.7 4275 411.7C4433.3 417.7 4591.7 432.3 4750 443.8C4908.3 455.3 5066.7 463.7 5225 457C5383.3 450.3 5541.7 428.7 5700 430.5C5858.3 432.3 6016.7 457.7 6175 471.7C6333.3 485.7 6491.7 488.3 6650 489C6808.3 489.7 6966.7 488.3 7125 474.2C7283.3 460 7441.7 433 7520.8 419.5L7600 406L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#449d48"/><path d="M0 539L79.2 539C158.3 539 316.7 539 475 532.2C633.3 525.3 791.7 511.7 950 511C1108.3 510.3 1266.7 522.7 1425 523C1583.3 523.3 1741.7 511.7 1900 511.7C2058.3 511.7 2216.7 523.3 2375 517.8C2533.3 512.3 2691.7 489.7 2850 476.2C3008.3 462.7 3166.7 458.3 3325 461.7C3483.3 465 3641.7 476 3800 478.7C3958.3 481.3 4116.7 475.7 4275 480.7C4433.3 485.7 4591.7 501.3 4750 499C4908.3 496.7 5066.7 476.3 5225 470.3C5383.3 464.3 5541.7 472.7 5700 476.7C5858.3 480.7 6016.7 480.3 6175 483.2C6333.3 486 6491.7 492 6650 490.5C6808.3 489 6966.7 480 7125 477.2C7283.3 474.3 7441.7 477.7 7520.8 479.3L7600 481L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#409544"/><path d="M0 486L79.2 488.3C158.3 490.7 316.7 495.3 475 498.2C633.3 501 791.7 502 950 503.3C1108.3 504.7 1266.7 506.3 1425 505.8C1583.3 505.3 1741.7 502.7 1900 499.7C2058.3 496.7 2216.7 493.3 2375 491.7C2533.3 490 2691.7 490 2850 499.3C3008.3 508.7 3166.7 527.3 3325 530.3C3483.3 533.3 3641.7 520.7 3800 523.2C3958.3 525.7 4116.7 543.3 4275 541C4433.3 538.7 4591.7 516.3 4750 515.8C4908.3 515.3 5066.7 536.7 5225 543.2C5383.3 549.7 5541.7 541.3 5700 542.7C5858.3 544 6016.7 555 6175 559.8C6333.3 564.7 6491.7 563.3 6650 552C6808.3 540.7 6966.7 519.3 7125 512.3C7283.3 505.3 7441.7 512.7 7520.8 516.3L7600 520L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#3d8c40"/><path d="M0 573L79.2 566C158.3 559 316.7 545 475 539.2C633.3 533.3 791.7 535.7 950 541.3C1108.3 547 1266.7 556 1425 557.5C1583.3 559 1741.7 553 1900 556.5C2058.3 560 2216.7 573 2375 570.8C2533.3 568.7 2691.7 551.3 2850 540.7C3008.3 530 3166.7 526 3325 527.8C3483.3 529.7 3641.7 537.3 3800 540.2C3958.3 543 4116.7 541 4275 547.7C4433.3 554.3 4591.7 569.7 4750 567.8C4908.3 566 5066.7 547 5225 538.5C5383.3 530 5541.7 532 5700 535C5858.3 538 6016.7 542 6175 547.3C6333.3 552.7 6491.7 559.3 6650 560.7C6808.3 562 6966.7 558 7125 555.8C7283.3 553.7 7441.7 553.3 7520.8 553.2L7600 553L7600 601L7520.8 601C7441.7 601 7283.3 601 7125 601C6966.7 601 6808.3 601 6650 601C6491.7 601 6333.3 601 6175 601C6016.7 601 5858.3 601 5700 601C5541.7 601 5383.3 601 5225 601C5066.7 601 4908.3 601 4750 601C4591.7 601 4433.3 601 4275 601C4116.7 601 3958.3 601 3800 601C3641.7 601 3483.3 601 3325 601C3166.7 601 3008.3 601 2850 601C2691.7 601 2533.3 601 2375 601C2216.7 601 2058.3 601 1900 601C1741.7 601 1583.3 601 1425 601C1266.7 601 1108.3 601 950 601C791.7 601 633.3 601 475 601C316.7 601 158.3 601 79.2 601L0 601Z" fill="#39833c"/></svg>
+                </div>
+            </div> -->
+        </div>
 
     </section>
 

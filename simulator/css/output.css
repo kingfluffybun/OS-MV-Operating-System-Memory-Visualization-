@@ -238,11 +238,69 @@ body {
     position: relative;
     background-color: #f6f6f6;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 48px;
     height: 100vh;
+    gap: 2vh;
 }
+
+.main {
+    p {font-size: 1rem;}
+    h2 {font-size: 2rem;}
+}
+
+.main-header {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    color: white;
+    gap: 4px;
+    width: 100%;
+    height: 12vh;
+    background-color: var(--primary-color);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.group-members {
+    color: var(--primary-color);
+    display:grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 20px;
+    p {
+        padding: 4px 0;
+    }
+}
+
+.steps {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    div {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    b {color: var(--primary-color);}
+}
+
+.circle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px; height: 32px;
+    padding: 8px;
+    border-radius: 50%;
+    background-color: var(--primary-color);
+    color: white;
+}
+
+/* ul {padding-left: 20px; width: 80%;} 
+ul li::marker {color: var(--primary-color);}
+ul li {line-height: 2;} */
 
 .main-container {
     position: relative;
@@ -690,4 +748,27 @@ button[type="submit"] {
 .segment-limit {
   position: absolute;
   bottom: -10px; 
+}
+
+.marquee-container {
+    overflow: hidden;
+    bottom: -80px;
+    left: 0;
+    position: absolute;
+}
+
+.marquee-content {
+    width: 7600px;
+    display: flex;
+    flex-wrap: nowrap;
+    animation: scroll 15s linear infinite;
+}
+
+@keyframes scroll {
+    from {
+        transform: translateX(0);
+    } 
+    to {
+        transform: translateX(-3800px);
+    }
 }
