@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/output.css">
+    <link rel="stylesheet" href="../css/test.css">
+    <link rel="stylesheet" href="../css/comparison.css">
+    <title>OS-MV</title>
+    <link rel="icon" type="image/x-icon" href="../../LOGO/favicon.ico">
+    <script src="../util/script.js" defer></script>
+    <script src="../../database/db.js" defer></script>
+</head>
+<body onload="simulatorLoad()">
+
+    <div id="sidebar-container"></div>
+    
+    <section class="comparison-grid">
+        <button id="toggle-btn">
+            <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-left-icon lucide-chevrons-left"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg>
+        </button>
+        <div class="simulation-controls">
+            <div>
+                <button id="play-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-play-icon lucide-play"><path d="M5 5a2 2 0 0 1 3.008-1.728l11.997 6.998a2 2 0 0 1 .003 3.458l-12 7A2 2 0 0 1 5 19z"/></svg>
+                    <p>Play</p>
+                </button>
+                <button id="stop-btn" style="display: none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pause-icon lucide-pause"><rect x="14" y="3" width="5" height="18" rx="1"/><rect x="5" y="3" width="5" height="18" rx="1"/></svg>  
+                    <p>Stop</p>
+                </button>
+            </div>
+            <div>
+                <button id="reset-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw-icon lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                    <p>Reset</p>
+                </button>
+            </div>
+            <div>
+                <button id="next-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
+                    <p>Next</p>
+                </button>
+            </div>
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chevrons-up-icon lucide-chevrons-up"><path d="m17 11-5-5-5 5"/><path d="m17 18-5-5-5 5"/></svg>
+                <p>Speed</p>
+                <div class="slide-container">
+                    <p>1x</p>
+                    <input type="range" min="1" max="3" step="0.5" value="1" class="slider" id="slider">
+                    <p>3x</p>
+                </div>
+            </div>
+        </div>
+        <div class="summary-table">
+            <h3>Summary Table</h3> <br>
+            <table>
+                <tr>
+                    <th>Algorithm</th>
+                    <th>Utilization</th>
+                    <th>Int. Frag.</th>
+                    <th>Ext. Frag.</th>
+                    <th>Success Rate</th>
+                </tr>
+                <tr>
+                    <td>First Fit - Fixed</td>
+                    <td>75%</td>
+                    <td>32 KB</td>
+                    <td>0 KB</td>
+                    <td>75%</td>
+                </tr>
+                <tr>
+                    <td>First Fit - Dynamic</td>
+                    <td>75%</td>
+                    <td>32 KB</td>
+                    <td>0 KB</td>
+                    <td>75%</td>
+                </tr>
+            </table>
+        </div>
+        <div class="contiguous-allocation">
+            <div class="contiguous-algorithm" id="first-fit-fixed">
+                <div class="algorithm-header">
+                    <h3>First Fit</h3>
+                    <div class="partition-pill" id="fixed"><p>Fixed</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="first-fit-dynamic">
+                <div class="algorithm-header">
+                    <h3>First Fit</h3>
+                    <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="next-fit-fixed">
+                <div class="algorithm-header">
+                    <h3>Next Fit</h3>
+                    <div class="partition-pill" id="fixed"><p>Fixed</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="next-fit-dynamic">
+                <div class="algorithm-header">
+                    <h3>Next Fit</h3>
+                    <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="best-fit-fixed">
+                <div class="algorithm-header">
+                    <h3>Best Fit</h3>
+                    <div class="partition-pill" id="fixed"><p>Fixed</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="best-fit-dynamic">
+                <div class="algorithm-header">
+                    <h3>Best Fit</h3>
+                    <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="worst-fit-fixed">
+                <div class="algorithm-header">
+                    <h3>Worst Fit</h3>
+                    <div class="partition-pill" id="fixed"><p>Fixed</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+            <div class="contiguous-algorithm" id="worst-fit-dynamic">
+                <div class="algorithm-header">
+                    <h3>Worst Fit</h3>
+                    <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>100%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>100 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>100%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="non-contiguous-allocation">
+            <div class="non-contiguous-algorithm">
+                <h3>Paging</h3>
+            </div>
+            <div class="non-contiguous-algorithm">
+                <h3>Segmentation</h3>
+            </div>
+            <div class="non-contiguous-algorithm">
+                <h3>Segmentation with Paging</h3>
+            </div>
+        </div>
+    </section>
+</body>

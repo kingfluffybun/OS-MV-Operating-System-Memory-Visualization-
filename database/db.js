@@ -218,6 +218,8 @@ async function resetPassword(username, newPassword, confirmNewPassword) {
         return {success: false};
     }
 
+
+
     const hashedPassword = await hashPassword(newPassword);
 
     try {
