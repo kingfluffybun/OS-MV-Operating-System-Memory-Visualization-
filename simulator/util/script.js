@@ -507,7 +507,7 @@ const prepareSimulation = () => {
     return false;
   }
 
-  // Segmentation uses a continuous-memory model — no discrete blocks required
+  // Segmentation uses a continuous-memory model internalFragmentation no discrete blocks required
   if (!isPaging && !isSegmentation && !isSegmentationPaging && !blocks.length) {
     appendConsoleMessage("No memory blocks defined.");
     return false;
@@ -1164,11 +1164,6 @@ const runStep = () => {
         `${processName} requires ${requiredPages} pages. Available: ${remainingFreeFrames} frames.`,
       );
 
-      // Strict check for sufficient frames
-      if (requiredPages > remainingFreeFrames) {
-        processAllocatable = false;
-      }
-
       if (processAllocatable) {
         Object.entries({
           Code: breakdown.code,
@@ -1265,26 +1260,8 @@ const runStep = () => {
             simulationState.pageAllocationIndex++;
           } else {
             appendConsoleMessage(
-              `${processName} -> Allocation failed (Insufficient memory). Rolling back.`,
+              `${processName} -> Allocation stopped (Insufficient memory for remaining pages).`,
             );
-
-            // Count unallocated pages as internal fragmentation
-            const unallocatedPages =
-              allPages.length - simulationState.pageAllocationIndex;
-            const unallocatedSize = unallocatedPages * simulationState.pageSize;
-            simulationState.stats.intFragmentation += unallocatedSize;
-
-            // Rollback using the new method
-            PagingSegmentSimulator.deallocateProcess(
-              simulationState.memory.frames,
-              processName,
-            );
-
-            // Update the process result to Unallocated
-            currentProcess.status = "Unallocated";
-            currentProcess.pages = [];
-            currentProcess.internalFragmentation = 0;
-
             simulationState.currentIndex += 1;
             simulationState.subStep = 0;
           }
