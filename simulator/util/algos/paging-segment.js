@@ -310,7 +310,7 @@ const PagingSegmentSimulator = {
   },
 
   getSimulationSummary(state) {
-    const { processes, memory, processResults, memorySize, pageSize } = state;
+    const { processes, memory, processResults, memorySize, pageSize, stats } = state;
     if (!memory || !memory.frames) return null;
 
     const framesArray = Array.isArray(memory.frames)
@@ -341,6 +341,8 @@ const PagingSegmentSimulator = {
       totalProcesses: processes.length,
       memory: { frames: framesArray },
       processResults,
+      totalPagesNeeded: stats?.totalPagesNeeded || 0,
+      totalPagesAllocated: stats?.totalPagesAllocated || 0,
     };
   },
 
@@ -445,9 +447,11 @@ const PagingSegmentSimulator = {
       return sum + (frame.status === "Occupied" ? frame.used : 0);
     }, 0);
     const totalFree = result.freeFrames * result.pageSize;
+    
+    // Success rate is now incremental based on pages allocated vs total pages needed
     const successRate =
-      result.totalProcesses > 0
-        ? (result.allocatedProcesses / result.totalProcesses) * 100
+      result.totalPagesNeeded > 0
+        ? (result.totalPagesAllocated / result.totalPagesNeeded) * 100
         : 0;
 
     result.processResults.forEach((process) => {

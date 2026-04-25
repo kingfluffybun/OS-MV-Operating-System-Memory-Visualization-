@@ -39,7 +39,7 @@ class SegmentationMemory {
     if (!name || size <= 0) throw new Error("invalid allocation");
     const breakdown = SegmentationMemory.breakdownSize(size);
     const segmentTypes = ["code", "heap", "data", "stack"];
-    
+
     // Save state for rollback
     const originalSegments = [...this.segments];
     const originalNextId = this.nextId;
@@ -828,15 +828,15 @@ const updateSegmentationStatistics = () => {
     const memoryUtilization =
       totalMemory > 0 ? (allocatedSize / totalMemory) * 100 : 0;
 
-    const allocatedProcessNames = new Set((status.allocated || []).map((seg) => seg.name));
-    const completedProcessCount =
-    segmentationState.currentProcessIndex; // processes fully stepped through
+    // Calculate total segments allocated and needed
+    const totalSegmentsNeeded =
+      (segmentationState.processQueue || []).length * 4; // 4 segments per process
+    const totalSegmentsAllocated = (status.allocated || []).length;
+
+    // Success rate is incremental: allocated segments / total segments needed
     const successRate =
-    segmentationState.processQueue &&
-    segmentationState.processQueue.length > 0
-        ? (allocatedProcessNames.size /
-            segmentationState.processQueue.length) *
-        100
+      totalSegmentsNeeded > 0
+        ? (totalSegmentsAllocated / totalSegmentsNeeded) * 100
         : 0;
 
     // Only show total free and external fragmentation when simulation has started (processes allocated)
