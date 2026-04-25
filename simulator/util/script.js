@@ -54,7 +54,7 @@ function showMenu() {
   // Check which page is user on
   const isAdminPage = currentPath.includes("/admin-dashboard/");
   const isSimulator = currentPath.includes("/simulator/algorithm/");
-  const isComparisonPage = currentPath.includes("/simulator/comparison/index.html");
+  const isComparisonPage = currentPath.includes("/simulator/comparison/") ;
   const isSingleMode = currentPath.includes("/simulator/single-mode.html")
   const isFrontPage =
     currentPath.includes("/simulator/index.html") ||
