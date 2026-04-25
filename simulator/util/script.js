@@ -547,7 +547,7 @@ const prepareSimulation = () => {
       stats: {
         allocatedSize: 0,
         successfulAllocations: 0,
-        intFragmentation: 0,
+        internalFragmentation: 0,
         totalPagesNeeded: totalPagesNeeded,
         totalPagesAllocated: 0,
       },
@@ -591,7 +591,7 @@ const prepareSimulation = () => {
       stats: {
         allocatedSize: 0,
         successfulAllocations: 0,
-        intFragmentation: 0,
+        internalFragmentation: 0,
         totalPagesNeeded: totalPagesNeeded,
         totalPagesAllocated: 0,
       },
@@ -618,7 +618,7 @@ const prepareSimulation = () => {
       stats: {
         allocatedSize: 0,
         successfulAllocations: 0,
-        intFragmentation: 0,
+        internalFragmentation: 0,
       },
     };
 
@@ -636,7 +636,7 @@ const prepareSimulation = () => {
       stats: {
         allocatedSize: 0,
         successfulAllocations: 0,
-        intFragmentation: 0,
+        internalFragmentation: 0,
       },
     };
   }
@@ -672,7 +672,7 @@ const prepareSimulation = () => {
     updateStatistics({
       allocatedSize: 0,
       totalFree: memorySimulator.totalFreeMemory(simulationState.memoryFrames),
-      intFragmentation: 0,
+      internalFragmentation: 0,
       externalFragmentation: 0,
       memoryUtilization: 0,
       successRate: 0,
@@ -1142,7 +1142,7 @@ const runStep = () => {
       const breakdown = PagingSegmentSimulator.breakdownSize(processSize);
       const segments = [];
       let processAllocatable = true;
-      let processInternalFrag = 0;
+      let processinternalFragmentation = 0;
 
       const framesArray = Array.isArray(simulationState.memory.frames)
         ? simulationState.memory.frames
@@ -1176,7 +1176,7 @@ const runStep = () => {
               segmentSize,
               simulationState.pageSize,
             );
-          processInternalFrag += internalFragmentation;
+          processinternalFragmentation += internalFragmentation;
           segments.push({
             segmentType,
             segmentSize,
@@ -1192,7 +1192,8 @@ const runStep = () => {
           breakdown,
           segments,
           pages: [],
-          internalFragmentation: processInternalFrag,
+          internalFragmentation: 0, // Set to 0 at Step 1, will be updated step-by-step in Step 2
+          totalProcessinternalFragmentation: processinternalFragmentation, // Store for reference if needed
         });
 
         appendConsoleMessage(
@@ -1229,7 +1230,11 @@ const runStep = () => {
         const allPages = [];
         currentProcess.segments.forEach((segment) => {
           segment.pages.forEach((page) => {
-            allPages.push({ segmentType: segment.segmentType, page: page });
+            allPages.push({
+              segmentType: segment.segmentType,
+              page: page,
+              segment: segment,
+            });
           });
         });
 
@@ -1255,8 +1260,19 @@ const runStep = () => {
               pageIndex: page.pageIndex,
               frameId: page.frameId,
             };
+
             // Increment total pages allocated each time a page is successfully allocated
             simulationState.stats.totalPagesAllocated += 1;
+
+            // Increment internal fragmentation step-by-step (only on the last page of a segment)
+            const segmentObj = allPages[simulationState.pageAllocationIndex].segment;
+            const isLastPageOfSegment =
+              page.pageIndex === segmentObj.pages.length - 1;
+            if (isLastPageOfSegment) {
+              simulationState.stats.internalFragmentation +=
+                segmentObj.internalFragmentation || 0;
+            }
+
             simulationState.pageAllocationIndex++;
           } else {
             appendConsoleMessage(
@@ -1273,10 +1289,8 @@ const runStep = () => {
             `${processName} -> All pages mapped to physical frames.`,
           );
 
-          // Update stats only after full allocation
+          // Update stats only after full allocation (Internal fragmentation now handled step-by-step)
           simulationState.stats.allocatedSize += currentProcess.requestedSize;
-          simulationState.stats.intFragmentation +=
-            currentProcess.internalFragmentation;
 
           simulationState.currentIndex += 1;
           simulationState.subStep = 0;
@@ -1417,11 +1431,10 @@ const runStep = () => {
         `${processId} Page ${simulationState.pageAllocationIndex} - No free frames available`,
       );
 
-      // Count unallocated pages as internal fragmentation
-      const unallocatedPages =
-        pagesNeeded - simulationState.pageAllocationIndex;
-      const unallocatedSize = unallocatedPages * pageSize;
-      simulationState.stats.intFragmentation += unallocatedSize;
+      // Count unallocated pages as internal fragmentation (Removing this as per user request to only add if allocated)
+      // const unallocatedPages = pagesNeeded - simulationState.pageAllocationIndex;
+      // const unallocatedSize = unallocatedPages * pageSize;
+      // simulationState.stats.internalFragmentation += unallocatedSize;
 
       // Move to next process since current one can't be allocated
       simulationState.pageAllocationIndex = 0;
@@ -1450,7 +1463,8 @@ const runStep = () => {
         frameIds: {},
         status: "Allocated",
         pagesAllocated: 0,
-        internalFragmentation: stepResult.result.internalFragmentation || 0,
+        internalFragmentation: 0, // Set to 0 initially, updated in stats only on last page
+        totalinternalFragmentation: stepResult.result.internalFragmentation || 0,
       };
     }
 
@@ -1492,7 +1506,7 @@ const runStep = () => {
     const pagingStats = {
       allocatedSize: dynamicAllocatedSize,
       totalFree,
-      intFragmentation: simulationState.stats.intFragmentation,
+      internalFragmentation: simulationState.stats.internalFragmentation,
       externalFragmentation: 0,
       memoryUtilization,
       successRate,
@@ -1512,6 +1526,12 @@ const runStep = () => {
     );
 
     // Increment page allocation index
+    const isLastPageOfProcess = simulationState.pageAllocationIndex === pagesNeeded - 1;
+    if (isLastPageOfProcess) {
+      simulationState.stats.internalFragmentation +=
+        simulationState.results[processId].internalFragmentation || 0;
+    }
+
     simulationState.pageAllocationIndex += 1;
 
     // Check if all pages allocated for this process
@@ -1565,7 +1585,7 @@ const runStep = () => {
   simulationState.stats.allocatedSize += stepResult.allocatedSize;
   simulationState.stats.successfulAllocations +=
     stepResult.successfulAllocations;
-  simulationState.stats.intFragmentation +=
+  simulationState.stats.internalFragmentation +=
     stepResult.result.fragmentation || 0;
 
   const compiledStats = memorySimulator.computeStats(
@@ -1855,7 +1875,7 @@ const runReset = () => {
   updateStatistics({
     allocatedSize: 0,
     totalFree: 0,
-    intFragmentation: 0,
+    internalFragmentation: 0,
     externalFragmentation: 0,
     memoryUtilization: 0,
     successRate: 0,

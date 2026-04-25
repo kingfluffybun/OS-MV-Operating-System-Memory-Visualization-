@@ -251,7 +251,7 @@ function setFragmentationVisibility() {
     return el;
   };
 
-  const internalFragEl = query("internal-frag-value");
+  const internalFragmentationEl = query("internal-frag-value");
   const externalFragEl = query("external-frag-value");
 
   const isPaging = typeof isPagingMode === 'function' && isPagingMode();
@@ -264,8 +264,8 @@ function setFragmentationVisibility() {
     const isDynamic = typeof isDynamicPartitionMode === 'function' && isDynamicPartitionMode();
     if (isDynamic) {
       // Dynamic partition: show external fragmentation, hide internal
-      if (internalFragEl && internalFragEl.parentElement) {
-        internalFragEl.parentElement.style.display = 'none';
+      if (internalFragmentationEl && internalFragmentationEl.parentElement) {
+        internalFragmentationEl.parentElement.style.display = 'none';
       }
       if (externalFragEl && externalFragEl.parentElement) {
         externalFragEl.parentElement.style.display = 'flex';
@@ -275,8 +275,8 @@ function setFragmentationVisibility() {
       if (externalFragEl && externalFragEl.parentElement) {
         externalFragEl.parentElement.style.display = 'none';
       }
-      if (internalFragEl && internalFragEl.parentElement) {
-        internalFragEl.parentElement.style.display = 'flex';
+      if (internalFragmentationEl && internalFragmentationEl.parentElement) {
+        internalFragmentationEl.parentElement.style.display = 'flex';
       }
     }
   } else if (isPaging || isSegPaging) {
@@ -284,13 +284,13 @@ function setFragmentationVisibility() {
     if (externalFragEl && externalFragEl.parentElement) {
       externalFragEl.parentElement.style.display = 'none';
     }
-    if (internalFragEl && internalFragEl.parentElement) {
-      internalFragEl.parentElement.style.display = 'flex';
+    if (internalFragmentationEl && internalFragmentationEl.parentElement) {
+      internalFragmentationEl.parentElement.style.display = 'flex';
     }
   } else if (isSegmentation) {
     // Segmentation: show external fragmentation, hide internal
-    if (internalFragEl && internalFragEl.parentElement) {
-      internalFragEl.parentElement.style.display = 'none';
+    if (internalFragmentationEl && internalFragmentationEl.parentElement) {
+      internalFragmentationEl.parentElement.style.display = 'none';
     }
     if (externalFragEl && externalFragEl.parentElement) {
       externalFragEl.parentElement.style.display = 'flex';
@@ -321,7 +321,7 @@ const updateStatistics = (stats) => {
 
   const allocatedEl = query("allocated-value");
   const totalFreeEl = query("total-free-value");
-  const internalFragEl = query("internal-frag-value");
+  const internalFragmentationEl = query("internal-frag-value");
   const externalFragEl = query("external-frag-value");
   const utilEl = query("util-value");
   const successEl = query("success-rate-value");
@@ -330,8 +330,8 @@ const updateStatistics = (stats) => {
     allocatedEl.textContent = `${Math.round(stats.allocatedSize)} KB`;
   if (totalFreeEl)
     totalFreeEl.textContent = `${Math.round(stats.totalFree)} KB`;
-  if (internalFragEl)
-    internalFragEl.textContent = `${Math.round(stats.intFragmentation)} KB`;
+  if (internalFragmentationEl)
+    internalFragmentationEl.textContent = `${Math.round(stats.internalFragmentation)} KB`;
   if (externalFragEl)
     externalFragEl.textContent = `${Math.round(stats.externalFragmentation)} KB`;
   if (utilEl) utilEl.textContent = `${stats.memoryUtilization.toFixed(1)}%`;
