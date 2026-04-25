@@ -239,7 +239,7 @@ function resetPass() {
             statusEl.textContent = '';
         }
 
-        const result = await resetPassword(username, newPassword, confirmNewPassword);
+        const result = await resetPasswordUser(username, newPassword, confirmNewPassword);
 
         if (result.success) {
             statusEl.textContent = 'Password reset successful! Redirecting...';

@@ -1,6 +1,6 @@
 // ========== DB SETUP ==========
-const SQL_JS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js';
-const SQL_JS_WASM = 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.wasm';
+const SQL_JS_URL = '../database/sql-wasm.js';
+const SQL_JS_WASM = '../database/sql-wasm.wasm';
 
 let SQL = null;
 let db = null;
@@ -195,7 +195,7 @@ async function verifyRecoveryKey(recoveryKey) {
     }
 }
 
-async function resetPassword(username, newPassword, confirmNewPassword) {
+async function resetPasswordUser(username, newPassword, confirmNewPassword) {
     await initDB();
 
     if  (newPassword.length < 8) {
