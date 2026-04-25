@@ -1306,7 +1306,7 @@ const runStep = () => {
         playInterval = null;
         togglePlayStop();
       }
-      reEnableSimulationButtons();
+    //   reEnableSimulationButtons();
       return false;
     }
 
@@ -1346,7 +1346,7 @@ const runStep = () => {
           playInterval = null;
           togglePlayStop();
         }
-        reEnableSimulationButtons();
+        // reEnableSimulationButtons();
         return false;
       }
     }
@@ -1434,7 +1434,7 @@ const runStep = () => {
           playInterval = null;
           togglePlayStop();
         }
-        reEnableSimulationButtons();
+        // reEnableSimulationButtons();
         return false;
       }
       return true;
@@ -1773,7 +1773,7 @@ const runPlay = () => {
       const didRun = runStep();
       if (!didRun) {
         togglePlayStop();
-        reEnableSimulationButtons();
+        // reEnableSimulationButtons();
         return;
       }
 
@@ -1783,7 +1783,7 @@ const runPlay = () => {
           clearInterval(playInterval);
           playInterval = null;
           togglePlayStop();
-          reEnableSimulationButtons();
+        //   reEnableSimulationButtons();
         }
       }, delay);
     };
