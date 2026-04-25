@@ -55,6 +55,7 @@ function showMenu() {
   const isAdminPage = currentPath.includes("/admin-dashboard/");
   const isSimulator = currentPath.includes("/simulator/algorithm/");
   const isComparisonPage = currentPath.includes("/simulator/comparison.html");
+  const isSingleMode = currentPath.includes("/simulator/single-mode.html")
   const isFrontPage =
     currentPath.includes("/simulator/index.html") ||
     currentPath.endsWith("/simulator/");
@@ -80,7 +81,7 @@ function showMenu() {
       document.getElementById("menu-dashboard").classList.add("active");
     }
 
-    if (isSimulator) {
+    if (isSimulator || isSingleMode) {
       document.getElementById("single-mode").classList.add("active");
     }
 
