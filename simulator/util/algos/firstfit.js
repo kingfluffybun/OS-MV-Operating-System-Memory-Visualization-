@@ -80,7 +80,7 @@ const memorySimulator = {
       totalMemory,
       allocatedSize,
       totalFree,
-      intFragmentation: stats.intFragmentation,
+      internalFragmentation: stats.internalFragmentation,
       externalFragmentation,
       memoryUtilization,
       successRate,
