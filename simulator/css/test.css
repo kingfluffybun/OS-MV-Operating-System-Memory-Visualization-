@@ -164,7 +164,7 @@ button:disabled svg {
     }
 }
 
-#add-process-btn, #randomize-value {
+#add-process-btn, #randomize-value, #randomize-process-btn, #add-partition-btn, #randomize-partition-btn {
     cursor: pointer;
     padding: 4px;
     min-width: 39px;
@@ -172,16 +172,17 @@ button:disabled svg {
     border: none;
 }
 
-#add-process-btn {
+#add-process-btn, #add-partition-btn {
     background-color: transparent;
     border: 2px var(--primary-color) solid; 
     color: var(--primary-color);
     transition: all 250ms ease;
 }
-#add-process-btn:hover {background-color: var(--primary-color); color: white;}
+
+#add-process-btn:hover, #add-partition-btn:hover {background-color: var(--primary-color); color: white;}
 #add-process-btn:disabled {border-color: #999;}
-#randomize-value {background-color: #e0e0e0; color: black; transition: all 250ms ease;}
-#randomize-value:hover{
+#randomize-value, #randomize-process-btn, #randomize-partition-btn {background-color: #e0e0e0; color: black; transition: all 250ms ease;}
+#randomize-value:hover, #randomize-process-btn:hover, #randomize-partition-btn:hover {
     > svg {transform: rotate(15deg);}
 }
 
