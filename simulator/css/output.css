@@ -57,7 +57,7 @@
 }
 
 /* For Tauri */
-h1, h2, h3, p, a, label {
+h1, h2, h3, p, a, label, td, th {
     user-select: none;
 } 
 input::-ms-reveal {display: none;}

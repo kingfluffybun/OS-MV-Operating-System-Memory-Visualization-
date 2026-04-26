@@ -1192,7 +1192,7 @@ function updateSummaryTable() {
 
         return {
             config: config,
-            displayName: config.name + (config.type && config.type !== config.id ? ' - ' + config.type : ''),
+            displayName: config.name + (config.type && config.type !== config.id ? ' - ' + config.type.charAt(0).toUpperCase() + config.type.slice(1) : ''),
             utilization: util,
             intFrag: intFrag,
             extFrag: extFrag,
