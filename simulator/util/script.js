@@ -378,6 +378,7 @@ const resetBlocksUI = () => {
     block.style.borderRadius = "12px";
     block.style.color = "black";
     block.classList.remove("allocated");
+    block.classList.remove("current");
 
     const bId = block.id.replace("block-", "");
     const labelNum = block.dataset.partitionLabel || bId;
