@@ -449,7 +449,7 @@ function renderBlocks(algoId) {
         const nextLogicalId = node.next ? String(node.next.originalLabel || node.next.parentId || node.next.id) : null;
 
         const colorIndex = node.status === 'Occupied' ? ((node.processId || 1) - 1) % processColorsto.length : -1;
-        const colorPair = colorIndex >= 0 ? processColorsto[colorIndex] : { bg: '#e0e0e0', border: 'rgba(0, 0, 0, 0.25)' };
+        const colorPair = colorIndex >= 0 ? processColorsto[colorIndex] : { bg: 'white', border: 'rgba(0, 0, 0, 0.25)' };
 
         const blockEl = renderMemoryNode(node, {
             isFirstInGroup: logicalId !== prevLogicalId,
