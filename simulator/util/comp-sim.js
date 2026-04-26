@@ -296,7 +296,7 @@ function stepAlgorithm(algoId) {
                 if (node.id === result.result.block) {
                     node.status = 'Occupied';
                     node.processId = processId;
-                    node.fragmentation = result.result.fragmentation || 0;
+                    node.fragmentation = (instance.config.type === 'fixed') ? (result.result.fragmentation || 0) : 0;
                     break;
                 }
                 node = node.next;
@@ -304,7 +304,10 @@ function stepAlgorithm(algoId) {
 
             instance.stats.allocatedSize += result.allocatedSize || 0;
             instance.stats.successfulAllocations += result.successfulAllocations || 0;
-            instance.stats.internalFragmentation += result.result.fragmentation || 0;
+            
+            if (instance.config.type === 'fixed') {
+                instance.stats.internalFragmentation += result.result.fragmentation || 0;
+            }
         }
 
         instance.results[processId] = result.result;
