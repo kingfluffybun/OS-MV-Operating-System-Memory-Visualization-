@@ -1,4 +1,4 @@
-﻿// ========== COMPARISON SIMULATION CONTROLLER ==========
+// ========== COMPARISON SIMULATION CONTROLLER ==========
 
 const processColorsto = [
     { bg: "#FFADAD", border: "#BF8282" },
@@ -102,8 +102,8 @@ function initContiguousAlgorithm(config) {
         }
     };
 
-    if (config.id.includes('next-fit') && typeof memorySimulator !== 'undefined') {
-        memorySimulator._nextLastBlock = null;
+    if (config.id.includes('next-fit') && typeof window.memorySimulator !== 'undefined') {
+        window.memorySimulator._nextLastBlock = null;
     }
 
     renderBlocks(config.id);
@@ -302,164 +302,32 @@ function stepAlgorithm(algoId) {
 function stepContiguousAlgorithm(algoId, processSize, processId) {
     const instance = algoInstances[algoId];
     const stepFnName = instance.config.stepFn;
-    let stepFn = null;
-
-    if (instance.config.category === 'contiguous') {
-        if (!stepFn) {
-            console.error('Step function missing:', stepFnName);
-            console.error('memorySimulator keys:', typeof memorySimulator !== 'undefined' ? Object.keys(memorySimulator).filter(k => k.includes('Fit') || k.includes('Step')) : 'undefined');
-            console.error('No step function found for ' + instance.config.name);
-            instance.currentIndex++;
-            return false;
-        }
-
-        // Sync Next Fit pointer for this instance
-        if (typeof memorySimulator !== 'undefined') {
-            memorySimulator._nextLastBlock = instance.lastBlock;
-        }
-
-        const result = stepFn(instance.memoryHead, processSize);
-
-        // Save back Next Fit pointer
-        if (typeof memorySimulator !== 'undefined') {
-            instance.lastBlock = memorySimulator._nextLastBlock;
-        }
-
-        if (result.newMemoryHead) {
-            instance.memoryHead = result.newMemoryHead;
-        }
-
-        if (result.result && result.result.status === 'Allocated') {
-            // Find the block and update it
-            let node = instance.memoryHead;
-            while (node) {
-                if (node.id === result.result.block) {
-                    node.status = 'Occupied';
-                    node.processId = processId;
-                    node.fragmentation = (instance.config.type === 'fixed') ? (result.result.fragmentation || 0) : 0;
-                    break;
-                }
-                node = node.next;
-            }
-
-            instance.stats.allocatedSize += result.allocatedSize || 0;
-            instance.stats.successfulAllocations += result.successfulAllocations || 0;
-            
-            if (instance.config.type === 'fixed') {
-                instance.stats.internalFragmentation += result.result.fragmentation || 0;
-            }
-        }
-
-        instance.results[processId] = result.result;
-        instance.currentIndex++;
-        renderBlocks(algoId);
-        updateAlgorithmStats(algoId);
-    } else if (instance.config.id === 'paging') {
-        if (typeof memorySimulator === 'undefined' || typeof memorySimulator.pagingStep !== 'function') {
-            console.error('pagingStep function missing');
-            return false;
-        }
-
-        const pageSize = comparisonData.pageSize;
-        const result = memorySimulator.pagingStep(instance.memoryFrames, processSize, pageSize, `Process ${processId}`);
-        
-        instance.memoryFrames = result.frames;
-        
-        if (result.result && result.result.status === 'Allocated') {
-            instance.stats.allocatedSize += processSize;
-            instance.stats.successfulAllocations += 1;
-            instance.stats.internalFragmentation += result.result.internalFragmentation || 0;
-        }
-        
-        instance.currentIndex++;
-        updatePagingUIInComparison(algoId);
-        updateAlgorithmStats(algoId);
-    } else if (instance.config.id === 'segmentation') {
-        if (typeof memorySimulator === 'undefined' || typeof memorySimulator.segmentationStep !== 'function') {
-            console.error('segmentationStep function missing');
-            return false;
-        }
-
-        const result = memorySimulator.segmentationStep(instance.memory, `Process ${processId}`, processSize);
-        
-        if (result.result && result.result.status === 'Allocated') {
-            instance.stats.allocatedSize += processSize;
-            instance.stats.successfulAllocations += 1;
-        }
-        
-        instance.currentIndex++;
-        updateSegmentationUIInComparison(algoId);
-        updateAlgorithmStats(algoId);
-    } else if (instance.config.id === 'segmentation-paging') {
-        if (typeof PagingSegmentSimulator === 'undefined') {
-            console.error('PagingSegmentSimulator missing');
-            return false;
-        }
-
-        const pageSize = comparisonData.pageSize;
-
-        // If we don't have current segments for this process, create them
-        if (!instance.currentSegments) {
-            const processSize = instance.processes[instance.currentIndex];
-            const breakdown = PagingSegmentSimulator.breakdownSize(processSize);
-            const segmentTypes = ['Code', 'Heap', 'Data', 'Stack'];
-            
-            instance.currentSegments = segmentTypes.map(type => {
-                const size = breakdown[type.toLowerCase()];
-                const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(size, pageSize);
-                return { type, size, pages, internalFragmentation };
-            }).filter(s => s.size > 0);
-            
-            instance.currentSegmentIdx = 0;
-            instance.currentPageIdx = 0;
-            
-            // Check if we can fit the whole process at once (simple check)
-            // But we step page by page anyway
-        }
-
-        const segment = instance.currentSegments[instance.currentSegmentIdx];
-        const page = segment.pages[instance.currentPageIdx];
-        const processName = `Process ${instance.currentIndex + 1}`;
-
-        const result = PagingSegmentSimulator.allocatePageStepSingle(instance.memory.frames, processName, segment.type, page);
-
-        if (result.success) {
-            instance.stats.allocatedSize += page.size;
-            // Internal fragmentation only added when a segment starts or when we finish it? 
-            // Actually it's per page allocation in this case.
-        }
-
-        instance.currentPageIdx++;
-        if (instance.currentPageIdx >= segment.pages.length) {
-            instance.stats.internalFragmentation += segment.internalFragmentation;
-            instance.currentPageIdx = 0;
-            instance.currentSegmentIdx++;
-        }
-
-        if (instance.currentSegmentIdx >= instance.currentSegments.length) {
-            instance.stats.successfulAllocations++;
-            instance.currentIndex++;
-            instance.currentSegments = null;
-        }
-
-        updateSegmentationPagingUIInComparison(algoId);
-        updateAlgorithmStats(algoId);
-    }
+    
+    // Assign step function from window.memorySimulator
+    let stepFn = (typeof window.memorySimulator !== 'undefined') ? window.memorySimulator[stepFnName] : null;
 
     if (!stepFn) {
         console.error('Step function missing:', stepFnName);
+        console.log('window.memorySimulator exists:', typeof window.memorySimulator !== 'undefined');
+        if (typeof window.memorySimulator !== 'undefined') {
+            console.log('window.memorySimulator keys:', Object.keys(window.memorySimulator));
+            console.log('Is stepFnName in window.memorySimulator?', stepFnName in window.memorySimulator);
+            console.log('Value of window.memorySimulator[stepFnName]:', window.memorySimulator[stepFnName]);
+        }
         instance.currentIndex++;
         return false;
     }
 
-    if (typeof memorySimulator !== 'undefined') {
-        memorySimulator._nextLastBlock = instance.lastBlock;
+    // Sync Next Fit pointer for this instance
+    if (typeof window.memorySimulator !== 'undefined') {
+        window.memorySimulator._nextLastBlock = instance.lastBlock;
     }
 
-    const result = stepFn(instance.memoryHead, processSize);
+    const result = stepFn.call(window.memorySimulator, instance.memoryHead, processSize);
 
-    if (typeof memorySimulator !== 'undefined') {
-        instance.lastBlock = memorySimulator._nextLastBlock;
+    // Save back Next Fit pointer
+    if (typeof window.memorySimulator !== 'undefined') {
+        instance.lastBlock = window.memorySimulator._nextLastBlock;
     }
 
     if (result.newMemoryHead) {
@@ -467,12 +335,13 @@ function stepContiguousAlgorithm(algoId, processSize, processId) {
     }
 
     if (result.result && result.result.status === 'Allocated') {
+        // Find the block and update it
         let node = instance.memoryHead;
         while (node) {
             if (node.id === result.result.block) {
                 node.status = 'Occupied';
                 node.processId = processId;
-                node.fragmentation = result.result.fragmentation || 0;
+                node.fragmentation = (instance.config.type === 'fixed') ? (result.result.fragmentation || 0) : 0;
                 break;
             }
             node = node.next;
@@ -480,7 +349,10 @@ function stepContiguousAlgorithm(algoId, processSize, processId) {
 
         instance.stats.allocatedSize += result.allocatedSize || 0;
         instance.stats.successfulAllocations += result.successfulAllocations || 0;
-        instance.stats.intFragmentation += result.result.fragmentation || 0;
+        
+        if (instance.config.type === 'fixed') {
+            instance.stats.internalFragmentation += result.result.fragmentation || 0;
+        }
     }
 
     instance.results[processId] = result.result;
@@ -489,6 +361,8 @@ function stepContiguousAlgorithm(algoId, processSize, processId) {
     updateAlgorithmStats(algoId);
     return true;
 }
+
+
 
 function stepNonContiguousAlgorithm(algoId, processSize, processId) {
     const instance = algoInstances[algoId];
@@ -545,9 +419,6 @@ function stepPaging(algoId, processSize, processId) {
         pagesAllocated++;
     }
 
-    instance.stats.allocatedSize += processSize;
-    instance.stats.successfulAllocations += 1;
-    instance.stats.intFragmentation += internalFrag;
     instance.results[processId] = { status: 'Allocated', pages: pagesAllocated, fragmentation: internalFrag };
     instance.currentIndex++;
 
@@ -578,8 +449,6 @@ function stepSegmentation(algoId, processSize, processId) {
 
     instance.segments.push(segment);
     instance.segmentTable[processId] = segment;
-    instance.stats.allocatedSize += processSize;
-    instance.stats.successfulAllocations += 1;
     instance.results[processId] = { status: 'Allocated', segmentId: segment.id, size: processSize };
     instance.currentIndex++;
 
@@ -633,8 +502,8 @@ function updateSummaryTable() {
 
         let extFrag = 0;
         if (config.category === 'contiguous') {
-            if (typeof memorySimulator !== 'undefined' && typeof memorySimulator.externalFragmentation === 'function') {
-                extFrag = memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
+            if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.externalFragmentation === 'function') {
+                extFrag = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
             }
         } else if (instance.stats.externalFragmentation !== undefined) {
             extFrag = instance.stats.externalFragmentation;

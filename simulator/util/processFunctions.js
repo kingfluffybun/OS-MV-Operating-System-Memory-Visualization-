@@ -10,7 +10,7 @@ const processColors = [
   { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" },
 ];
 
-// const processContainer = document.querySelector(".process-container");
+var processContainer = document.querySelector(".process-container");
 let processIdCounter = processContainer
   ? processContainer.querySelectorAll(".process").length + 1
   : 1;

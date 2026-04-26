@@ -15,7 +15,7 @@
 
   utilityScripts.forEach((fileName) => {
     const scriptUrl = scriptDir + fileName;
-    if (document.querySelector(`script[src="${scriptUrl}"]`)) {
+    if (Array.from(document.scripts).some(s => (s.getAttribute('src') || '').includes(fileName))) {
       return;
     }
 
@@ -109,8 +109,8 @@ function loadCurrentUser() {
   }
 }
 
-const processContainer = document.querySelector(".process-container");
-const allProcessContainers = Array.from(
+var processContainer = document.querySelector(".process-container");
+var allProcessContainers = Array.from(
   document.querySelectorAll(".process-container"),
 );
 const getProcessContainer = (element) =>

@@ -1,9 +1,8 @@
-// Extend existing memorySimulator if it exists
-if (typeof memorySimulator === 'undefined') {
-  var memorySimulator = {};
+if (!window.memorySimulator) {
+  window.memorySimulator = {};
 }
 
-Object.assign(memorySimulator, {
+Object.assign(window.memorySimulator, {
   createLinkedMemory(blocks) {
     let head = null;
     let tail = null;
