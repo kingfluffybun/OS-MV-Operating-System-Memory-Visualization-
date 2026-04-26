@@ -98,7 +98,7 @@ function initContiguousAlgorithm(config) {
         stats: {
             allocatedSize: 0,
             successfulAllocations: 0,
-            intFragmentation: 0
+            internalFragmentation: 0
         }
     };
 
@@ -120,7 +120,7 @@ function initNonContiguousAlgorithm(config) {
         stats: {
             allocatedSize: 0,
             successfulAllocations: 0,
-            intFragmentation: 0
+            internalFragmentation: 0
         },
         // Paging state
         frames: [],
@@ -164,11 +164,144 @@ function renderNonContiguousInitial(algoId) {
 
     if (instance.config.type === 'paging') {
         renderPagingFrames(algoId);
+        renderPagingPages(algoId);
     } else if (instance.config.type === 'segmentation') {
         renderSegmentationMemory(algoId);
+        renderSegmentationSegments(algoId);
     } else if (instance.config.type === 'segmentation-paging') {
         renderSegmentationPaging(algoId);
+        renderSegmentationPagingSegments(algoId);
     }
+}
+
+function renderPagingPages(algoId) {
+    const instance = algoInstances[algoId];
+    const container = document.getElementById(algoId);
+    if (!container) return;
+
+    const pagesContainer = container.querySelector('.pages-container');
+    if (!pagesContainer) return;
+
+    pagesContainer.innerHTML = '';
+    const pageSize = comparisonData.pageSize;
+
+    instance.processes.forEach((size, i) => {
+        const pagesNeeded = Math.ceil(size / pageSize);
+        const colorIndex = i % processColorsto.length;
+        const colors = processColorsto[colorIndex];
+
+        for (let j = 0; j < pagesNeeded; j++) {
+            const pageEl = document.createElement('div');
+            pageEl.className = 'page';
+            pageEl.id = `page-${algoId}-${i}-${j}`;
+            pageEl.innerHTML = `
+                <div class="page-content" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                    <p>P${i + 1} - Page ${j}</p>
+                </div>
+            `;
+            pagesContainer.appendChild(pageEl);
+        }
+
+        if (i < instance.processes.length - 1) {
+            const spacer = document.createElement('div');
+            spacer.style.height = '8px';
+            pagesContainer.appendChild(spacer);
+        }
+    });
+}
+
+function renderSegmentationSegments(algoId) {
+    const instance = algoInstances[algoId];
+    const container = document.getElementById(algoId);
+    if (!container) return;
+
+    const segContainer = container.querySelector('.segmentation-container');
+    if (!segContainer) return;
+
+    segContainer.innerHTML = '';
+
+    instance.processes.forEach((size, i) => {
+        const colorIndex = i % processColorsto.length;
+        const colors = processColorsto[colorIndex];
+        const breakdown = SegmentationMemory.breakdownSize(size);
+
+        const procDiv = document.createElement('div');
+        procDiv.className = 'segmentation';
+        procDiv.innerHTML = `<h4>Process ${i + 1}</h4>`;
+
+        const types = ['code', 'heap', 'data', 'stack'];
+        types.forEach((type, idx) => {
+            const segSize = breakdown[type];
+            if (segSize > 0) {
+                const segEl = document.createElement('div');
+                segEl.className = 'segments-container';
+                segEl.id = `seg-list-${algoId}-${i}-${type}`;
+                segEl.innerHTML = `
+                    <div id="segment-number">S${idx}</div>
+                    <div class="segments" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                        <p class="segment-type">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
+                        <p id="segment-size">${segSize} KB</p>
+                    </div>
+                `;
+                procDiv.appendChild(segEl);
+            }
+        });
+        segContainer.appendChild(procDiv);
+    });
+}
+
+function renderSegmentationPagingSegments(algoId) {
+    const instance = algoInstances[algoId];
+    const container = document.getElementById(algoId);
+    if (!container) return;
+
+    const segPagingContainer = container.querySelector('.segmentation-paging-container');
+    if (!segPagingContainer) return;
+
+    segPagingContainer.innerHTML = '';
+    const pageSize = comparisonData.pageSize;
+
+    instance.processes.forEach((size, i) => {
+        const colorIndex = i % processColorsto.length;
+        const colors = processColorsto[colorIndex];
+        const breakdown = PagingSegmentSimulator.breakdownSize(size);
+
+        const procDiv = document.createElement('div');
+        procDiv.className = 'segmentation-paging-group';
+        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 12px 0 6px 0;">Process ${i + 1}</h4>`;
+
+        const types = ['code', 'heap', 'data', 'stack'];
+        types.forEach((type, idx) => {
+            const segSize = breakdown[type];
+            if (segSize > 0) {
+                const { pages } = PagingSegmentSimulator.segmentToPages(segSize, pageSize);
+                
+                const segCard = document.createElement('div');
+                segCard.className = 'segments-paging-container';
+                
+                const pagesHtml = pages.map(p => `
+                    <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
+                        <div class="page-content" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                            <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
+                        </div>
+                    </div>
+                `).join('');
+
+                segCard.innerHTML = `
+                    <div id="segment-number">S${idx}</div>
+                    <div class="segments-paging" style="border-color: #eee;">
+                        <div class="segment-paging-header" style="background-color: #f8f9fa; color: #666;">
+                            <div><p class="segment-type" style="font-weight: 600;">${type.charAt(0).toUpperCase() + type.slice(1)}</p></div>
+                            <div><p style="font-weight: 600;">${segSize} KB</p></div>
+                        </div>
+                        <div class="segment-pages">${pagesHtml}</div>
+                    </div>
+                `;
+                procDiv.appendChild(segCard);
+            }
+        });
+        segPagingContainer.appendChild(procDiv);
+    });
 }
 
 function renderPagingFrames(algoId) {
@@ -181,7 +314,49 @@ function renderPagingFrames(algoId) {
     instance.frames.forEach(function(frame) {
         const frameEl = document.createElement('div');
         frameEl.className = 'frame';
-        frameEl.innerHTML = '<div class="frame-content"><p>Frame ' + frame.id + '</p><p>' + frame.size + ' KB</p></div>';
+        
+        if (frame.status === 'Occupied') {
+            const colorIndex = (frame.processId - 1) % processColorsto.length;
+            const colorPair = processColorsto[colorIndex];
+            frameEl.innerHTML = `
+                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}">
+                    <p style="font-weight: 600;">P${frame.processId} - Page ${frame.pageId}</p>
+                    <p>${frame.size} KB</p>
+                </div>
+            `;
+
+            // Highlight in pages-container or segmentation-paging list
+            if (instance.config.type === 'paging') {
+                const pageId = `page-${algoId}-${frame.processId - 1}-${frame.pageId}`;
+                const pageEl = document.getElementById(pageId);
+                if (pageEl) {
+                    const content = pageEl.querySelector('.page-content');
+                    if (content) {
+                        content.style.backgroundColor = colorPair.bg;
+                        content.style.borderBottomColor = colorPair.border;
+                        content.style.color = '#333';
+                    }
+                }
+            } else if (instance.config.type === 'segmentation-paging') {
+                // For segmentation-paging, we need to know the segment type.
+                // In our simplified stepPaging used by seg-paging, we don't have segment type in frame yet.
+                // But we can find the page by searching for the ID that matches.
+                const pageIdPattern = `page-seg-${algoId}-${frame.processId - 1}-`;
+                const allPages = document.querySelectorAll(`[id^="${pageIdPattern}"]`);
+                allPages.forEach(pEl => {
+                    if (pEl.id.endsWith(`-${frame.pageId}`)) {
+                        const content = pEl.querySelector('.page-content');
+                        if (content) {
+                            content.style.backgroundColor = colorPair.bg;
+                            content.style.borderBottomColor = colorPair.border;
+                            content.style.color = '#333';
+                        }
+                    }
+                });
+            }
+        } else {
+            frameEl.innerHTML = '<div class="frame-content"><p>Frame ' + frame.id + '</p><p>' + frame.size + ' KB</p></div>';
+        }
         framesContainer.appendChild(frameEl);
     });
 }
@@ -211,6 +386,27 @@ function renderSegmentationMemory(algoId) {
 
     if (instance.stats.allocatedSize > 0) physContainer.appendChild(usedBlock);
     if (freeSpace > 0) physContainer.appendChild(freeBlock);
+
+    // Update highlights in segmentation list
+    instance.segments.forEach(seg => {
+        const colorIndex = (seg.processId - 1) % processColorsto.length;
+        const colorPair = processColorsto[colorIndex];
+        const types = ['code', 'heap', 'data', 'stack'];
+        
+        // In our simplified stepSegmentation, we allocate one big segment.
+        // We'll highlight all segment types for this process.
+        types.forEach(type => {
+            const segEl = document.getElementById(`seg-list-${algoId}-${seg.processId - 1}-${type}`);
+            if (segEl) {
+                const content = segEl.querySelector('.segments');
+                if (content) {
+                    content.style.backgroundColor = colorPair.bg;
+                    content.style.borderBottomColor = colorPair.border;
+                    content.style.color = '#333';
+                }
+            }
+        });
+    });
 }
 
 function renderSegmentationPaging(algoId) {
@@ -419,6 +615,12 @@ function stepPaging(algoId, processSize, processId) {
     }
 
     instance.results[processId] = { status: 'Allocated', pages: pagesAllocated, fragmentation: internalFrag };
+    
+    // Update statistics
+    instance.stats.allocatedSize += processSize;
+    instance.stats.successfulAllocations++;
+    instance.stats.internalFragmentation += internalFrag;
+
     instance.currentIndex++;
 
     renderPagingFrames(algoId);
@@ -449,6 +651,11 @@ function stepSegmentation(algoId, processSize, processId) {
     instance.segments.push(segment);
     instance.segmentTable[processId] = segment;
     instance.results[processId] = { status: 'Allocated', segmentId: segment.id, size: processSize };
+    
+    // Update statistics
+    instance.stats.allocatedSize += processSize;
+    instance.stats.successfulAllocations++;
+
     instance.currentIndex++;
 
     renderSegmentationMemory(algoId);
@@ -480,7 +687,7 @@ function updateAlgorithmStats(algoId) {
     const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
 
     if (utilEl) utilEl.textContent = util + '%';
-    if (intfragEl) intfragEl.textContent = instance.stats.intFragmentation + ' KB';
+    if (intfragEl) intfragEl.textContent = instance.stats.internalFragmentation + ' KB';
     if (successEl) successEl.textContent = success + '%';
 }
 
