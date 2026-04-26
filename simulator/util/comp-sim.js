@@ -1183,11 +1183,11 @@ function updateSummaryTable() {
     tableData.forEach(function(row) {
         const tr = document.createElement('tr');
         tr.innerHTML =
-            '<td>' + row.displayName + '</td>' +
-            '<td>' + row.utilization.toFixed(1) + '%</td>' +
-            '<td>' + row.intFrag + ' KB</td>' +
-            '<td>' + row.extFrag + ' KB</td>' +
-            '<td>' + row.success.toFixed(1) + '%</td>';
+            '<td><p>' + row.displayName + '</p></td>' +
+            '<td><p>' + row.utilization.toFixed(1) + '%</p></td>' +
+            '<td><p>' + row.intFrag + ' KB</p></td>' +
+            '<td><p>' + row.extFrag + ' KB</p></td>' +
+            '<td><p>' + row.success.toFixed(1) + '%</p></td>';
         tbody.appendChild(tr);
     });
 
