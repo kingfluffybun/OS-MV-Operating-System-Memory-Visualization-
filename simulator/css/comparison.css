@@ -43,7 +43,7 @@
             width: 100%; 
             border-collapse: collapse;
         }
-        th, td {text-align: right; padding: 8px 24px;}
+        th, td {text-align: right; padding: 8px 24px; font-size: 12px;}
         td:first-child, th:first-child {text-align: left;}
         tr {border-bottom: #999 1px solid;}
     }
@@ -157,6 +157,7 @@
 }
 
 /* Process items in comparison queue - matches single mode style */
+.contiguous-process-queue .process,
 .process-item {
     display: flex;
     align-items: center;
@@ -171,8 +172,13 @@
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.process-item > span:first-child {
+.process-item > span:first-child,
+.contiguous-process-queue .process > .process-content p:first-child {
     margin-right: auto;
+}
+
+.contiguous-process-queue .process.unallocated {
+    border-bottom-color: rgba(0, 0, 0, 0.12);
 }
 
 /* Non-contiguous algorithm containers */
@@ -279,8 +285,12 @@
     }
 }
 
-.contiguous-container .block.popin {
-    animation: pop-in 250ms ease;
+
+.segmentation-hole {
+    background-color: #f7f7f7;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.9) 5px, rgba(0,0,0,0.08) 5px, rgba(0,0,0,0.08) 10px);
+    color: #666;
+    border: 1px dashed #ccc;
 }
 
 .contiguous-container .block.popin {
@@ -378,8 +388,8 @@
 
 .non-contiguous-container .frame-content {
     flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     padding: 6px 16px;
     border-radius: 8px;
     font-size: 11px;
@@ -543,7 +553,7 @@
 
 .segmentation-paging-group {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     flex-direction: column;
 }
 

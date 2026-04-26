@@ -289,7 +289,7 @@ function renderSegmentationSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation';
-        procDiv.innerHTML = `<h4>Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="color:${colors.bg} font-weight:700">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -338,7 +338,7 @@ function renderSegmentationPagingSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation-paging-group';
-        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 8px 0; font-weight:500;">Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 4px 0; font-weight:500;">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -656,7 +656,7 @@ function renderSharedProcessQueue() {
         queue.innerHTML = '';
         processes.forEach(function(size, i) {
             const process = document.createElement('div');
-            process.className = 'process';
+            process.className = 'process process-item';
             process.id = 'process-' + algo.id + '-' + (i + 1);
 
             const colorIndex = i % processColorsto.length;
@@ -664,6 +664,10 @@ function renderSharedProcessQueue() {
             process.style.backgroundColor = colorPair.bg;
             process.style.borderBottomColor = colorPair.border;
             process.style.color = colorPair.text;
+
+            process.setAttribute("data-bg", colorPair.bg);
+            process.setAttribute("data-border", colorPair.border);
+            process.setAttribute("data-text", colorPair.text);
 
             process.innerHTML = `
                 <div class="process-content">
@@ -677,6 +681,15 @@ function renderSharedProcessQueue() {
     });
 }
 
+function clearProcessQueueHashes() {
+    document.querySelectorAll('.contiguous-process-queue .process').forEach(processEl => {
+        processEl.style.backgroundImage = '';
+        processEl.style.backgroundColor = processEl.getAttribute('data-bg') || 'white';
+        processEl.style.color = processEl.getAttribute('data-text') || 'black';
+        processEl.classList.remove('unallocated', 'current');
+    });
+}
+
 function updateContiguousProcessQueue(algoId) {
     const instance = algoInstances[algoId];
     if (!instance) return;
@@ -684,8 +697,35 @@ function updateContiguousProcessQueue(algoId) {
     const queue = document.querySelector('#' + algoId + ' .contiguous-process-queue');
     if (!queue) return;
     
-    queue.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    queue.querySelectorAll('.current, .unallocated').forEach(el => el.classList.remove('current', 'unallocated'));
     
+    const processEls = Array.from(queue.querySelectorAll('.process'));
+    processEls.forEach((processEl) => {
+        const processId = parseInt(processEl.id.split('-').slice(-1)[0], 10);
+        const processResult = instance.results && instance.results[processId];
+        if (processResult && processResult.status !== 'Allocated') {
+            processEl.classList.add('unallocated');
+            // Apply hash pattern using process colors
+            const bgColor = processEl.getAttribute('data-bg') || '#f7f7f7';
+            const borderColor = processEl.getAttribute('data-border') || 'rgba(0, 0, 0, 0.25)';
+            const hatchPattern = `repeating-linear-gradient(
+                45deg,
+                ${bgColor},
+                ${bgColor} 5px,
+                ${borderColor} 5px,
+                ${borderColor} 10px
+            )`;
+            processEl.style.backgroundImage = hatchPattern;
+            processEl.style.backgroundColor = bgColor;
+            processEl.style.color = processEl.getAttribute('data-text') || '#666';
+        } else {
+            // Reset for allocated processes
+            processEl.style.backgroundImage = '';
+            processEl.style.backgroundColor = processEl.getAttribute('data-bg') || 'white';
+            processEl.style.color = processEl.getAttribute('data-text') || 'black';
+        }
+    });
+
     const procIndex = instance.lastAllocated ? instance.lastAllocated.procIndex : -1;
     if (procIndex >= 0) {
         const processEl = document.getElementById('process-' + algoId + '-' + (procIndex + 1));
@@ -1366,6 +1406,10 @@ function stepAllSimulations() {
 function resetAllSimulations() {
     stopAllSimulations();
 
+    // Clear process queue hashes before reinitializing
+    clearProcessQueueHashes();
+    renderSharedProcessQueue();
+
     ALGO_CONFIG.forEach(function(config) {
         initAlgorithm(config);
         updateAlgorithmStats(config.id);
@@ -1401,6 +1445,10 @@ containers.forEach(container => {
     });
   });
 });
+
+const processContainers = document.querySelectorAll('.contiguous-process-queue')
+
+
 
 function transparentController() {
     const body = document.querySelector(".comparison-grid")
