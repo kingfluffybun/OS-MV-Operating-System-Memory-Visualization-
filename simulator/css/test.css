@@ -122,7 +122,7 @@ button:disabled svg {
             overflow-y: auto;
             height: 100%;
             scroll-behavior: smooth;
-            > .process {
+            > .process, #unpartition {
                 display: flex;
                 align-items: center;
                 gap: 8px;
@@ -158,6 +158,13 @@ button:disabled svg {
                         background: transparent;
                         border: none;
                     } button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
+                }
+            } #unpartition {
+                background-color: #b4b4b4;
+                border-color: #8a8a8a;
+                .process-action {
+                    button:hover svg {transform: translateY(-2px);}
+                    button {cursor: pointer;}
                 }
             }
         }

@@ -47,6 +47,8 @@ const updateTotalPartitionDisplay = () => {
   if (progressBar) {
     progressBar.style.width = `${stats.percentage}%`;
   }
+
+  updateUnpartitionBlock();
 };
 
 /**
@@ -72,6 +74,16 @@ const getPartitionBlockSizes = () => {
  */
 const getCurrentPartitionSum = () => {
   return getPartitionBlockSizes().reduce((sum, size) => sum + size, 0);
+};
+
+/**
+ * Calculate raw remaining memory for partition allocation
+ * @returns {number} Remaining memory in KB (can be negative when overallocated)
+ */
+const calculateRemainingSpace = () => {
+  const totalMemory = getTotalMemorySize();
+  const currentSum = getCurrentPartitionSum();
+  return totalMemory - currentSum;
 };
 
 /**
@@ -166,16 +178,6 @@ const calculateProgressPercentage = () => {
 };
 
 /**
- * UI FEEDBACK: Calculate remaining memory space
- * @returns {number} Remaining memory in KB
- */
-const calculateRemainingSpace = () => {
-  const totalMemory = getTotalMemorySize();
-  const currentSum = getCurrentPartitionSum();
-  return Math.max(totalMemory - currentSum, 0);
-};
-
-/**
  * UI FEEDBACK: Get detailed partition statistics
  * @returns {Object} Statistics object for UI display
  */
@@ -211,6 +213,8 @@ const updatePartitionProgressBar = () => {
   if (totalPartitionDisplay) {
     totalPartitionDisplay.textContent = `${stats.currentSum} / ${stats.totalMemory} KB (${stats.percentage.toFixed(1)}%)`;
   }
+
+  updateUnpartitionBlock();
 };
 
 /**
@@ -250,7 +254,12 @@ const autoFillFinalBlock = () => {
 
   const blockCount = partitionContainer.querySelectorAll('.process').length + 1;
   const finalBlock = createPartitionBlockElement(blockCount, finalBlockSize);
-  partitionContainer.appendChild(finalBlock);
+  const unpartition = partitionContainer.querySelector('#unpartition');
+  if (unpartition) {
+    partitionContainer.insertBefore(finalBlock, unpartition);
+  } else {
+    partitionContainer.appendChild(finalBlock);
+  }
 
   updatePartitionProgressBar();
 
@@ -327,7 +336,12 @@ const addPartitionBlock = (blockSize) => {
 
   const blockCount = partitionContainer.querySelectorAll('.process').length + 1;
   const newBlock = createPartitionBlockElement(blockCount, validation.value);
-  partitionContainer.appendChild(newBlock);
+  const unpartition = partitionContainer.querySelector('#unpartition');
+  if (unpartition) {
+    partitionContainer.insertBefore(newBlock, unpartition);
+  } else {
+    partitionContainer.appendChild(newBlock);
+  }
 
   updatePartitionProgressBar();
 
@@ -335,6 +349,38 @@ const addPartitionBlock = (blockSize) => {
     success: true,
     message: `Block ${blockCount} of ${validation.value} KB added successfully.`,
   };
+};
+
+/**
+ * Update the remaining unpartitioned block display and button state.
+ */
+const updateUnpartitionBlock = () => {
+  const remaining = calculateRemainingSpace();
+  const unpartition = document.getElementById('unpartition');
+  if (!unpartition) return;
+
+  const sizeEl = unpartition.querySelector('.process-content p:nth-child(2)');
+  const button = unpartition.querySelector('#fill-unpartition-btn');
+
+  if (!sizeEl || !button) return;
+
+  if (remaining > 0) {
+    sizeEl.textContent = `${remaining} KB`;
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy-plus-icon lucide-copy-plus"><line x1="15" x2="15" y1="12" y2="18"/><line x1="12" x2="18" y1="15" y2="15"/><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>';
+    button.disabled = false;
+    unpartition.style.display = '';
+  } else {
+    unpartition.style.display = 'none';
+  }
+};
+
+/**
+ * Convert the remaining unpartitioned memory into one final block.
+ */
+const fillRemainingPartition = () => {
+  const result = autoFillFinalBlock();
+  appendConsoleMessage(result.success ? result.message : `⚠️ ${result.message}`);
+  updatePartitionProgressBar();
 };
 
 /**
@@ -458,6 +504,11 @@ const initPartitionListeners = () => {
 
   if (partitionContainer) {
     partitionContainer.addEventListener('click', (event) => {
+      if (event.target.closest('#fill-unpartition-btn')) {
+        fillRemainingPartition();
+        return;
+      }
+
       if (event.target.closest('.delete-process-btn')) {
         const block = event.target.closest('.process');
         if (block) {
