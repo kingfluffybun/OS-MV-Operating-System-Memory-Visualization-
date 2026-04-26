@@ -271,6 +271,7 @@ body {
     grid-template-columns: repeat(4, 1fr); 
     gap: 20px;
     p {
+        font-weight: 500;
         padding: 4px 0;
     }
 }
