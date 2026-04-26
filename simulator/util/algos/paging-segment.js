@@ -8,9 +8,9 @@ const PagingSegmentSimulator = {
     { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" }, // Cream
     { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" }, // Tea Green
     { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" }, // Electric Aqua
-    { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
-    { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
-    { bg: "#FFC6FF", border: "#BF94BF" }, // Mavue
+    { bg: "#A0C4FF", border: "#7893BF", text: "#042C53" },
+    { bg: "#BDB2FF", border: "#8E85BF", text: "#26215C" },
+    { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" },
   ],
 
   getProcessColor(processName) {
@@ -538,13 +538,14 @@ const PagingSegmentSimulator = {
           if (colorPair) {
             bg = colorPair.bg;
             border = colorPair.border;
+            text = colorPair.text;
           }
         } catch (e) {
           console.error("Color lookup failed:", e);
         }
 
         frameContent = `
-          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; color: ${colorPair?.text || '#27500A'}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr; color: ${text}">
             <p>${frame.processName || "Unknown"} - ${frame.segmentType || "Page"}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : "?"}</p>
             <p>${frame.used} KB</p>
