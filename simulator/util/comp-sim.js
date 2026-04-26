@@ -1,4 +1,4 @@
-﻿// ========== COMPARISON SIMULATION CONTROLLER ==========
+// ========== COMPARISON SIMULATION CONTROLLER ==========
 
 const processColorsto = [
     { bg: "#FFADAD", border: "#BF8282" },
@@ -91,6 +91,7 @@ function initAlgorithm(config) {
             memoryHead: head,
             processes: comparisonData.processes.slice(),
             currentIndex: 0,
+            lastBlock: null,
             results: {},
             stats: {
                 allocatedSize: 0,
@@ -98,6 +99,10 @@ function initAlgorithm(config) {
                 intFragmentation: 0
             }
         };
+
+        if (config.id.includes('next-fit') && typeof memorySimulator !== 'undefined') {
+            memorySimulator._nextLastBlock = null;
+        }
 
         // Render initial blocks
         renderBlocks(config.id);
@@ -114,7 +119,17 @@ function renderBlocks(algoId) {
     container.innerHTML = '';
 
     let node = instance.memoryHead;
+    let prevLogicalId = null;
+
     while (node) {
+        const logicalId = String(node.originalLabel || node.parentId || node.id);
+        const nextLogicalId = node.next
+            ? String(node.next.originalLabel || node.next.parentId || node.next.id)
+            : null;
+
+        const isFirstInGroup = logicalId !== prevLogicalId;
+        const isLastInGroup = logicalId !== nextLogicalId;
+
         const block = document.createElement('div');
         block.className = 'block';
         block.id = 'block-' + node.id;
@@ -122,6 +137,21 @@ function renderBlocks(algoId) {
 
         const widthPercent = comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0;
         block.style.width = widthPercent + '%';
+
+        // Apply "together blocks" visual grouping
+        if (!isFirstInGroup || !isLastInGroup) {
+            if (isFirstInGroup && !isLastInGroup) {
+                block.style.borderRadius = "12px 0px 0px 12px";
+            } else if (!isFirstInGroup && !isLastInGroup) {
+                block.style.borderRadius = "0px 0px 0px 0px";
+                block.style.marginLeft = "-10px";
+                block.style.zIndex = "1";
+            } else if (!isFirstInGroup && isLastInGroup) {
+                block.style.borderRadius = "0px 12px 12px 0px";
+                block.style.marginLeft = "-10px";
+                block.style.zIndex = "1";
+            }
+        }
 
         let bgColor, borderColor;
         if (node.status === 'Free') {
@@ -136,8 +166,9 @@ function renderBlocks(algoId) {
         block.style.backgroundColor = bgColor;
         block.style.borderBottomColor = borderColor;
 
-        const statusText = node.status === 'Free' ? 'Free' : (node.processId ? 'Process ' + node.processId : 'Allocated');
-        const titleText = node.status === 'Free' ? '' : 'Block ' + node.id;
+        // Only show "Block X" label for the first block in a group
+        const statusText = node.status === 'Free' ? (node.isSplit ? 'Hole' : 'Free') : (node.processId ? 'Process ' + node.processId : 'Allocated');
+        const titleText = isFirstInGroup ? 'Block ' + logicalId : '';
 
         block.innerHTML = `
             <p>${titleText}</p>
@@ -153,6 +184,8 @@ function renderBlocks(algoId) {
             <div></div>
         `;
         container.appendChild(block);
+        
+        prevLogicalId = logicalId;
         node = node.next;
     }
 }
@@ -221,7 +254,17 @@ function stepAlgorithm(algoId) {
             return false;
         }
 
+        // Sync Next Fit pointer for this instance
+        if (typeof memorySimulator !== 'undefined') {
+            memorySimulator._nextLastBlock = instance.lastBlock;
+        }
+
         const result = stepFn(instance.memoryHead, processSize);
+
+        // Save back Next Fit pointer
+        if (typeof memorySimulator !== 'undefined') {
+            instance.lastBlock = memorySimulator._nextLastBlock;
+        }
 
         if (result.newMemoryHead) {
             instance.memoryHead = result.newMemoryHead;
