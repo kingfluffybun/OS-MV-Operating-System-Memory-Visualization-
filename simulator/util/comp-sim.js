@@ -310,7 +310,7 @@ function renderSegmentationPagingSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation-paging-group';
-        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 12px 0 6px 0;">Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 8px 0; font-weight:500;">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -331,8 +331,8 @@ function renderSegmentationPagingSegments(algoId) {
 
                 segCard.innerHTML = `
                     <div id="segment-number">S${idx}</div>
-                    <div class="segments-paging" style="border-color: #eee;">
-                        <div class="segment-paging-header" style="background-color: #f8f9fa; color: #666;">
+                    <div class="segments-paging" style="border:4px solid ${colors.bg};">
+                        <div class="segment-paging-header" style="background-color: ${colors.bg}; color: ${colors.text};">
                             <div><p class="segment-type" style="font-weight: 600;">${type.charAt(0).toUpperCase() + type.slice(1)}</p></div>
                             <div><p style="font-weight: 600;">${segSize} KB</p></div>
                         </div>

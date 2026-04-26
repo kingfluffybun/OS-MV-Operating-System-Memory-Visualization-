@@ -333,7 +333,6 @@
     text-align: left;
     color: #000;
     font-weight: 600;
-    margin-bottom: 4px;
 }
 
 .non-contiguous-container .pages-container,
@@ -342,10 +341,11 @@
     overflow-y: auto;
     background-color: transparent;
     border-radius: 0;
-    padding: 4px !important;
     margin: 0 !important;
     border: none;
 }
+
+.pages-container, .frames-container {padding: 10px !important;}
 
 .non-contiguous-container .page,
 .non-contiguous-container .frame {
@@ -414,6 +414,8 @@
     overflow-x: hidden;
 }
 
+.non-contiguous-container .segmentation-viz {padding: 12px;}
+
 .non-contiguous-container .segmentation-viz h3,
 .non-contiguous-container .physical-viz h3 {
     font-size: 14px;
@@ -427,7 +429,6 @@
     flex-grow: 1;
     background-color: transparent;
     border-radius: 0;
-    padding: 4px;
     border: none;
 }
 
@@ -436,21 +437,26 @@
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
     border: 1px solid #eee;
-    padding: 12px;
+    padding: 8px;
 }
 
 .non-contiguous-container .segmentation h4 {
     font-size: 11px;
     color: #666;
-    margin: 8px 0 4px 0;
     font-weight: 500;
+    margin: 8px 0;
 }
 
 .non-contiguous-container .segments-container {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 6px;
+}
+
+.segmentation {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
 .non-contiguous-container #segment-number {
@@ -509,17 +515,24 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    padding: 10px;
 }
 
 .non-contiguous-container .segments-paging-container {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 12px;
     width: 100%;
 }
 
 .segmentation-paging-viz {
     overflow-y: auto;
+}
+
+.segmentation-paging-group {
+    display: flex;
+    gap: 4px;
+    flex-direction: column;
 }
 
 .non-contiguous-container .segments-paging {
