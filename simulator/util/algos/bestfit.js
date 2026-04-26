@@ -8,7 +8,7 @@ if (typeof memorySimulator === 'undefined') {
 }
 
 Object.assign(memorySimulator, {
-  bestFitCreateLinkedMemory(blocks) {
+  createLinkedMemory(blocks) {
     let head = null,
       tail = null;
     blocks.forEach((size, i) => {

@@ -250,7 +250,6 @@ button:disabled svg {
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.06), 0px 6px 12px rgba(0, 0, 0, 0.06);
         }
         .block {
-            animation: pop-in 250ms ease;
             background-color: white;
             border-bottom: 8px solid rgba(0, 0, 0, 0.25);
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
@@ -258,6 +257,9 @@ button:disabled svg {
             grid-template-rows: 1.5fr 1fr 1.5fr;
             transition: width 0.3s ease, background 0.3s ease;
             border-radius: 12px;
+        }
+        .block.popin {
+            animation: pop-in 250ms ease;
         }
         /* Remove gaps between consecutive blocks in same partition group */
         .block-group-first {

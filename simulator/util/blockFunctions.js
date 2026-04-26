@@ -117,6 +117,7 @@ const createBlockElement = (id, sizeKb, options = {}) => {
     options.partitionLabel != null ? options.partitionLabel : id;
   const block = document.createElement("div");
   block.className = options.isSplitFree ? "block block--split-free" : "block";
+  if (options.popin) block.classList.add("popin");
   block.id = `block-${id}`;
   block.dataset.partitionLabel = options.isSplitFree
     ? ""
@@ -176,6 +177,7 @@ const insertDynamicFreeSplitAfter = (
   }
   const freeEl = createBlockElement(freeNodeId, freeSizeKb, {
     isSplitFree: true,
+    popin: true,
   });
   freeEl.id = `block-split-${freeNodeId}`;
 
@@ -270,6 +272,7 @@ const renderMemoryNode = (node, options = {}) => {
 
     const pBlock = document.createElement('div');
     pBlock.className = 'block';
+    if (options.popin) pBlock.classList.add('popin');
     pBlock.style.width = processWidth + '%';
     pBlock.style.backgroundColor = bgColor;
     pBlock.style.borderBottom = `8px solid ${borderColor}`;
@@ -285,6 +288,7 @@ const renderMemoryNode = (node, options = {}) => {
 
     const wBlock = document.createElement('div');
     wBlock.className = 'block';
+    if (options.popin) wBlock.classList.add('popin');
     wBlock.style.width = wasteWidth + '%';
     wBlock.style.borderRadius = "0px 12px 12px 0px";
     wBlock.style.borderBottom = `8px solid ${borderColor}`;
@@ -305,6 +309,7 @@ const renderMemoryNode = (node, options = {}) => {
   // Normal block
   const block = document.createElement('div');
   block.className = 'block';
+  if (options.popin) block.classList.add('popin');
   if (widthPercent) block.style.width = widthPercent + '%';
   if (widthPx) block.style.width = widthPx + 'px';
   block.style.flex = '0 0 auto';

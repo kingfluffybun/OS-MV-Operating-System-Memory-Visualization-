@@ -363,6 +363,7 @@ if (add_block_btn) {
     const newBlock = createBlockElement(
       nextBlockId,
       Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min),
+      { popin: true }
     );
     simulationContainer.insertBefore(newBlock, add_block_btn);
     updateTotalMemory();
@@ -492,7 +493,7 @@ const restorePreSimulationBlocks = () => {
   simulationContainer.querySelectorAll(".block").forEach((b) => b.remove());
   if (preSimBlockState && preSimBlockState.length) {
     preSimBlockState.forEach((sz, i) => {
-      const el = createBlockElement(i + 1, sz);
+      const el = createBlockElement(i + 1, sz, { popin: true });
       simulationContainer.insertBefore(el, addBtn || null);
     });
   }
@@ -742,7 +743,7 @@ const insertFixedWasteSplitAfter = (
 
   // 2. Create the "Internal Frag" block
   const wasteEl = document.createElement("div");
-  wasteEl.className = "block block--fixed-waste";
+  wasteEl.className = "block block--fixed-waste popin";
   wasteEl.id = `block-${blockId}-waste`;
   wasteEl.style.marginLeft = `-10px`;
   wasteEl.style.borderRadius = `0px 12px 12px 0px`;

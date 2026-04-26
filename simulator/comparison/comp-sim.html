@@ -22,6 +22,7 @@
     <script src="../util/script.js" defer></script>
     <script src="../util/comparison.js" defer></script>
     <script src="../../database/db.js" defer></script>
+    <script src="../util/pagingUI.js" defer></script>
     <script src="../util/comp-sim.js" defer></script>
 </head>
 <body>
@@ -291,15 +292,24 @@
         
         <!-- Non-Contiguous -->
         <div class="non-contiguous-allocation" id="non-contiguous-grid">
-            <div class="non-contiguous-algorithm" class="algo-card" id="paging">
+            <div class="non-contiguous-algorithm algo-card" id="paging">
                 <div class="algorithm-header">
                     <h3>Paging</h3>
                 </div>
-                <div style="display: flex; flex-direction: column; grid-row: span 2;">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
-                    <div class="contiguous-process-queue"></div>
+                <div class="non-contiguous-container">
+                    <div class="simulation-paging">
+                        <div class="container">
+                            <div class="pages-viz">
+                                <h3>Pages (Virtual Memory)</h3>
+                                <div class="pages-container"></div>
+                            </div>
+                            <div class="frames-viz">
+                                <h3>Frames (Physical Memory)</h3>
+                                <div class="frames-container"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="non-contiguous-container"></div>
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
@@ -315,15 +325,24 @@
                     </div>
                 </div>
             </div>
-            <div class="non-contiguous-algorithm" class="algo-card" id="segmentation">
+            <div class="non-contiguous-algorithm algo-card" id="segmentation">
                 <div class="algorithm-header">
                     <h3>Segmentation</h3>
                 </div>
-                <div style="display: flex; flex-direction: column; grid-row: span 2;">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
-                    <div class="contiguous-process-queue"></div>
+                <div class="non-contiguous-container">
+                    <div class="simulation-segmentation">
+                        <div class="container">
+                            <div class="segmentation-viz">
+                                <h3>Segmentation</h3>
+                                <div class="segmentation-container"></div>
+                            </div>
+                            <div class="physical-viz">
+                                <h3>Physical Memory</h3>
+                                <div class="physical-memory-container"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="non-contiguous-container"></div>
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
@@ -339,15 +358,24 @@
                     </div>
                 </div>
             </div>
-            <div class="non-contiguous-algorithm" class="algo-card" id="segmentation-paging">
+            <div class="non-contiguous-algorithm algo-card" id="segmentation-paging">
                 <div class="algorithm-header">
                     <h3>Segmentation with Paging</h3>
                 </div>
-                <div style="display: flex; flex-direction: column; grid-row: span 2;">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
-                    <div class="contiguous-process-queue"></div>
+                <div class="non-contiguous-container">
+                    <div class="simulation-segmentation">
+                        <div class="container">
+                            <div class="segmentation-paging-viz">
+                                <h3>Segmentation</h3>
+                                <div class="segmentation-paging-container"></div>
+                            </div>
+                            <div class="physical-viz">
+                                <h3>Physical Memory</h3>
+                                <div class="frames-container"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="non-contiguous-container"></div>
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
