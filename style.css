@@ -26,7 +26,7 @@ input::-ms-reveal {display: none;}
 input::-ms-clear {display: none;}
 
 body {
-background-color: white;
+    background-color: #f6f6f6;
     display: flex;
     justify-content: center;
     align-items: center;
