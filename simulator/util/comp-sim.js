@@ -136,7 +136,15 @@ function initNonContiguousAlgorithm(config) {
         memory: null,
         segments: [],
         segmentTable: {},
-        segmentIndex: 0 // Track current segment being allocated (0-3: code, heap, data, stack)
+        segmentIndex: 0, // Track current segment being allocated (0-3: code, heap, data, stack)
+        // Highlight state
+        lastAllocated: {
+            procIndex: -1,
+            pageIndex: -1,
+            frameId: -1,
+            type: null, // 'code', 'heap', etc. for segmentation
+            segmentId: -1
+        }
     };
 
     const instance = algoInstances[config.id];
@@ -233,14 +241,22 @@ function renderPagingPages(algoId) {
             const pageEl = document.createElement('div');
             pageEl.className = 'page';
             pageEl.id = `page-${algoId}-${i}-${j}`;
+            
+            const isCurrent = instance.lastAllocated.procIndex === i && instance.lastAllocated.pageIndex === j;
+            const currentClass = isCurrent ? ' current' : '';
+
             pageEl.innerHTML = `
                 <p id="page-number">P${j}</p>
-                <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                <div class="page-content${currentClass}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
                     <p>${processIdStr}</p>
                     <p>&nbsp;(Waiting for allocation)</p>
                 </div>
             `;
             pagesContainer.appendChild(pageEl);
+
+            if (isCurrent) {
+                scrollToHighlight(pagesContainer, pageEl);
+            }
         }
 
         if (i < instance.processes.length - 1) {
@@ -278,14 +294,22 @@ function renderSegmentationSegments(algoId) {
                 const segEl = document.createElement('div');
                 segEl.className = 'segments-container';
                 segEl.id = `seg-list-${algoId}-${i}-${type}`;
+                
+                const isCurrent = instance.lastAllocated.procIndex === i && instance.lastAllocated.type === type;
+                const currentClass = isCurrent ? ' current' : '';
+
                 segEl.innerHTML = `
                     <div id="segment-number">S${idx}</div>
-                    <div class="segments" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                    <div class="segments${currentClass}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
                         <p class="segment-type">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
                         <p id="segment-size">${segSize} KB</p>
                     </div>
                 `;
                 procDiv.appendChild(segEl);
+
+                if (isCurrent) {
+                    scrollToHighlight(segContainer, segEl);
+                }
             }
         });
         segContainer.appendChild(procDiv);
@@ -321,13 +345,20 @@ function renderSegmentationPagingSegments(algoId) {
                 const segCard = document.createElement('div');
                 segCard.className = 'segments-paging-container';
                 
-                const pagesHtml = pages.map(p => `
-                    <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
-                        <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
-                            <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
+                let segmentHasHighlight = false;
+                const pagesHtml = pages.map(p => {
+                    const pageIsCurrent = instance.lastAllocated.procIndex === i && 
+                                        instance.lastAllocated.type === type && 
+                                        instance.lastAllocated.pageIndex === p.pageIndex;
+                    if (pageIsCurrent) segmentHasHighlight = true;
+                    return `
+                        <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
+                            <div class="page-content${pageIsCurrent ? ' current' : ''}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                                <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
+                            </div>
                         </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
 
                 segCard.innerHTML = `
                     <div id="segment-number">S${idx}</div>
@@ -340,6 +371,10 @@ function renderSegmentationPagingSegments(algoId) {
                     </div>
                 `;
                 procDiv.appendChild(segCard);
+
+                if (segmentHasHighlight) {
+                    scrollToHighlight(segPagingContainer, segCard);
+                }
             }
         });
         segPagingContainer.appendChild(procDiv);
@@ -356,6 +391,19 @@ function renderPagingFrames(algoId) {
     const frames = memObj.frames;
     const frameSize = memObj.frameSize || memObj.pageSize || comparisonData.pageSize;
 
+    // Clear previous highlights in virtual memory list
+    const container = document.getElementById(algoId);
+    if (!container) return;
+    // Clear previous highlights in virtual memory list
+    const virtualMemoryContainer = container.querySelector('.pages-container') || 
+                                 container.querySelector('.segmentation-paging-container') ||
+                                 container.querySelector('.segmentation-container');
+    if (virtualMemoryContainer) {
+        virtualMemoryContainer.style.position = 'relative';
+        virtualMemoryContainer.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    }
+
+    if (framesContainer) framesContainer.style.position = 'relative';
     framesContainer.innerHTML = '';
 
     const framesArray = Array.isArray(frames) ? frames : Object.values(frames);
@@ -376,14 +424,21 @@ function renderPagingFrames(algoId) {
             const segmentType = frame.segmentType || "";
             const typeInfo = segmentType ? ` - ${segmentType.charAt(0).toUpperCase()}` : '';
 
+            const isCurrentFrame = instance.lastAllocated.frameId === fId;
+            const currentClass = isCurrentFrame ? ' current' : '';
+
             frameEl.innerHTML = `
                 <p id="frame-number">F${fId}</p>
-                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text || '#333'}; grid-template-columns: repeat(3, 1fr);">
+                <div class="frame-content${currentClass}" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text || '#333'}; grid-template-columns: repeat(3, 1fr);">
                     <p>P${procNum}${typeInfo}</p>
                     <p>Page ${pageIndex}</p>
                     <p>${frame.used || frameSize}KB</p>
                 </div>
             `;
+
+            if (isCurrentFrame) {
+                scrollToHighlight(framesContainer, frameEl);
+            }
 
             if (instance.config.type === 'paging') {
                 const pageId = `page-${algoId}-${procIndex}-${pageIndex}`;
@@ -398,6 +453,11 @@ function renderPagingFrames(algoId) {
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
                         content.style.color = colorPair.text || '#333';
+
+                        if (isCurrentFrame) {
+                            content.classList.add('current');
+                            scrollToHighlight(virtualMemoryContainer, pageEl);
+                        }
                     }
                 }
             } else if (instance.config.type === 'segmentation-paging') {
@@ -407,6 +467,10 @@ function renderPagingFrames(algoId) {
                 if (pageEl) {
                     const content = pageEl.querySelector('.page-content');
                     if (content) {
+                        if (isCurrentFrame) {
+                            content.classList.add('current');
+                            scrollToHighlight(virtualMemoryContainer, pageEl);
+                        }
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
                         content.style.color = colorPair.text || '#333';
@@ -431,6 +495,14 @@ function renderSegmentationMemory(algoId) {
     const physContainer = document.querySelector('#' + algoId + ' .physical-memory-container');
     if (!physContainer || !instance.memory) return;
 
+    // Clear previous highlights in segmentation list
+    const segContainer = document.querySelector('#' + algoId + ' .segmentation-container');
+    if (segContainer) {
+        segContainer.style.position = 'relative';
+        segContainer.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    }
+
+    if (physContainer) physContainer.style.position = 'relative';
     physContainer.innerHTML = '';
     const status = instance.memory.getStatus();
     
@@ -468,6 +540,12 @@ function renderSegmentationMemory(algoId) {
                 <span style="font-weight:bold;">P${procNum} - ${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</span>
                 <span>${seg.size} KB (${seg.base}-${seg.end})</span>
             `;
+            
+            const isCurrent = instance.lastAllocated.procIndex === (procNum - 1) && instance.lastAllocated.type === seg.type.toLowerCase();
+            if (isCurrent) {
+                segDiv.classList.add('current');
+            }
+
             memDiv.appendChild(segDiv);
 
             // Highlight in segmentation list
@@ -480,6 +558,11 @@ function renderSegmentationMemory(algoId) {
                     content.style.backgroundColor = colorPair.bg;
                     content.style.borderBottomColor = colorPair.border;
                     content.style.color = '#333';
+
+                    if (isCurrent) {
+                        content.classList.add('current');
+                        scrollToHighlight(segContainer, segEl);
+                    }
                 }
             }
         });
@@ -724,6 +807,14 @@ function stepPaging(algoId, processSize, processId) {
         instance.stats.allocatedSize += pageUsed;
 
         instance.results[processId].pagesAllocated++;
+        
+        // Update last allocated for highlight
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            pageIndex: instance.pageAllocationIndex,
+            frameId: parseInt(Object.keys(result.result.frameIds)[0])
+        };
+
         instance.pageAllocationIndex++;
 
         // If all pages are allocated, move to next process
@@ -808,6 +899,14 @@ function stepSegmentation(algoId, processSize, processId) {
         }
         
         instance.stats.allocatedSize += segSize;
+
+        // Update last allocated for highlight
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            type: currentType,
+            segmentId: result.result.segment.id
+        };
+
         instance.segmentIndex++;
 
         // Check if finished with all segments
@@ -899,6 +998,15 @@ function stepSegmentationPaging(algoId, processSize, processId) {
         
         instance.stats.allocatedSize += currentPageInfo.page.size;
         instance.results[processId].pagesAllocated++;
+
+        // Update last allocated for highlight
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            type: currentPageInfo.type,
+            pageIndex: currentPageInfo.page.pageIndex,
+            frameId: result.allocation.frameId
+        };
+
         instance.pageAllocationIndex++;
         
         if (instance.pageAllocationIndex >= allPages.length) {
@@ -1253,8 +1361,31 @@ document.querySelector('.comparison-grid').addEventListener('scroll', transparen
 
 // ========== PAGING UI HELPERS FOR COMPARISON ==========
 
-
-
+function scrollToHighlight(container, element) {
+    if (!container || !element) return;
+    
+    // Use setTimeout to ensure the element is in the DOM and layout is complete
+    setTimeout(() => {
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = element.getBoundingClientRect();
+        
+        // Calculate the relative position of the element within the container's visible area
+        const relativeTop = elementRect.top - containerRect.top;
+        
+        // targetScroll = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
+        // This centers the element within the scrollable container
+        const targetScroll = container.scrollTop + relativeTop - (container.clientHeight / 2) + (element.offsetHeight / 2);
+        
+        if (container.scrollTo) {
+            container.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+            });
+        } else {
+            container.scrollTop = targetScroll;
+        }
+    }, 100);
+}
 
 // Initialize on page load
 if (document.readyState === 'loading') {

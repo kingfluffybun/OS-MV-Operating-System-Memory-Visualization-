@@ -564,6 +564,13 @@
     border-bottom: 2px solid rgba(0, 0, 0, 0.1);
 }
 
-.non-contiguous-container .segment-pages .page-content.current {
-    outline: 2px solid var(--primary-color);
+.non-contiguous-container .segment-pages .page-content.current,
+.non-contiguous-container .page-content.current,
+.non-contiguous-container .frame-content.current,
+.non-contiguous-container .segments.current,
+.non-contiguous-container .allocated-segments.current {
+    outline: 2px solid var(--primary-color) !important;
+    box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2) !important;
+    position: relative;
+    z-index: 10;
 }
