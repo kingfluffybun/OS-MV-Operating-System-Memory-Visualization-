@@ -120,12 +120,14 @@ function initNonContiguousAlgorithm(config) {
         stats: {
             allocatedSize: 0,
             successfulAllocations: 0,
-            internalFragmentation: 0
+            internalFragmentation: 0,
+            externalFragmentation: 0
         },
         // Paging state
         memoryFrames: null,
         pageTable: {},
         // Segmentation state
+        memory: null,
         segments: [],
         segmentTable: {}
     };
@@ -133,7 +135,7 @@ function initNonContiguousAlgorithm(config) {
     const instance = algoInstances[config.id];
 
     // Initialize frames for paging
-    if (config.type === 'paging' || config.type === 'segmentation-paging') {
+    if (config.type === 'paging') {
         if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.createFrames === 'function') {
             instance.memoryFrames = window.memorySimulator.createFrames(frameCount, comparisonData.pageSize);
         } else {
@@ -153,13 +155,21 @@ function initNonContiguousAlgorithm(config) {
         }
     }
 
-    // Initialize physical memory for segmentation
+    // Initialize memory for segmentation
     if (config.type === 'segmentation') {
-        instance.physicalMemory = {
-            totalSize: comparisonData.totalMemory,
-            usedSize: 0,
-            blocks: []
-        };
+        if (typeof memorySimulator !== 'undefined' && typeof memorySimulator.createMemory === 'function') {
+            instance.memory = memorySimulator.createMemory(comparisonData.totalMemory);
+        } else {
+            // Fallback if SegmentationMemory is not globally available yet
+            instance.memory = new SegmentationMemory(comparisonData.totalMemory);
+        }
+    }
+
+    // Initialize for segmentation with paging
+    if (config.type === 'segmentation-paging') {
+        if (typeof PagingSegmentSimulator !== 'undefined') {
+            instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, comparisonData.pageSize);
+        }
     }
 
     renderNonContiguousInitial(config.id);
@@ -326,25 +336,37 @@ function renderSegmentationPagingSegments(algoId) {
 function renderPagingFrames(algoId) {
     const instance = algoInstances[algoId];
     const framesContainer = document.querySelector('#' + algoId + ' .frames-container');
-    if (!framesContainer || !instance.memoryFrames) return;
+    if (!framesContainer || !instance.memoryFrames && !instance.memory) return;
+
+    // Support both memoryFrames (paging) and memory (segmentation-paging)
+    const memObj = instance.memoryFrames || instance.memory;
+    const frames = memObj.frames;
+    const frameSize = memObj.frameSize || memObj.pageSize || comparisonData.pageSize;
 
     framesContainer.innerHTML = '';
 
-    Object.values(instance.memoryFrames.frames).forEach(function(frame) {
+    Object.values(frames).forEach(function(frame) {
         const frameEl = document.createElement('div');
         frameEl.className = 'frame';
-        frameEl.id = `frame-${algoId}-${frame.id}`;
+        frameEl.id = `frame-${algoId}-${frame.frameId || frame.id}`;
 
         if (frame.status === 'Occupied') {
-            const procNum = parseInt(frame.process.split('_')[1]) || 1;
+            // Harmonize frame data (paging uses frame.process, seg-paging uses frame.processName)
+            const procName = frame.processName || frame.process;
+            const procNum = parseInt(procName.replace(/\D/g, '')) || 1;
             const procIndex = procNum - 1;
             const colorPair = processColorsto[procIndex % processColorsto.length];
-            const pageIndex = frame.page - 1;
             
+            // Harmonize page index
+            const pageIndex = (frame.pageIndex !== undefined && frame.pageIndex !== null) ? frame.pageIndex : (frame.page - 1);
+            
+            // For segmentation-paging, show segment type too
+            const typeInfo = frame.segmentType ? ` - ${frame.segmentType.charAt(0).toUpperCase()}` : '';
+
             frameEl.innerHTML = `
-                <p id="frame-number">F${frame.id}</p>
+                <p id="frame-number">F${frame.frameId || frame.id}</p>
                 <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text}; grid-template-columns: repeat(3, 1fr);">
-                    <p>P${procNum}</p>
+                    <p>P${procNum}${typeInfo}</p>
                     <p>Page ${pageIndex}</p>
                     <p>${frame.used} KB</p>
                 </div>
@@ -366,13 +388,25 @@ function renderPagingFrames(algoId) {
                         content.style.color = colorPair.text;
                     }
                 }
+            } else if (instance.config.type === 'segmentation-paging') {
+                const type = frame.segmentType ? frame.segmentType.toLowerCase() : '';
+                const pageId = `page-seg-${algoId}-${procIndex}-${type}-${pageIndex}`;
+                const pageEl = document.getElementById(pageId);
+                if (pageEl) {
+                    const content = pageEl.querySelector('.page-content');
+                    if (content) {
+                        content.style.backgroundColor = colorPair.bg;
+                        content.style.borderBottomColor = colorPair.border;
+                        content.style.color = colorPair.text;
+                    }
+                }
             }
         } else {
             frameEl.innerHTML = `
-                <p id="frame-number">F${frame.id}</p>
+                <p id="frame-number">F${frame.frameId || frame.id}</p>
                 <div class="frame-content">
                     <p>Free</p>
-                    <p>${frame.size} KB</p>
+                    <p>${frame.size || frameSize} KB</p>
                 </div>
             `;
         }
@@ -383,39 +417,51 @@ function renderPagingFrames(algoId) {
 function renderSegmentationMemory(algoId) {
     const instance = algoInstances[algoId];
     const physContainer = document.querySelector('#' + algoId + ' .physical-memory-container');
-    if (!physContainer) return;
+    if (!physContainer || !instance.memory) return;
 
     physContainer.innerHTML = '';
+    const status = instance.memory.getStatus();
+    
+    const memDiv = document.createElement('div');
+    memDiv.className = 'physical-memory';
+    memDiv.style.display = 'flex';
+    memDiv.style.flexDirection = 'column';
+    memDiv.style.width = '100%';
 
-    const totalMem = comparisonData.totalMemory;
-    const freeSpace = totalMem - instance.stats.allocatedSize;
-    const usedPercent = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100) : 0;
+    // Render allocated segments
+    if (status && status.allocated) {
+        status.allocated.forEach((seg) => {
+            const procNum = parseInt(seg.name.replace(/\D/g, '')) || 1;
+            const colorPair = processColorsto[(procNum - 1) % processColorsto.length];
+            
+            const segDiv = document.createElement('div');
+            // Scale height for comparison view (smaller than single mode)
+            const height = Math.max(30, seg.size * 0.4); 
+            segDiv.style.height = `${height}px`;
+            segDiv.style.minHeight = '30px';
+            segDiv.className = 'allocated-segments';
+            segDiv.style.backgroundColor = colorPair.bg;
+            segDiv.style.borderBottom = `2px solid ${colorPair.border}`;
+            segDiv.style.color = '#333';
+            segDiv.style.display = 'flex';
+            segDiv.style.flexDirection = 'column';
+            segDiv.style.justifyContent = 'center';
+            segDiv.style.alignItems = 'center';
+            segDiv.style.fontSize = '10px';
+            segDiv.style.padding = '2px';
+            segDiv.style.margin = '1px 0';
+            segDiv.style.borderRadius = '4px';
 
-    const usedBlock = document.createElement('div');
-    usedBlock.className = 'memory-block used';
-    usedBlock.style.width = usedPercent + '%';
-    usedBlock.style.backgroundColor = '#4CAF50';
-    usedBlock.innerHTML = '<span>Used: ' + instance.stats.allocatedSize + ' KB</span>';
+            segDiv.innerHTML = `
+                <span style="font-weight:bold;">P${procNum} - ${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</span>
+                <span>${seg.size} KB (${seg.base}-${seg.end})</span>
+            `;
+            memDiv.appendChild(segDiv);
 
-    const freeBlock = document.createElement('div');
-    freeBlock.className = 'memory-block free';
-    freeBlock.style.width = (100 - usedPercent) + '%';
-    freeBlock.style.backgroundColor = '#e0e0e0';
-    freeBlock.innerHTML = '<span>Free: ' + freeSpace + ' KB</span>';
-
-    if (instance.stats.allocatedSize > 0) physContainer.appendChild(usedBlock);
-    if (freeSpace > 0) physContainer.appendChild(freeBlock);
-
-    // Update highlights in segmentation list
-    instance.segments.forEach(seg => {
-        const colorIndex = (seg.processId - 1) % processColorsto.length;
-        const colorPair = processColorsto[colorIndex];
-        const types = ['code', 'heap', 'data', 'stack'];
-        
-        // In our simplified stepSegmentation, we allocate one big segment.
-        // We'll highlight all segment types for this process.
-        types.forEach(type => {
-            const segEl = document.getElementById(`seg-list-${algoId}-${seg.processId - 1}-${type}`);
+            // Highlight in segmentation list
+            const type = seg.type.toLowerCase();
+            const segElId = `seg-list-${algoId}-${procNum - 1}-${type}`;
+            const segEl = document.getElementById(segElId);
             if (segEl) {
                 const content = segEl.querySelector('.segments');
                 if (content) {
@@ -425,7 +471,30 @@ function renderSegmentationMemory(algoId) {
                 }
             }
         });
-    });
+    }
+
+    // Render free blocks
+    if (status && status.free) {
+        status.free.forEach((hole) => {
+            if (hole.size <= 0) return;
+            const holeDiv = document.createElement('div');
+            const height = Math.max(20, hole.size * 0.4);
+            holeDiv.style.height = `${height}px`;
+            holeDiv.style.backgroundColor = '#f0f0f0';
+            holeDiv.style.border = '1px dashed #ccc';
+            holeDiv.style.display = 'flex';
+            holeDiv.style.justifyContent = 'center';
+            holeDiv.style.alignItems = 'center';
+            holeDiv.style.fontSize = '10px';
+            holeDiv.style.color = '#999';
+            holeDiv.style.margin = '1px 0';
+            holeDiv.style.borderRadius = '4px';
+            holeDiv.innerHTML = `Free: ${hole.size} KB`;
+            memDiv.appendChild(holeDiv);
+        });
+    }
+
+    physContainer.appendChild(memDiv);
 }
 
 function renderSegmentationPaging(algoId) {
@@ -630,42 +699,99 @@ function stepPaging(algoId, processSize, processId) {
 
 function stepSegmentation(algoId, processSize, processId) {
     const instance = algoInstances[algoId];
-    const totalMem = comparisonData.totalMemory;
-    const remainingSpace = totalMem - instance.stats.allocatedSize;
+    const processIdStr = `Process ${processId}`;
 
-    if (processSize > remainingSpace) {
-        instance.results[processId] = { status: 'Failed', reason: 'Not enough memory' };
-        instance.currentIndex++;
-        updateAlgorithmStats(algoId);
-        return true;
+    if (!instance.memory) {
+        instance.memory = new SegmentationMemory(comparisonData.totalMemory);
     }
 
-    // Create segment
-    const segment = {
-        id: instance.segments.length + 1,
-        processId: processId,
-        size: processSize,
-        base: instance.stats.allocatedSize
-    };
+    const segments = instance.memory.allocate(processIdStr, processSize);
 
-    instance.segments.push(segment);
-    instance.segmentTable[processId] = segment;
-    instance.results[processId] = { status: 'Allocated', segmentId: segment.id, size: processSize };
-    
-    // Update statistics
-    instance.stats.allocatedSize += processSize;
-    instance.stats.successfulAllocations++;
+    if (segments && segments.length > 0) {
+        instance.results[processId] = { 
+            status: 'Allocated', 
+            segments: segments, 
+            size: processSize 
+        };
+        
+        // Update statistics
+        instance.stats.allocatedSize += processSize;
+        instance.stats.successfulAllocations++;
+        
+        // External fragmentation from current memory status
+        const status = instance.memory.getStatus();
+        instance.stats.externalFragmentation = status.free.reduce((a, f) => a + f.size, 0);
+    } else {
+        instance.results[processId] = { status: 'Failed', reason: 'Not enough memory for all segments' };
+        // Check fragmentation even on failure
+        const status = instance.memory.getStatus();
+        instance.stats.externalFragmentation = status.free.reduce((a, f) => a + f.size, 0);
+    }
 
     instance.currentIndex++;
-
     renderSegmentationMemory(algoId);
     updateAlgorithmStats(algoId);
     return true;
 }
 
 function stepSegmentationPaging(algoId, processSize, processId) {
-    // Simplified: treat as paging with larger "pages" (segments divided into pages)
-    return stepPaging(algoId, processSize, processId);
+    const instance = algoInstances[algoId];
+    const processName = `Process ${processId}`;
+    const pageSize = comparisonData.pageSize;
+
+    if (!instance.memory) {
+        instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, pageSize);
+    }
+
+    const breakdown = PagingSegmentSimulator.breakdownSize(processSize);
+    let allAllocated = true;
+    const processAllocations = [];
+    let processInternalFrag = 0;
+
+    // Save current memory state for potential rollback
+    const originalFrames = JSON.parse(JSON.stringify(instance.memory.frames));
+
+    const segmentTypes = {
+        Code: breakdown.code,
+        Heap: breakdown.heap,
+        Data: breakdown.data,
+        Stack: breakdown.stack
+    };
+
+    for (const [type, size] of Object.entries(segmentTypes)) {
+        if (size <= 0) continue;
+
+        const { pages, internalFragmentation } = PagingSegmentSimulator.segmentToPages(size, pageSize);
+        const result = PagingSegmentSimulator.allocatePagesToFrames(instance.memory.frames, processName, type, pages);
+        
+        if (result.success) {
+            processAllocations.push(...result.allocation);
+            processInternalFrag += internalFragmentation;
+        } else {
+            allAllocated = false;
+            break;
+        }
+    }
+
+    if (allAllocated) {
+        instance.results[processId] = { 
+            status: 'Allocated', 
+            allocations: processAllocations,
+            internalFragmentation: processInternalFrag
+        };
+        instance.stats.allocatedSize += processSize;
+        instance.stats.successfulAllocations++;
+        instance.stats.internalFragmentation += processInternalFrag;
+    } else {
+        // Rollback
+        instance.memory.frames = originalFrames;
+        instance.results[processId] = { status: 'Failed', reason: 'Not enough frames' };
+    }
+
+    instance.currentIndex++;
+    renderPagingFrames(algoId);
+    updateAlgorithmStats(algoId);
+    return true;
 }
 
 function updateAlgorithmStats(algoId) {
