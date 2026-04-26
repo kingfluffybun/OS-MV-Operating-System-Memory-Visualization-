@@ -187,6 +187,7 @@ const updateBlockVisuals = (results) => {
       if (processElem) {
         bgColor = processElem.getAttribute("data-bg");
         borderColor = processElem.getAttribute("data-border");
+        textColor = processElem.getAttribute("data-text");
         isAllocated = true;
         processActualSize = result.size;
       }
@@ -195,6 +196,7 @@ const updateBlockVisuals = (results) => {
     if (isAllocated) {
       block.style.background = bgColor;
       block.style.borderBottom = `8px solid ${borderColor}`;
+      block.style.color = textColor;
       block.classList.add("allocated");
       const statusLabel = block.querySelector(".block-status");
       if (statusLabel && allocationProcessKey) {

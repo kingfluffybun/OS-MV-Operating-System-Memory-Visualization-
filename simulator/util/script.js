@@ -54,7 +54,7 @@ function showMenu() {
   // Check which page is user on
   const isAdminPage = currentPath.includes("/admin-dashboard/");
   const isSimulator = currentPath.includes("/simulator/algorithm/");
-  const isComparisonPage = currentPath.includes("/simulator/comparison/") ;
+  const isComparisonPage = currentPath.includes("/simulator/comparison/");
   const isSingleMode = currentPath.includes("/simulator/single-mode.html")
   const isFrontPage =
     currentPath.includes("/simulator/index.html") ||
@@ -217,8 +217,10 @@ function attachProcessListeners() {
 
     newAddBtn.addEventListener("click", () => {
       const sizeInput = activeView.querySelector("#process-size");
-      const size = parseInt(sizeInput ? sizeInput.value : 0, 10);
+      let size = parseInt(sizeInput ? sizeInput.value : 0, 10);
       if (!size || size <= 0) return;
+
+      if (size > 1000000) size = 1000000;
 
       if (isSegmentationPagingMode()) {
         const segPagingContainer =
@@ -455,6 +457,7 @@ const resetBlocksUI = () => {
     block.style.borderColor = "";
     block.style.borderBottom = "";
     block.style.borderRadius = "12px";
+    block.style.color = "black";
     block.classList.remove("allocated");
 
     const bId = block.id.replace("block-", "");
@@ -731,6 +734,7 @@ const insertFixedWasteSplitAfter = (
   blockId,
   bgColor,
   borderColor,
+  textColor
 ) => {
   // 1. Update the original block display immediately
   const sizeDisplay = allocatedEl.querySelector(".block-size-value");
@@ -742,10 +746,12 @@ const insertFixedWasteSplitAfter = (
   wasteEl.id = `block-${blockId}-waste`;
   wasteEl.style.marginLeft = `-10px`;
   wasteEl.style.borderRadius = `0px 12px 12px 0px`;
+
   // wasteEl.style.color = `$`
   // Store colors so updateBlockVisuals can re-apply them on refresh
   if (bgColor) wasteEl.dataset.hatchBg = bgColor;
   if (borderColor) wasteEl.dataset.hatchBorder = borderColor;
+  if (textColor) wasteEl.dataset.textColor = textColor;
 
   // Inherit the parent block's label (e.g. "Block 2 - Internal Frag")
   const parentLabel = allocatedEl.querySelector("p")
@@ -755,7 +761,7 @@ const insertFixedWasteSplitAfter = (
   wasteEl.innerHTML = `
         <p></p>
         <div class="block-content">
-            <div class="block-status">Unusable</div>
+            <div class="block-status"><p>Unusable</p></div>
             <div class="block-size">
                 <h2><span class="block-size-value">${wasteSizeKb}</span></h2>
                 <h2>&nbsp;KB</h2>
@@ -767,13 +773,15 @@ const insertFixedWasteSplitAfter = (
   if (bgColor && borderColor) {
     const hatchPattern = `repeating-linear-gradient(
             45deg,
-            ${bgColor}75,
-            ${bgColor}75 5px,
-            #2c2c2c 5px,
-            #2c2c2c 10px
+            ${bgColor}88,
+            ${bgColor}88 5px,
+            ${borderColor}66 5px,
+            ${borderColor}66 10px
         )`;
     wasteEl.style.background = hatchPattern;
     wasteEl.style.borderBottom = `8px solid ${borderColor}`;
+    wasteEl.style.opacity = 0.85;
+    wasteEl.style.color = `${textColor}`;
   }
 
   // 4. Place it after the allocated block
@@ -1266,14 +1274,15 @@ const runStep = () => {
             // Increment total pages allocated each time a page is successfully allocated
             simulationState.stats.totalPagesAllocated += 1;
 
-            // Increment internal fragmentation step-by-step (only on the last page of a segment)
-            const segmentObj = allPages[simulationState.pageAllocationIndex].segment;
-            const isLastPageOfSegment =
-              page.pageIndex === segmentObj.pages.length - 1;
-            if (isLastPageOfSegment) {
-              simulationState.stats.internalFragmentation +=
-                segmentObj.internalFragmentation || 0;
-            }
+            // Update internal fragmentation dynamically
+            const framesArray = Array.isArray(simulationState.memory.frames)
+              ? simulationState.memory.frames
+              : Object.values(simulationState.memory.frames);
+            const totalUsed = framesArray.reduce((sum, frame) => {
+              return sum + (frame.status === "Occupied" ? (frame.used || 0) : 0);
+            }, 0);
+            const occupiedCount = framesArray.filter(f => f.status === "Occupied").length;
+            simulationState.stats.internalFragmentation = (occupiedCount * simulationState.pageSize) - totalUsed;
 
             simulationState.pageAllocationIndex++;
           } else {
@@ -1322,7 +1331,7 @@ const runStep = () => {
         playInterval = null;
         togglePlayStop();
       }
-    //   reEnableSimulationButtons();
+      //   reEnableSimulationButtons();
       return false;
     }
 
@@ -1457,7 +1466,6 @@ const runStep = () => {
 
     if (stepResult.frames) simulationState.memoryFrames = stepResult.frames;
 
-    // Store result with process ID
     if (!simulationState.results[processId]) {
       simulationState.results[processId] = {
         size,
@@ -1465,8 +1473,7 @@ const runStep = () => {
         frameIds: {},
         status: "Allocated",
         pagesAllocated: 0,
-        internalFragmentation: 0, // Set to 0 initially, updated in stats only on last page
-        totalinternalFragmentation: stepResult.result.internalFragmentation || 0,
+        internalFragmentation: stepResult.result.internalFragmentation || 0,
       };
     }
 
@@ -1495,15 +1502,18 @@ const runStep = () => {
     const successRate =
       simulationState.stats.totalPagesNeeded > 0
         ? (simulationState.stats.totalPagesAllocated /
-            simulationState.stats.totalPagesNeeded) *
-          100
+          simulationState.stats.totalPagesNeeded) *
+        100
         : 0;
 
-    const dynamicAllocatedSize = Object.values(
-      simulationState.memoryFrames.frames,
-    ).reduce((sum, frame) => {
-      return sum + (frame.status === "Occupied" ? frame.used : 0);
+    const framesArray = Object.values(simulationState.memoryFrames.frames);
+    const dynamicAllocatedSize = framesArray.reduce((sum, frame) => {
+      return sum + (frame.status === "Occupied" ? (frame.used || 0) : 0);
     }, 0);
+    const occupiedFrames = framesArray.filter(f => f.status === "Occupied").length;
+
+    // Update global internal fragmentation dynamically
+    simulationState.stats.internalFragmentation = (occupiedFrames * pageSize) - dynamicAllocatedSize;
 
     const pagingStats = {
       allocatedSize: dynamicAllocatedSize,
@@ -1528,12 +1538,6 @@ const runStep = () => {
     );
 
     // Increment page allocation index
-    const isLastPageOfProcess = simulationState.pageAllocationIndex === pagesNeeded - 1;
-    if (isLastPageOfProcess) {
-      simulationState.stats.internalFragmentation +=
-        simulationState.results[processId].internalFragmentation || 0;
-    }
-
     simulationState.pageAllocationIndex += 1;
 
     // Check if all pages allocated for this process
@@ -1566,10 +1570,10 @@ const runStep = () => {
     typeof allocationFn === "function"
       ? allocationFn.call(memorySimulator, simulationState.memoryHead, size)
       : {
-          result: { size, block: "None", status: "Unallocated" },
-          allocatedSize: 0,
-          successfulAllocations: 0,
-        };
+        result: { size, block: "None", status: "Unallocated" },
+        allocatedSize: 0,
+        successfulAllocations: 0,
+      };
 
   // CRITICAL: Attach the process size to the result
   stepResult.result.size = size;
@@ -1625,7 +1629,7 @@ const runStep = () => {
         );
       } else if (isFixed) {
         const colorIndex = simulationState.currentIndex % processColors.length;
-        const { bg: procBg, border: procBorder } = processColors[colorIndex];
+        const { bg: procBg, border: procBorder, text: procText } = processColors[colorIndex];
         blockEl.style.borderRadius = "12px 0px 0px 12px";
         insertFixedWasteSplitAfter(
           blockEl,
@@ -1634,6 +1638,7 @@ const runStep = () => {
           stepResult.result.block,
           procBg,
           procBorder,
+          procText,
         );
       }
     }
@@ -1770,6 +1775,11 @@ const togglePlayStop = () => {
 
 const runPlay = () => {
   try {
+    const isFinished = simulationState && simulationState.currentIndex >= simulationState.processes.length;
+    if (isFinished) {
+      runReset();
+    }
+
     const isFirstPlay = !simulationState;
     if (isFirstPlay) {
       if (!prepareSimulation()) return;
@@ -1805,7 +1815,7 @@ const runPlay = () => {
           clearInterval(playInterval);
           playInterval = null;
           togglePlayStop();
-        //   reEnableSimulationButtons();
+          //   reEnableSimulationButtons();
         }
       }, delay);
     };

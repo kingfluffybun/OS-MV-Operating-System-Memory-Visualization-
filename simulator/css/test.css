@@ -157,6 +157,7 @@ button:disabled svg {
                         align-items: center;
                         background: transparent;
                         border: none;
+                        color: currentColor;
                     } button.edit-process-btn:hover, button.delete-process-btn:hover {cursor: pointer;}
                 }
             } #unpartition {
@@ -223,7 +224,7 @@ button:disabled svg {
         > .block, .add-block {
             border-radius: 12px;
             height: 100%;
-            max-height: 2048px;
+            max-width: 2048px;
             padding: 12px 0;
             position: relative;
             > p {font-weight: 400; font-size: 0.75rem; padding: 0 12px 0 12px;}
@@ -239,7 +240,7 @@ button:disabled svg {
                 align-items: center;
                 > h2 {font-size: 1.25rem; }
             }
-            > div .block-status {text-align: center; font-weight: 500; font-size: 12px;}
+            > div .block-status {text-align: center; font-weight: 700; font-size: 12px;}
         } .block--split-free {
             border-bottom-color: rgba(0, 0, 0, 0.12);
             box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.06), 0px 6px 12px rgba(0, 0, 0, 0.06);

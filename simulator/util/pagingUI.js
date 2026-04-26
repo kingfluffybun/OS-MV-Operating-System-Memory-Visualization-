@@ -41,10 +41,14 @@ const getPagingInputs = () => {
     memorySizeInput = document.getElementById("memory-size");
   }
 
-  const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
-  const memorySize = memorySizeInput
+  let pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+  let memorySize = memorySizeInput
     ? parseInt(memorySizeInput.value, 10)
     : NaN;
+
+  if (pageSize > 1000000) pageSize = 1000000;
+  if (memorySize > 1000000) memorySize = 1000000;
+
   return { pageSize, memorySize };
 };
 

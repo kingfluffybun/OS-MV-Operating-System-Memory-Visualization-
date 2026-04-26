@@ -660,10 +660,14 @@ const getSegmentationPagingInputs = () => {
     pageSizeInput = document.getElementById("page-frame-size");
   }
 
-  const memorySize = memorySizeInput
+  let memorySize = memorySizeInput
     ? parseInt(memorySizeInput.value, 10)
     : NaN;
-  const pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+  let pageSize = pageSizeInput ? parseInt(pageSizeInput.value, 10) : NaN;
+
+  if (memorySize > 1000000) memorySize = 1000000;
+  if (pageSize > 1000000) pageSize = 1000000;
+
   return { memorySize, pageSize };
 };
 

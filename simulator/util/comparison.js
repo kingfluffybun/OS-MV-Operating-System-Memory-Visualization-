@@ -6,7 +6,9 @@
  */
 const getTotalMemorySize = () => {
   const globalSetting = document.querySelector('.global-setting-input div:first-child input');
-  return globalSetting ? parseInt(globalSetting.value, 10) || 0 : 0;
+  let val = globalSetting ? parseInt(globalSetting.value, 10) || 0 : 0;
+  if (val > 1000000) val = 1000000;
+  return val;
 };
 
 /**
@@ -15,7 +17,9 @@ const getTotalMemorySize = () => {
  */
 const getPageSize = () => {
   const pageSizeInput = document.querySelector('.global-setting-input div:last-child input');
-  return pageSizeInput ? parseInt(pageSizeInput.value, 10) || 1 : 1;
+  let val = pageSizeInput ? parseInt(pageSizeInput.value, 10) || 1 : 1;
+  if (val > 1000000) val = 1000000;
+  return val;
 };
 
 /**
@@ -138,7 +142,8 @@ const canAddBlock = (blockSize) => {
  * @returns {Object} { isValid: boolean, value: number, message: string }
  */
 const validateBlockInput = (inputValue) => {
-  const parsed = parseInt(inputValue, 10);
+  let parsed = parseInt(inputValue, 10);
+  if (parsed > 1000000) parsed = 1000000;
 
   if (Number.isNaN(parsed) || parsed <= 0) {
     return {
@@ -571,7 +576,11 @@ const startInlineEditPartition = (element, onCommit) => {
     const text = element.textContent.trim();
     const parsed = parseInt(text, 10);
     const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
+    let finalValue = valid ? parsed : null;
+    if (finalValue !== null && finalValue > 1000000) {
+      finalValue = 1000000;
+    }
+    cleanup(finalValue);
   };
 
   const onKeyDown = (event) => {
@@ -641,14 +650,14 @@ const getNextProcessId = () => {
  */
 const createProcessSettingElement = (processNumber, sizeKb) => {
   const processColors = [
-    { bg: '#FFADAD', border: '#BF8282' },
-    { bg: '#FFD6A5', border: '#BFA07C' },
-    { bg: '#FDFFB6', border: '#BEBF88' },
-    { bg: '#CAFFBF', border: '#98BF8F' },
-    { bg: '#9BF6FF', border: '#7DC6CE' },
-    { bg: '#A0C4FF', border: '#7893BF' },
-    { bg: '#BDB2FF', border: '#8E85BF' },
-    { bg: '#FFC6FF', border: '#BF94BF' },
+  { bg: "#FFADAD", border: "#BF8282", text: "#791F1F" },
+  { bg: "#FFD6A5", border: "#BFA07C", text: "#633806" },
+  { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" },
+  { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" },
+  { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" },
+  { bg: "#A0C4FF", border: "#7893BF", text: "#042C53" },
+  { bg: "#BDB2FF", border: "#8E85BF", text: "#26215C" },
+  { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" },
   ];
 
   const colorIndex = (processNumber - 1) % processColors.length;
@@ -659,8 +668,10 @@ const createProcessSettingElement = (processNumber, sizeKb) => {
   process.id = `process-${processNumber}`;
   process.setAttribute('data-bg', colorPair.bg);
   process.setAttribute('data-border', colorPair.border);
+  process.setAttribute('data-text', colorPair.text);
   process.style.backgroundColor = colorPair.bg;
   process.style.borderBottomColor = colorPair.border;
+  process.style.color = colorPair.text;
 
   process.innerHTML = `
     <div class="process-content">
@@ -696,7 +707,7 @@ const createProcessSettingElement = (processNumber, sizeKb) => {
  * @returns {Object} { success: boolean, message: string }
  */
 const addProcessSetting = (processSize) => {
-  const parsed = parseInt(processSize, 10);
+  let parsed = parseInt(processSize, 10);
 
   if (Number.isNaN(parsed) || parsed <= 0) {
     return {
@@ -704,6 +715,8 @@ const addProcessSetting = (processSize) => {
       message: 'Process size must be a positive number.',
     };
   }
+
+  if (parsed > 1000000) parsed = 1000000;
 
   const processContainer = document.querySelector('.process-setting .process-container');
   if (!processContainer) {
@@ -761,7 +774,11 @@ const startInlineEditProcess = (element, onCommit) => {
     const text = element.textContent.trim();
     const parsed = parseInt(text, 10);
     const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
+    let finalValue = valid ? parsed : null;
+    if (finalValue !== null && finalValue > 1000000) {
+      finalValue = 1000000;
+    }
+    cleanup(finalValue);
   };
 
   const onKeyDown = (event) => {
@@ -878,8 +895,10 @@ const renumberProcessesInSettings = () => {
     const colorPair = processColors[colorIndex];
     process.setAttribute('data-bg', colorPair.bg);
     process.setAttribute('data-border', colorPair.border);
+    process.setAttribute('data-text', colorPair.text);
     process.style.backgroundColor = colorPair.bg;
     process.style.borderBottomColor = colorPair.border;
+    process.style.color = colorPair.text;
   });
 
   updateProcessSettingsSummary();
