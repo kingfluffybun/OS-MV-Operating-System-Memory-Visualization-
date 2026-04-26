@@ -490,6 +490,7 @@
     border-bottom: 3px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 4px;
     align-items: center;
+    overflow: hidden;
 }
 
 .non-contiguous-container .segment-type {

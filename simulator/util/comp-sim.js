@@ -523,10 +523,9 @@ function renderSegmentationMemory(algoId) {
             const colorPair = processColorsto[(procNum - 1) % processColorsto.length];
             
             const segDiv = document.createElement('div');
-            // Scale height for comparison view (smaller than single mode)
-            const height = Math.max(30, seg.size * 0.4); 
+            // Scale height for comparison view: base 30px + proportional kb
+            const height = 30 + (seg.size * 0.8); 
             segDiv.style.height = `${height}px`;
-            segDiv.style.minHeight = '30px';
             segDiv.className = 'allocated-segments';
             segDiv.style.backgroundColor = colorPair.bg;
             segDiv.style.borderBottom = `2px solid ${colorPair.border}`;
@@ -578,7 +577,7 @@ function renderSegmentationMemory(algoId) {
         status.free.forEach((hole) => {
             if (hole.size <= 0) return;
             const holeDiv = document.createElement('div');
-            const height = Math.max(20, hole.size * 0.4);
+            const height = 30 + (hole.size * 0.8);
             holeDiv.style.height = `${height}px`;
             holeDiv.style.backgroundColor = '#f0f0f0';
             holeDiv.style.border = '1px dashed #ccc';
