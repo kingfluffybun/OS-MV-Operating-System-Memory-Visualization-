@@ -1766,6 +1766,11 @@ const togglePlayStop = () => {
 
 const runPlay = () => {
   try {
+    const isFinished = simulationState && simulationState.currentIndex >= simulationState.processes.length;
+    if (isFinished) {
+      runReset();
+    }
+
     const isFirstPlay = !simulationState;
     if (isFirstPlay) {
       if (!prepareSimulation()) return;
