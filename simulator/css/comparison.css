@@ -249,3 +249,268 @@
         transform: scale(1);
     }
 }
+
+/* Paging Visualization in Comparison Mode */
+.non-contiguous-container .simulation-paging .container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    min-height: 300px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.non-contiguous-container .pages-viz,
+.non-contiguous-container .frames-viz {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+}
+
+.non-contiguous-container .pages-viz h3,
+.non-contiguous-container .frames-viz h3 {
+    font-size: 14px;
+    text-align: left;
+    color: #000;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.non-contiguous-container .pages-container,
+.non-contiguous-container .frames-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: transparent;
+    border-radius: 0;
+    padding: 4px;
+    border: none;
+}
+
+.non-contiguous-container .page,
+.non-contiguous-container .frame {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.non-contiguous-container #page-number,
+.non-contiguous-container #frame-number {
+    font-size: 11px;
+    min-width: 20px;
+    color: #333;
+    font-weight: 500;
+}
+
+.non-contiguous-container .page-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    background-color: #9BF6FF;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+    min-height: 28px;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.non-contiguous-container .frame-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    background-color: white;
+    border-bottom: 4px solid #eee;
+    min-height: 28px;
+    align-items: center;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.non-contiguous-container .frame-content p {
+    margin: 0;
+}
+
+
+/* Segmentation Visualization in Comparison Mode */
+.non-contiguous-container .simulation-segmentation .container {
+    display: grid;
+    grid-template-columns: 1fr 0.8fr;
+    gap: 16px;
+    min-height: 300px;
+    padding: 0;
+    background: transparent;
+    border: none;
+}
+
+.non-contiguous-container .segmentation-viz,
+.non-contiguous-container .physical-viz {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+}
+
+.non-contiguous-container .segmentation-viz h3,
+.non-contiguous-container .physical-viz h3 {
+    font-size: 14px;
+    text-align: left;
+    color: #000;
+    font-weight: 600;
+}
+
+.non-contiguous-container .segmentation-container,
+.non-contiguous-container .physical-memory-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    background-color: transparent;
+    border-radius: 0;
+    padding: 4px;
+    border: none;
+}
+
+.non-contiguous-container .physical-memory-container {
+    background-color: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+    padding: 12px;
+}
+
+.non-contiguous-container .segmentation h4 {
+    font-size: 11px;
+    color: #666;
+    margin: 8px 0 4px 0;
+    font-weight: 500;
+}
+
+.non-contiguous-container .segments-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.non-contiguous-container #segment-number {
+    font-size: 11px;
+    min-width: 20px;
+    color: #333;
+    font-weight: 500;
+}
+
+.non-contiguous-container .segments {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 16px;
+    border-radius: 8px;
+    font-size: 11px;
+    background-color: #9BF6FF;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.1);
+    min-height: 28px;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.non-contiguous-container .allocated-segments {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 10px;
+    background-color: #9BF6FF;
+    border-bottom: 3px solid rgba(0, 0, 0, 0.1);
+    margin-bottom: 4px;
+    align-items: center;
+}
+
+.non-contiguous-container .segment-type {
+    font-weight: 500;
+}
+
+.non-contiguous-container .segment-base-limit {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 9px;
+    gap: 1px;
+}
+
+.non-contiguous-container .segment-base,
+.non-contiguous-container .segment-limit {
+    color: #888;
+}
+
+
+/* Segmentation with Paging Visualization in Comparison Mode */
+.non-contiguous-container .segmentation-paging-container {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.non-contiguous-container .segments-paging-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 8px;
+}
+
+.non-contiguous-container .segments-paging {
+    flex-grow: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background-color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+.non-contiguous-container .segment-paging-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    font-size: 11px;
+}
+
+.non-contiguous-container .segment-paging-header p {
+    margin: 0;
+}
+
+.non-contiguous-container .segment-pages {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+}
+
+.non-contiguous-container .segment-pages .page {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.non-contiguous-container .segment-pages .page-content {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    padding: 4px 12px;
+    border-radius: 6px;
+    font-size: 10px;
+    min-height: 24px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+.non-contiguous-container .segment-pages .page-content.current {
+    outline: 2px solid var(--primary-color);
+}
+
+
