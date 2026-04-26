@@ -929,7 +929,34 @@ function updateAlgorithmStats(algoId) {
     const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
 
     if (utilEl) utilEl.textContent = util + '%';
-    if (intfragEl) intfragEl.textContent = instance.stats.internalFragmentation + ' KB';
+    
+    // Conditional Fragmentation logic for Algorithm Cards
+    if (intfragEl) {
+        const label = intfragEl.previousElementSibling;
+        const type = instance.config.type;
+        const category = instance.config.category;
+
+        if (type === 'fixed' || type === 'paging' || type === 'segmentation-paging') {
+            // Show Internal Fragmentation
+            if (label) label.textContent = 'Internal Fragmentation';
+            intfragEl.textContent = (instance.stats.internalFragmentation || 0) + ' KB';
+        } else if (type === 'dynamic' || type === 'segmentation') {
+            // Show External Fragmentation instead of Internal for these types
+            if (label) label.textContent = 'External Fragmentation';
+            
+            let extFrag = 0;
+            if (type === 'dynamic') {
+                if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.externalFragmentation === 'function') {
+                    extFrag = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
+                }
+            } else if (type === 'segmentation' && instance.memory && typeof instance.memory.getStatus === 'function') {
+                const status = instance.memory.getStatus();
+                extFrag = status.free.reduce((a, f) => a + f.size, 0);
+            }
+            intfragEl.textContent = extFrag + ' KB';
+        }
+    }
+
     if (successEl) successEl.textContent = success + '%';
 }
 
@@ -948,25 +975,43 @@ function updateSummaryTable() {
         const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
         const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
 
-        let extFrag = 0;
-        if (config.category === 'contiguous') {
-            if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.externalFragmentation === 'function') {
-                extFrag = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
-            }
-        } else if (instance.stats.externalFragmentation !== undefined) {
-            extFrag = instance.stats.externalFragmentation;
-        } else if (config.id === 'segmentation' && instance.memory && typeof instance.memory.getStatus === 'function') {
-            const status = instance.memory.getStatus();
-            extFrag = status.free.reduce((a, f) => a + f.size, 0);
+        const displayName = config.name + (config.type && config.type !== config.id ? ' - ' + config.type : '');
+        const type = config.type;
+
+        // Rules for fragmentation:
+        // 1. Fixed: Internal (YES), External (NO)
+        // 2. Dynamic: External (YES), Internal (NO)
+        // 3. Paging: Internal (YES), External (NO)
+        // 4. Segmentation: External (YES), Internal (NO)
+        // 5. Segmentation with Paging: Internal (YES), External (NO)
+
+        let intFragDisplay = "0 KB";
+        let extFragDisplay = "0 KB";
+
+        // Internal Frag Calculation/Display
+        if (type === 'fixed' || type === 'paging' || type === 'segmentation-paging') {
+            intFragDisplay = (instance.stats.internalFragmentation || 0) + ' KB';
         }
 
-        const displayName = config.name + (config.type && config.type !== config.id ? ' - ' + config.type : '');
+        // External Frag Calculation/Display
+        if (type === 'dynamic' || type === 'segmentation') {
+            let extFragValue = 0;
+            if (type === 'dynamic') {
+                if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.externalFragmentation === 'function') {
+                    extFragValue = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
+                }
+            } else if (type === 'segmentation' && instance.memory && typeof instance.memory.getStatus === 'function') {
+                const status = instance.memory.getStatus();
+                extFragValue = status.free.reduce((a, f) => a + f.size, 0);
+            }
+            extFragDisplay = extFragValue + ' KB';
+        }
 
         row.innerHTML =
             '<td>' + displayName + '</td>' +
             '<td>' + util + '%</td>' +
-            '<td>' + (instance.stats.internalFragmentation || 0) + ' KB</td>' +
-            '<td>' + extFrag + ' KB</td>' +
+            '<td>' + intFragDisplay + '</td>' +
+            '<td>' + extFragDisplay + '</td>' +
             '<td>' + success + '%</td>';
         tbody.appendChild(row);
     });
