@@ -123,68 +123,22 @@ function renderBlocks(algoId) {
 
     while (node) {
         const logicalId = String(node.originalLabel || node.parentId || node.id);
-        const nextLogicalId = node.next
-            ? String(node.next.originalLabel || node.next.parentId || node.next.id)
-            : null;
+        const nextLogicalId = node.next ? String(node.next.originalLabel || node.next.parentId || node.next.id) : null;
 
-        const isFirstInGroup = logicalId !== prevLogicalId;
-        const isLastInGroup = logicalId !== nextLogicalId;
+        const colorIndex = node.status === 'Occupied' ? ((node.processId || 1) - 1) % processColorsto.length : -1;
+        const colorPair = colorIndex >= 0 ? processColorsto[colorIndex] : { bg: '#e0e0e0', border: 'rgba(0, 0, 0, 0.25)' };
 
-        const block = document.createElement('div');
-        block.className = 'block';
-        block.id = 'block-' + node.id;
-        block.dataset.partitionLabel = String(node.id);
+        const blockEl = renderMemoryNode(node, {
+            isFirstInGroup: logicalId !== prevLogicalId,
+            isLastInGroup: logicalId !== nextLogicalId,
+            logicalId: logicalId,
+            widthPercent: comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0,
+            bgColor: colorPair.bg,
+            borderColor: colorPair.border,
+            isFixed: instance.config.type === 'fixed'
+        });
 
-        const widthPercent = comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0;
-        block.style.width = widthPercent + '%';
-
-        // Apply "together blocks" visual grouping
-        if (!isFirstInGroup || !isLastInGroup) {
-            if (isFirstInGroup && !isLastInGroup) {
-                block.style.borderRadius = "12px 0px 0px 12px";
-            } else if (!isFirstInGroup && !isLastInGroup) {
-                block.style.borderRadius = "0px 0px 0px 0px";
-                block.style.marginLeft = "-10px";
-                block.style.zIndex = "1";
-            } else if (!isFirstInGroup && isLastInGroup) {
-                block.style.borderRadius = "0px 12px 12px 0px";
-                block.style.marginLeft = "-10px";
-                block.style.zIndex = "1";
-            }
-        }
-
-        let bgColor, borderColor;
-        if (node.status === 'Free') {
-            bgColor = '#e0e0e0';
-            borderColor = 'rgba(0, 0, 0, 0.25)';
-        } else {
-            const colorIndex = ((node.processId || 1) - 1) % processColorsto.length;
-            const colorPair = processColorsto[colorIndex];
-            bgColor = colorPair.bg;
-            borderColor = colorPair.border;
-        }
-        block.style.backgroundColor = bgColor;
-        block.style.borderBottomColor = borderColor;
-
-        // Only show "Block X" label for the first block in a group
-        const statusText = node.status === 'Free' ? (node.isSplit ? 'Hole' : 'Free') : (node.processId ? 'Process ' + node.processId : 'Allocated');
-        const titleText = isFirstInGroup ? 'Block ' + logicalId : '';
-
-        block.innerHTML = `
-            <p>${titleText}</p>
-            <div class="block-content">
-                <div>
-                    <p class="block-status">${statusText}</p>
-                </div>
-                <div class="block-size">
-                    <h2><span class="block-size-value">${node.size}</span></h2>
-                    <h2>&nbsp;KB</h2>
-                </div>
-            </div>
-            <div></div>
-        `;
-        container.appendChild(block);
-        
+        container.appendChild(blockEl);
         prevLogicalId = logicalId;
         node = node.next;
     }
@@ -277,6 +231,7 @@ function stepAlgorithm(algoId) {
                 if (node.id === result.result.block) {
                     node.status = 'Occupied';
                     node.processId = processId;
+                    node.fragmentation = result.result.fragmentation || 0;
                     break;
                 }
                 node = node.next;

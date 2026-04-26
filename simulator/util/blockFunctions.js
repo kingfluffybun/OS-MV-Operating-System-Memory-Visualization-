@@ -221,3 +221,102 @@ const editBlock = (block) => {
     resizeBlocks();
   });
 };
+const getHatchPattern = (bgColor, borderColor) => {
+  return `repeating-linear-gradient(45deg, ${bgColor}88, ${bgColor}88 5px, ${borderColor}66 5px, ${borderColor}66 10px)`;
+};
+
+const applyBlockGroupStyles = (blockEl, isFirst, isLast) => {
+  if (isFirst && !isLast) {
+    blockEl.style.borderRadius = "12px 0px 0px 12px";
+  } else if (!isFirst && !isLast) {
+    blockEl.style.borderRadius = "0px 0px 0px 0px";
+    blockEl.style.marginLeft = "-10px";
+    blockEl.style.zIndex = "1";
+  } else if (!isFirst && isLast) {
+    blockEl.style.borderRadius = "0px 12px 12px 0px";
+    blockEl.style.marginLeft = "-10px";
+    blockEl.style.zIndex = "1";
+  }
+};
+
+/**
+ * Shared renderer for a single memory node.
+ * Handles grouping, colors, and fragmentation hash patterns.
+ */
+const renderMemoryNode = (node, options = {}) => {
+  const {
+    isFirstInGroup = true,
+    isLastInGroup = true,
+    logicalId = node.id,
+    widthPercent = null,
+    bgColor = '#e0e0e0',
+    borderColor = 'rgba(0, 0, 0, 0.25)',
+    isFixed = false
+  } = options;
+
+  // Handle Internal Fragmentation in Fixed Partition (Visual Split)
+  if (node.status === 'Occupied' && isFixed && node.fragmentation > 0) {
+    const processSize = node.size - node.fragmentation;
+    const processWidth = (processSize / node.size) * 100;
+    const wasteWidth = (node.fragmentation / node.size) * 100;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'block-wrapper';
+    if (widthPercent) wrapper.style.width = widthPercent + '%';
+    wrapper.style.display = 'flex';
+
+    const pBlock = document.createElement('div');
+    pBlock.className = 'block';
+    pBlock.style.width = processWidth + '%';
+    pBlock.style.backgroundColor = bgColor;
+    pBlock.style.borderBottom = `8px solid ${borderColor}`;
+    pBlock.style.borderRadius = "12px 0px 0px 12px";
+    pBlock.style.marginRight = "-5px";
+    pBlock.innerHTML = `
+      <p>Block ${logicalId}</p>
+      <div class="block-content">
+        <div class="block-status">Process ${node.processId}</div>
+        <div class="block-size"><h2>${processSize} KB</h2></div>
+      </div>
+    `;
+
+    const wBlock = document.createElement('div');
+    wBlock.className = 'block';
+    wBlock.style.width = wasteWidth + '%';
+    wBlock.style.borderRadius = "0px 12px 12px 0px";
+    wBlock.style.borderBottom = `8px solid ${borderColor}`;
+    wBlock.style.background = getHatchPattern(bgColor, borderColor);
+    wBlock.innerHTML = `
+      <p></p>
+      <div class="block-content">
+        <div class="block-status">Unusable</div>
+        <div class="block-size"><h2>${node.fragmentation} KB</h2></div>
+      </div>
+    `;
+
+    wrapper.appendChild(pBlock);
+    wrapper.appendChild(wBlock);
+    return wrapper;
+  }
+
+  // Normal block
+  const block = document.createElement('div');
+  block.className = 'block';
+  if (widthPercent) block.style.width = widthPercent + '%';
+  block.style.backgroundColor = bgColor;
+  block.style.borderBottom = `8px solid ${borderColor}`;
+
+  applyBlockGroupStyles(block, isFirstInGroup, isLastInGroup);
+
+  const statusText = node.status === 'Free' ? (node.isSplit ? 'Hole' : 'Free') : (node.processId ? 'Process ' + node.processId : 'Allocated');
+  const titleText = isFirstInGroup ? 'Block ' + logicalId : '';
+
+  block.innerHTML = `
+    <p>${titleText}</p>
+    <div class="block-content">
+      <div class="block-status">${statusText}</div>
+      <div class="block-size"><h2>${node.size} KB</h2></div>
+    </div>
+  `;
+  return block;
+};
