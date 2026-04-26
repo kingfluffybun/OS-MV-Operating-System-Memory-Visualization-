@@ -633,6 +633,22 @@ containers.forEach(container => {
   });
 });
 
+function transparentController() {
+    const body = document.querySelector(".comparison-grid")
+  const header = document.querySelector(".simulation-controls");
+
+  const scrollPos = body.scrollTop; 
+  console.log(body.scrollTop);
+  if (scrollPos > 150) { 
+    console.log("gumana")
+    header.classList.add("scrolled-style");
+  } else {
+    header.classList.remove("scrolled-style");
+  }
+};
+
+document.querySelector('.comparison-grid').addEventListener('scroll', transparentController);
+
 // ========== PAGING UI HELPERS FOR COMPARISON ==========
 
 function initPagingUIInComparison(algoId) {

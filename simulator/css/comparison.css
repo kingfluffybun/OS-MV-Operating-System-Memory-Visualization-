@@ -2,6 +2,19 @@
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: 250ms all ease;
+}
+
+.scrolled-style {
+    background-color: transparent;
+    backdrop-filter: blur(10px);
+    div {
+        backdrop-filter: blur(15px);
+    }
+}
+
+.scrolled-style div button:hover {
+    background-color: white !important;
 }
 
 .comparison-grid {
