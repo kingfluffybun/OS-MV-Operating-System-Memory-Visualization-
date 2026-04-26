@@ -780,7 +780,6 @@ const insertFixedWasteSplitAfter = (
         )`;
     wasteEl.style.background = hatchPattern;
     wasteEl.style.borderBottom = `8px solid ${borderColor}`;
-    wasteEl.style.opacity = 0.85;
     wasteEl.style.color = `${textColor}`;
   }
 
@@ -1225,6 +1224,9 @@ const runStep = () => {
         appendConsoleMessage(
           `${processName} (${processSize} KB) -> Unallocated (Insufficient memory).`,
         );
+        if (typeof markProcessAsUnallocated === 'function') {
+          markProcessAsUnallocated(processName);
+        }
         simulationState.currentIndex += 1;
         simulationState.subStep = 0;
       }
@@ -1359,6 +1361,18 @@ const runStep = () => {
       `${stepResult.processName} - ${segLabel} (${stepResult.segmentSize} KB) -> ${stepResult.status}`,
     );
 
+    // Mark process as unallocated if this segment failed and it's the last segment of the process
+    if (stepResult.status === "Unallocated" && stepResult.completedProcess) {
+      if (typeof markProcessAsUnallocated === 'function') {
+        markProcessAsUnallocated(stepResult.processName);
+      }
+    } else if (stepResult.status === "Allocated" && stepResult.completedProcess) {
+      // Mark process as allocated when all segments are successfully allocated
+      if (typeof markProcessAsAllocated === 'function') {
+        markProcessAsAllocated(stepResult.processName);
+      }
+    }
+
     // Only advance simulationState.currentIndex when ALL segments of a process are done
     if (stepResult.completedProcess) {
       simulationState.currentIndex += 1;
@@ -1441,6 +1455,10 @@ const runStep = () => {
       appendConsoleMessage(
         `${processId} Page ${simulationState.pageAllocationIndex} - No free frames available`,
       );
+
+      if (typeof markProcessAsUnallocated === 'function') {
+        markProcessAsUnallocated(processId);
+      }
 
       // Count unallocated pages as internal fragmentation (Removing this as per user request to only add if allocated)
       // const unallocatedPages = pagesNeeded - simulationState.pageAllocationIndex;
@@ -1705,6 +1723,18 @@ const runStep = () => {
     `${processId} (${size} KB) -> ${finalResult?.status || stepResult.result.status}${displayBlockId !== "None" ? ` to Block ${displayBlockId}` : ""}`,
   );
 
+  // Mark process visually based on allocation status
+  const allocationStatus = finalResult?.status || stepResult.result.status;
+  if (allocationStatus === "Allocated") {
+    if (typeof markProcessAsAllocated === 'function') {
+      markProcessAsAllocated(processId);
+    }
+  } else if (allocationStatus === "Unallocated") {
+    if (typeof markProcessAsUnallocated === 'function') {
+      markProcessAsUnallocated(processId);
+    }
+  }
+
   if (finalResult && finalResult.status === "Allocated") {
     followAllocatedBlock(finalResult.block);
   }
@@ -1857,6 +1887,11 @@ const runReset = () => {
 
   simulationState = null;
   currentStep = 0;
+
+  // Reset process allocation status
+  if (typeof resetProcessAllocationStatus === 'function') {
+    resetProcessAllocationStatus();
+  }
 
   if (isSegmentation) {
     resetSegmentation();

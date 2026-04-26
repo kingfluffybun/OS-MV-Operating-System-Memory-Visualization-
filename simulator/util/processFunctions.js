@@ -173,3 +173,57 @@ const editProcess = (process) => {
   const sizeEl = process.querySelector(".process-content p:nth-child(2)");
   startInlineEdit(sizeEl, (parsedSize) => {});
 };
+
+const markProcessAsUnallocated = (processId) => {
+  const activeContainer = getActiveProcessContainer();
+  if (!activeContainer) return;
+
+  const processElement = activeContainer.querySelector(`#process-${processId.split(' ')[1]}`);
+  if (processElement) {
+    // Get the process's background color
+    const bgColor = processElement.getAttribute("data-bg")
+    const borderColor = processElement.getAttribute("data-border")
+    if (bgColor) {
+      // Apply the same hatching pattern used for internal fragmentation
+      const hatchPattern = `repeating-linear-gradient(
+        45deg,
+        ${bgColor},
+        ${bgColor} 5px,
+        ${borderColor} 5px,
+        ${borderColor} 10px
+      )`;
+      processElement.style.background = hatchPattern;
+      processElement.style.borderBottom = `4px solid ${borderColor}`
+    }
+  }
+};
+
+const markProcessAsAllocated = (processId) => {
+  const activeContainer = getActiveProcessContainer();
+  if (!activeContainer) return;
+
+  const processElement = activeContainer.querySelector(`#process-${processId.split(' ')[1]}`);
+  if (processElement) {
+    // Restore the original solid background color
+    const bgColor = processElement.getAttribute("data-bg");
+    if (bgColor) {
+      processElement.style.background = bgColor;
+      processElement.style.borderBottom = `4px solid ${processElement.getAttribute("data-border")}`;
+    }
+  }
+};
+
+const resetProcessAllocationStatus = () => {
+  const activeContainer = getActiveProcessContainer();
+  if (!activeContainer) return;
+
+  const processElements = activeContainer.querySelectorAll('.process');
+  processElements.forEach((processElement) => {
+    // Restore original solid background for all processes
+    const bgColor = processElement.getAttribute("data-bg");
+    if (bgColor) {
+      processElement.style.background = bgColor;
+      processElement.style.borderBottom = `4px solid ${processElement.getAttribute("data-border")}`;
+    }
+  });
+};
