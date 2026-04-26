@@ -501,6 +501,7 @@
     border-bottom: 3px solid rgba(0, 0, 0, 0.1);
     margin-bottom: 4px;
     align-items: center;
+    overflow: hidden;
 }
 
 .non-contiguous-container .segment-type {
@@ -596,7 +597,10 @@
 .non-contiguous-container .page-content.current,
 .non-contiguous-container .frame-content.current,
 .non-contiguous-container .segments.current,
-.non-contiguous-container .allocated-segments.current {
+.non-contiguous-container .allocated-segments.current,
+.contiguous-process-queue .process.current,
+.contiguous-container .block.current,
+.contiguous-container .block-wrapper.current {
     outline: 2px solid var(--primary-color) !important;
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2) !important;
     position: relative;

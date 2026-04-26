@@ -228,7 +228,9 @@ const getHatchPattern = (bgColor, borderColor) => {
 };
 
 const applyBlockGroupStyles = (blockEl, isFirst, isLast) => {
-  if (isFirst && !isLast) {
+  if (isFirst && isLast) {
+    blockEl.style.borderRadius = "12px";
+  } else if (isFirst && !isLast) {
     blockEl.style.borderRadius = "12px 0px 0px 12px";
   } else if (!isFirst && !isLast) {
     blockEl.style.borderRadius = "0px 0px 0px 0px";

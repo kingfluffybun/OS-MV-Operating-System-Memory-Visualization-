@@ -104,6 +104,10 @@ function initContiguousAlgorithm(config) {
             allocatedSize: 0,
             successfulAllocations: 0,
             internalFragmentation: 0
+        },
+        lastAllocated: {
+            procIndex: -1,
+            blockId: -1
         }
     };
 
@@ -519,10 +523,9 @@ function renderSegmentationMemory(algoId) {
             const colorPair = processColorsto[(procNum - 1) % processColorsto.length];
             
             const segDiv = document.createElement('div');
-            // Scale height for comparison view (smaller than single mode)
-            const height = Math.max(30, seg.size * 0.4); 
+            // Scale height for comparison view: base 30px + proportional kb
+            const height = 30 + (seg.size * 0.8); 
             segDiv.style.height = `${height}px`;
-            segDiv.style.minHeight = '30px';
             segDiv.className = 'allocated-segments';
             segDiv.style.backgroundColor = colorPair.bg;
             segDiv.style.borderBottom = `2px solid ${colorPair.border}`;
@@ -544,6 +547,7 @@ function renderSegmentationMemory(algoId) {
             const isCurrent = instance.lastAllocated.procIndex === (procNum - 1) && instance.lastAllocated.type === seg.type.toLowerCase();
             if (isCurrent) {
                 segDiv.classList.add('current');
+                scrollToHighlight(physContainer, segDiv);
             }
 
             memDiv.appendChild(segDiv);
@@ -573,7 +577,7 @@ function renderSegmentationMemory(algoId) {
         status.free.forEach((hole) => {
             if (hole.size <= 0) return;
             const holeDiv = document.createElement('div');
-            const height = Math.max(20, hole.size * 0.4);
+            const height = 30 + (hole.size * 0.8);
             holeDiv.style.height = `${height}px`;
             holeDiv.style.backgroundColor = '#f0f0f0';
             holeDiv.style.border = '1px dashed #ccc';
@@ -626,7 +630,17 @@ function renderBlocks(algoId) {
             isFixed: instance.config.type === 'fixed'
         }); 
 
+        const isCurrentBlock = instance.lastAllocated && instance.lastAllocated.blockId === node.id;
+        if (isCurrentBlock) {
+            blockEl.classList.add('current');
+        }
+
         container.appendChild(blockEl);
+        
+        if (isCurrentBlock) {
+            scrollToHighlight(container, blockEl);
+        }
+
         prevLogicalId = logicalId;
         node = node.next;
     }
@@ -643,7 +657,7 @@ function renderSharedProcessQueue() {
         processes.forEach(function(size, i) {
             const process = document.createElement('div');
             process.className = 'process';
-            process.id = 'process-' + (i + 1);
+            process.id = 'process-' + algo.id + '-' + (i + 1);
 
             const colorIndex = i % processColorsto.length;
             const colorPair = processColorsto[colorIndex];
@@ -661,6 +675,25 @@ function renderSharedProcessQueue() {
             queue.appendChild(process);
         });
     });
+}
+
+function updateContiguousProcessQueue(algoId) {
+    const instance = algoInstances[algoId];
+    if (!instance) return;
+    
+    const queue = document.querySelector('#' + algoId + ' .contiguous-process-queue');
+    if (!queue) return;
+    
+    queue.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    
+    const procIndex = instance.lastAllocated ? instance.lastAllocated.procIndex : -1;
+    if (procIndex >= 0) {
+        const processEl = document.getElementById('process-' + algoId + '-' + (procIndex + 1));
+        if (processEl) {
+            processEl.classList.add('current');
+            scrollToHighlight(queue, processEl);
+        }
+    }
 }
 
 function stepAlgorithm(algoId) {
@@ -733,11 +766,22 @@ function stepContiguousAlgorithm(algoId, processSize, processId) {
         if (instance.config.type === 'fixed') {
             instance.stats.internalFragmentation += result.result.fragmentation || 0;
         }
+        
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            blockId: result.result.block
+        };
+    } else {
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            blockId: -1
+        };
     }
 
     instance.results[processId] = result.result;
     instance.currentIndex++;
     renderBlocks(algoId);
+    updateContiguousProcessQueue(algoId);
     updateAlgorithmStats(algoId);
     return true;
 }
@@ -1341,12 +1385,19 @@ function getComparisonStepDelay() {
 
 const containers = document.querySelectorAll('.contiguous-container');
 
+window.lastAutoScrollTime = 0;
+let isSyncingScroll = false;
 containers.forEach(container => {
   container.addEventListener('scroll', () => {
+    if (isitPlaying || isSyncingScroll || (Date.now() - window.lastAutoScrollTime < 800)) return;
+    isSyncingScroll = true;
     containers.forEach(target => {
       if (target !== container) {
         target.scrollLeft = container.scrollLeft;
       }
+    });
+    requestAnimationFrame(() => {
+        isSyncingScroll = false;
     });
   });
 });
@@ -1372,25 +1423,52 @@ document.querySelector('.comparison-grid').addEventListener('scroll', transparen
 function scrollToHighlight(container, element) {
     if (!container || !element) return;
     
+    // Find the actual scrollable container. Some algorithms wrap their content 
+    // in a non-scrollable div inside a scrollable visualization container.
+    let scrollable = container;
+    while (scrollable && scrollable !== document.body) {
+        const computedStyle = window.getComputedStyle(scrollable);
+        if (computedStyle.overflowY === 'auto' || computedStyle.overflowY === 'scroll' || 
+            computedStyle.overflowX === 'auto' || computedStyle.overflowX === 'scroll') {
+            break;
+        }
+        scrollable = scrollable.parentElement;
+    }
+    
+    // Fallback if we somehow didn't find one
+    if (!scrollable || scrollable === document.body) {
+        scrollable = container;
+    }
+
     // Use setTimeout to ensure the element is in the DOM and layout is complete
     setTimeout(() => {
-        const containerRect = container.getBoundingClientRect();
+        const containerRect = scrollable.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(scrollable);
         
-        // Calculate the relative position of the element within the container's visible area
-        const relativeTop = elementRect.top - containerRect.top;
+        let scrollToOptions = { behavior: 'smooth' };
+        let doScroll = false;
         
-        // targetScroll = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
-        // This centers the element within the scrollable container
-        const targetScroll = container.scrollTop + relativeTop - (container.clientHeight / 2) + (element.offsetHeight / 2);
-        
-        if (container.scrollTo) {
-            container.scrollTo({
-                top: targetScroll,
-                behavior: 'smooth'
-            });
-        } else {
-            container.scrollTop = targetScroll;
+        if (computedStyle.overflowY === 'auto' || computedStyle.overflowY === 'scroll') {
+            const relativeTop = elementRect.top - containerRect.top;
+            scrollToOptions.top = scrollable.scrollTop + relativeTop - (scrollable.clientHeight / 2) + (element.offsetHeight / 2);
+            doScroll = true;
+        }
+
+        if (computedStyle.overflowX === 'auto' || computedStyle.overflowX === 'scroll') {
+            const relativeLeft = elementRect.left - containerRect.left;
+            scrollToOptions.left = scrollable.scrollLeft + relativeLeft - (scrollable.clientWidth / 2) + (element.offsetWidth / 2);
+            doScroll = true;
+        }
+
+        if (doScroll) {
+            window.lastAutoScrollTime = Date.now();
+            if (scrollable.scrollTo) {
+                scrollable.scrollTo(scrollToOptions);
+            } else {
+                if (scrollToOptions.top !== undefined) scrollable.scrollTop = scrollToOptions.top;
+                if (scrollToOptions.left !== undefined) scrollable.scrollLeft = scrollToOptions.left;
+            }
         }
     }, 100);
 }
