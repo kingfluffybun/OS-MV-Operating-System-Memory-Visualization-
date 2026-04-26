@@ -313,7 +313,7 @@ const renderMemoryNode = (node, options = {}) => {
   if (widthPercent) block.style.width = widthPercent + '%';
   if (widthPx) block.style.width = widthPx + 'px';
   block.style.flex = '0 0 auto';
-  block.style.backgroundColor = bgColor;
+  block.style.backgroundColor = `white`;
   block.style.borderBottom = `8px solid ${borderColor}`;
 
   applyBlockGroupStyles(block, isFirstInGroup, isLastInGroup);
