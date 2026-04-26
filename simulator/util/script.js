@@ -217,8 +217,10 @@ function attachProcessListeners() {
 
     newAddBtn.addEventListener("click", () => {
       const sizeInput = activeView.querySelector("#process-size");
-      const size = parseInt(sizeInput ? sizeInput.value : 0, 10);
+      let size = parseInt(sizeInput ? sizeInput.value : 0, 10);
       if (!size || size <= 0) return;
+
+      if (size > 1000000) size = 1000000;
 
       if (isSegmentationPagingMode()) {
         const segPagingContainer =

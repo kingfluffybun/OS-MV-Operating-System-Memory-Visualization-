@@ -139,7 +139,11 @@ const startInlineEdit = (element, onCommit) => {
     const text = element.textContent.trim();
     const parsed = parseInt(text, 10);
     const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
+    let finalValue = valid ? parsed : null;
+    if (finalValue !== null && finalValue > 1000000) {
+      finalValue = 1000000;
+    }
+    cleanup(finalValue);
   };
 
   const onKeyDown = (event) => {
