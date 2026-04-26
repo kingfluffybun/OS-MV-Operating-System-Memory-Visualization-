@@ -266,7 +266,7 @@ let segmentationState = {
 };
 
 const getProcessColors = (processName) => {
-  const defaultColors = { bg: "#9BF6FF", border: "#74B8BF" };
+  const defaultColors = { bg: "#9BF6FF", border: "#74B8BF", text: "#085041" };
   if (!processName) return defaultColors;
 
   const processes = Array.from(document.querySelectorAll(".process"));
@@ -279,6 +279,7 @@ const getProcessColors = (processName) => {
   return {
     bg: processEl.getAttribute("data-bg") || defaultColors.bg,
     border: processEl.getAttribute("data-border") || defaultColors.border,
+    text: processEl.getAttribute("data-text") || defaultColors.text,
   };
 };
 
@@ -489,7 +490,7 @@ const updateSegmentationDisplay = (status) => {
 
         segmentTypes.forEach((segmentType, index) => {
           if (segmentType.size > 0) {
-            const { bg, border } = getProcessColors(processName);
+            const { bg, border, text } = getProcessColors(processName);
             const segmentContainer = document.createElement("div");
             segmentContainer.className = "segments-container";
 
@@ -513,6 +514,7 @@ const updateSegmentationDisplay = (status) => {
                 : "");
             infoDiv.style.backgroundColor = bg;
             infoDiv.style.borderBottom = `4px solid ${border}`;
+            infoDiv.style.color = text;
 
             const nameP = document.createElement("p");
             nameP.id = "process-segment";
@@ -540,7 +542,7 @@ const updateSegmentationDisplay = (status) => {
       } else {
         // Show allocated segments for completed processes
         processSegments.forEach((seg, index) => {
-          const { bg, border } = getProcessColors(seg.name);
+          const { bg, border, text } = getProcessColors(seg.name);
           const segmentContainer = document.createElement("div");
           segmentContainer.className = "segments-container";
 
@@ -562,6 +564,7 @@ const updateSegmentationDisplay = (status) => {
               : "");
           infoDiv.style.backgroundColor = bg;
           infoDiv.style.borderBottom = `4px solid ${border}`;
+          infoDiv.style.color = text;
 
           const nameP = document.createElement("p");
           nameP.id = "process-segment";
@@ -630,7 +633,7 @@ const updatePhysicalMemoryDisplay = (status) => {
         const processSegments = processGroups[processName];
 
         processSegments.forEach((seg) => {
-          const { bg, border } = getProcessColors(seg.name);
+          const { bg, border, text } = getProcessColors(seg.name);
           const segDiv = document.createElement("div");
           const PX_PER_KB = 1;
           segDiv.style.height = `${seg.size * PX_PER_KB + 48}px`;
@@ -642,6 +645,7 @@ const updatePhysicalMemoryDisplay = (status) => {
           segDiv.style.position = `relative`;
           segDiv.style.backgroundColor = bg;
           segDiv.style.borderBottom = `4px solid ${border}`;
+          segDiv.style.color = text;
 
           const baseValue = currentBase;
           const limitValue = currentBase + seg.size;

@@ -144,6 +144,7 @@ const initializePagingUI = (memoryFrames, processes = []) => {
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+          contentDiv.style.color = colors.text;
         }
         pagesContainer.appendChild(pageEl);
       }
@@ -215,6 +216,7 @@ const updatePagingUI = (memoryFrames) => {
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+          contentDiv.style.color = colors.text;
         }
 
         // Set data attributes for followAllocatedFrame
@@ -274,6 +276,7 @@ const updatePagingUI = (memoryFrames) => {
         if (contentDiv) {
           contentDiv.style.backgroundColor = colors.bg;
           contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+          contentDiv.style.color = colors.text;
         }
       }
     });

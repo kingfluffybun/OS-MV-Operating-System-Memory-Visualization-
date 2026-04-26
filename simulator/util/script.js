@@ -761,7 +761,7 @@ const insertFixedWasteSplitAfter = (
   wasteEl.innerHTML = `
         <p></p>
         <div class="block-content">
-            <div class="block-status"><p>Unusable</p></div>
+            <div class="block-status"><p style="font-weight: 650;">Unusable</p></div>
             <div class="block-size">
                 <h2><span class="block-size-value">${wasteSizeKb}</span></h2>
                 <h2>&nbsp;KB</h2>
