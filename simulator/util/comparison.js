@@ -641,14 +641,14 @@ const getNextProcessId = () => {
  */
 const createProcessSettingElement = (processNumber, sizeKb) => {
   const processColors = [
-    { bg: '#FFADAD', border: '#BF8282' },
-    { bg: '#FFD6A5', border: '#BFA07C' },
-    { bg: '#FDFFB6', border: '#BEBF88' },
-    { bg: '#CAFFBF', border: '#98BF8F' },
-    { bg: '#9BF6FF', border: '#7DC6CE' },
-    { bg: '#A0C4FF', border: '#7893BF' },
-    { bg: '#BDB2FF', border: '#8E85BF' },
-    { bg: '#FFC6FF', border: '#BF94BF' },
+  { bg: "#FFADAD", border: "#BF8282", text: "#791F1F" },
+  { bg: "#FFD6A5", border: "#BFA07C", text: "#633806" },
+  { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" },
+  { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" },
+  { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" },
+  { bg: "#A0C4FF", border: "#7893BF", text: "#042C53" },
+  { bg: "#BDB2FF", border: "#8E85BF", text: "#26215C" },
+  { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" },
   ];
 
   const colorIndex = (processNumber - 1) % processColors.length;
@@ -659,8 +659,10 @@ const createProcessSettingElement = (processNumber, sizeKb) => {
   process.id = `process-${processNumber}`;
   process.setAttribute('data-bg', colorPair.bg);
   process.setAttribute('data-border', colorPair.border);
+  process.setAttribute('data-text', colorPair.text);
   process.style.backgroundColor = colorPair.bg;
   process.style.borderBottomColor = colorPair.border;
+  process.style.color = colorPair.text;
 
   process.innerHTML = `
     <div class="process-content">
@@ -878,8 +880,10 @@ const renumberProcessesInSettings = () => {
     const colorPair = processColors[colorIndex];
     process.setAttribute('data-bg', colorPair.bg);
     process.setAttribute('data-border', colorPair.border);
+    process.setAttribute('data-text', colorPair.text);
     process.style.backgroundColor = colorPair.bg;
     process.style.borderBottomColor = colorPair.border;
+    process.style.color = colorPair.text;
   });
 
   updateProcessSettingsSummary();

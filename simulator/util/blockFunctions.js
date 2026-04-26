@@ -105,8 +105,10 @@ const renumberProcesses = (container) => {
 
     process.setAttribute("data-bg", colorPair.bg);
     process.setAttribute("data-border", colorPair.border);
+    process.setAttribute("data-text", colorPair.text);
     process.style.backgroundColor = colorPair.bg;
     process.style.borderBottomColor = colorPair.border;
+    process.style.color = colorIndex.text;
   });
 };
 

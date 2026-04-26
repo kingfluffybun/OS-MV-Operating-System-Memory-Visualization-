@@ -455,6 +455,7 @@ const resetBlocksUI = () => {
     block.style.borderColor = "";
     block.style.borderBottom = "";
     block.style.borderRadius = "12px";
+    block.style.color = "black";
     block.classList.remove("allocated");
 
     const bId = block.id.replace("block-", "");
@@ -731,6 +732,7 @@ const insertFixedWasteSplitAfter = (
   blockId,
   bgColor,
   borderColor,
+  textColor
 ) => {
   // 1. Update the original block display immediately
   const sizeDisplay = allocatedEl.querySelector(".block-size-value");
@@ -742,10 +744,12 @@ const insertFixedWasteSplitAfter = (
   wasteEl.id = `block-${blockId}-waste`;
   wasteEl.style.marginLeft = `-10px`;
   wasteEl.style.borderRadius = `0px 12px 12px 0px`;
+
   // wasteEl.style.color = `$`
   // Store colors so updateBlockVisuals can re-apply them on refresh
   if (bgColor) wasteEl.dataset.hatchBg = bgColor;
   if (borderColor) wasteEl.dataset.hatchBorder = borderColor;
+  if (textColor) wasteEl.dataset.textColor = textColor;
 
   // Inherit the parent block's label (e.g. "Block 2 - Internal Frag")
   const parentLabel = allocatedEl.querySelector("p")
@@ -755,7 +759,7 @@ const insertFixedWasteSplitAfter = (
   wasteEl.innerHTML = `
         <p></p>
         <div class="block-content">
-            <div class="block-status">Unusable</div>
+            <div class="block-status"><p>Unusable</p></div>
             <div class="block-size">
                 <h2><span class="block-size-value">${wasteSizeKb}</span></h2>
                 <h2>&nbsp;KB</h2>
@@ -767,13 +771,15 @@ const insertFixedWasteSplitAfter = (
   if (bgColor && borderColor) {
     const hatchPattern = `repeating-linear-gradient(
             45deg,
-            ${bgColor}75,
-            ${bgColor}75 5px,
-            #2c2c2c 5px,
-            #2c2c2c 10px
+            ${bgColor}88,
+            ${bgColor}88 5px,
+            ${borderColor}66 5px,
+            ${borderColor}66 10px
         )`;
     wasteEl.style.background = hatchPattern;
     wasteEl.style.borderBottom = `8px solid ${borderColor}`;
+    wasteEl.style.opacity = 0.85;
+    wasteEl.style.color = `${textColor}`;
   }
 
   // 4. Place it after the allocated block
@@ -1621,7 +1627,7 @@ const runStep = () => {
         );
       } else if (isFixed) {
         const colorIndex = simulationState.currentIndex % processColors.length;
-        const { bg: procBg, border: procBorder } = processColors[colorIndex];
+        const { bg: procBg, border: procBorder, text: procText } = processColors[colorIndex];
         blockEl.style.borderRadius = "12px 0px 0px 12px";
         insertFixedWasteSplitAfter(
           blockEl,
@@ -1630,6 +1636,7 @@ const runStep = () => {
           stepResult.result.block,
           procBg,
           procBorder,
+          procText,
         );
       }
     }
