@@ -230,17 +230,11 @@ function renderPagingPages(algoId) {
             pageEl.id = `page-${algoId}-${i}-${j}`;
             pageEl.innerHTML = `
                 <p id="page-number">P${j}</p>
-                <div class="page-content" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
                     <p>${processIdStr}</p>
                     <p>&nbsp;(Waiting for allocation)</p>
                 </div>
             `;
-            const contentDiv = pageEl.querySelector('.page-content');
-            if (contentDiv) {
-                contentDiv.style.backgroundColor = colors.bg;
-                contentDiv.style.borderBottom = `4px solid ${colors.border}`;
-                contentDiv.style.color = colors.text;
-            }
             pagesContainer.appendChild(pageEl);
         }
 
@@ -281,7 +275,7 @@ function renderSegmentationSegments(algoId) {
                 segEl.id = `seg-list-${algoId}-${i}-${type}`;
                 segEl.innerHTML = `
                     <div id="segment-number">S${idx}</div>
-                    <div class="segments" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                    <div class="segments" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
                         <p class="segment-type">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
                         <p id="segment-size">${segSize} KB</p>
                     </div>
@@ -324,7 +318,7 @@ function renderSegmentationPagingSegments(algoId) {
                 
                 const pagesHtml = pages.map(p => `
                     <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
-                        <div class="page-content" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
+                        <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
                             <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
                         </div>
                     </div>
