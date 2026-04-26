@@ -402,18 +402,27 @@ const setTotalMemoryDisplay = (total) => {
 const followAllocatedBlock = (blockId) => {
   if (!blockId || blockId === "None") return;
 
+  if (simulationContainer) {
+    simulationContainer.querySelectorAll(".block").forEach((b) => {
+      b.classList.remove("current");
+    });
+  }
+
   // Try finding a split block first, then a regular block
   let blockEl = document.getElementById(`block-split-${blockId}`);
   if (!blockEl) {
     blockEl = document.getElementById(`block-${blockId}`);
   }
 
-  if (blockEl && blockEl.scrollIntoView) {
-    blockEl.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-      inline: "center",
-    });
+  if (blockEl) {
+    blockEl.classList.add("current");
+    if (blockEl.scrollIntoView) {
+      blockEl.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
+    }
   }
 };
 

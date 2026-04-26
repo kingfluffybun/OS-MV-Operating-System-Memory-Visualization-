@@ -614,5 +614,5 @@
     outline: 2px solid var(--primary-color) !important;
     box-shadow: 0 0 0 1px rgba(76, 175, 80, 0.2) !important;
     position: relative;
-    z-index: 10;
+    z-index: 100 !important;
 }
