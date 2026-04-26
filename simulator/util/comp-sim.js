@@ -132,11 +132,11 @@ function renderBlocks(algoId) {
             isFirstInGroup: logicalId !== prevLogicalId,
             isLastInGroup: logicalId !== nextLogicalId,
             logicalId: logicalId,
-            widthPercent: comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0,
+            widthPx: 40 + (node.size * 0.5), // Same calculation as single mode: minWidth + (blockSize * pxPerKb)
             bgColor: colorPair.bg,
             borderColor: colorPair.border,
             isFixed: instance.config.type === 'fixed'
-        });
+        }); 
 
         container.appendChild(blockEl);
         prevLogicalId = logicalId;
@@ -164,7 +164,7 @@ function renderSharedProcessQueue() {
 
             process.innerHTML = `
                 <div class="process-content">
-                    <p>Process ${i + 1}</p>
+                    <p>P${i + 1}</p>
                     <p>${size}</p>
                     <p>&nbsp;KB</p>
                 </div>

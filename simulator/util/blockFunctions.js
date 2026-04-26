@@ -222,7 +222,7 @@ const editBlock = (block) => {
   });
 };
 const getHatchPattern = (bgColor, borderColor) => {
-  return `repeating-linear-gradient(45deg, ${bgColor}88, ${bgColor}88 5px, ${borderColor}66 5px, ${borderColor}66 10px)`;
+  return `repeating-linear-gradient(45deg, ${bgColor}, ${bgColor} 5px, ${borderColor} 5px, ${borderColor} 10px)`;
 };
 
 const applyBlockGroupStyles = (blockEl, isFirst, isLast) => {
@@ -249,6 +249,7 @@ const renderMemoryNode = (node, options = {}) => {
     isLastInGroup = true,
     logicalId = node.id,
     widthPercent = null,
+    widthPx = null,
     bgColor = '#e0e0e0',
     borderColor = 'rgba(0, 0, 0, 0.25)',
     isFixed = false
@@ -263,7 +264,9 @@ const renderMemoryNode = (node, options = {}) => {
     const wrapper = document.createElement('div');
     wrapper.className = 'block-wrapper';
     if (widthPercent) wrapper.style.width = widthPercent + '%';
+    if (widthPx) wrapper.style.width = widthPx + 'px';
     wrapper.style.display = 'flex';
+    wrapper.style.flex = '0 0 auto';
 
     const pBlock = document.createElement('div');
     pBlock.className = 'block';
@@ -303,6 +306,8 @@ const renderMemoryNode = (node, options = {}) => {
   const block = document.createElement('div');
   block.className = 'block';
   if (widthPercent) block.style.width = widthPercent + '%';
+  if (widthPx) block.style.width = widthPx + 'px';
+  block.style.flex = '0 0 auto';
   block.style.backgroundColor = bgColor;
   block.style.borderBottom = `8px solid ${borderColor}`;
 
