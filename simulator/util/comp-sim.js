@@ -1,14 +1,14 @@
 // ========== COMPARISON SIMULATION CONTROLLER ==========
 
 const processColorsto = [
-    { bg: "#FFADAD", border: "#BF8282" },
-    { bg: "#FFD6A5", border: "#BFA07C" },
-    { bg: "#FDFFB6", border: "#BEBF88" },
-    { bg: "#CAFFBF", border: "#98BF8F" },
-    { bg: "#9BF6FF", border: "#7DC6CE" },
-    { bg: "#A0C4FF", border: "#7893BF" },
-    { bg: "#BDB2FF", border: "#8E85BF" },
-    { bg: "#FFC6FF", border: "#BF94BF" }
+    { bg: "#FFADAD", border: "#BF8282", text: "#791F1F" },
+    { bg: "#FFD6A5", border: "#BFA07C", text: "#633806" },
+    { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" },
+    { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" },
+    { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" },
+    { bg: "#A0C4FF", border: "#7893BF", text: "#042C53" },
+    { bg: "#BDB2FF", border: "#8E85BF", text: "#26215C" },
+    { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" }
 ];
 
 const ALGO_CONFIG = [
@@ -235,7 +235,7 @@ function renderPagingPages(algoId) {
             pageEl.id = `page-${algoId}-${i}-${j}`;
             pageEl.innerHTML = `
                 <p id="page-number">P${j}</p>
-                <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                     <p>${processIdStr}</p>
                     <p>&nbsp;(Waiting for allocation)</p>
                 </div>
@@ -280,7 +280,7 @@ function renderSegmentationSegments(algoId) {
                 segEl.id = `seg-list-${algoId}-${i}-${type}`;
                 segEl.innerHTML = `
                     <div id="segment-number">S${idx}</div>
-                    <div class="segments" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                    <div class="segments" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                         <p class="segment-type">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
                         <p id="segment-size">${segSize} KB</p>
                     </div>
@@ -323,7 +323,7 @@ function renderSegmentationPagingSegments(algoId) {
                 
                 const pagesHtml = pages.map(p => `
                     <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
-                        <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: #333;">
+                        <div class="page-content" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                             <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
                         </div>
                     </div>
@@ -378,7 +378,7 @@ function renderPagingFrames(algoId) {
 
             frameEl.innerHTML = `
                 <p id="frame-number">F${fId}</p>
-                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text || '#333'}; grid-template-columns: repeat(3, 1fr);">
+                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text}; grid-template-columns: repeat(3, 1fr);">
                     <p>P${procNum}${typeInfo}</p>
                     <p>Page ${pageIndex}</p>
                     <p>${frame.used || frameSize}KB</p>
@@ -397,7 +397,7 @@ function renderPagingFrames(algoId) {
                         `;
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
-                        content.style.color = colorPair.text || '#333';
+                        content.style.color = colorPair.text;
                     }
                 }
             } else if (instance.config.type === 'segmentation-paging') {
@@ -409,7 +409,7 @@ function renderPagingFrames(algoId) {
                     if (content) {
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
-                        content.style.color = colorPair.text || '#333';
+                        content.style.color = colorPair.text;
                     }
                 }
             }
@@ -454,7 +454,7 @@ function renderSegmentationMemory(algoId) {
             segDiv.className = 'allocated-segments';
             segDiv.style.backgroundColor = colorPair.bg;
             segDiv.style.borderBottom = `2px solid ${colorPair.border}`;
-            segDiv.style.color = '#333';
+            segDiv.style.color = colorPair.text;
             segDiv.style.display = 'flex';
             segDiv.style.flexDirection = 'column';
             segDiv.style.justifyContent = 'center';
@@ -479,7 +479,7 @@ function renderSegmentationMemory(algoId) {
                 if (content) {
                     content.style.backgroundColor = colorPair.bg;
                     content.style.borderBottomColor = colorPair.border;
-                    content.style.color = '#333';
+                    content.style.color = colorPair.text;
                 }
             }
         });
@@ -566,6 +566,7 @@ function renderSharedProcessQueue() {
             const colorPair = processColorsto[colorIndex];
             process.style.backgroundColor = colorPair.bg;
             process.style.borderBottomColor = colorPair.border;
+            process.style.color = colorPair.text;
 
             process.innerHTML = `
                 <div class="process-content">
