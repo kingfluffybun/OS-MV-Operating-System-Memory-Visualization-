@@ -149,7 +149,11 @@ class SegmentationMemory {
   }
 }
 
-var memorySimulator = {
+if (typeof memorySimulator === 'undefined') {
+  var memorySimulator = {};
+}
+
+Object.assign(memorySimulator, {
   createMemory(totalSize = 1024) {
     return new SegmentationMemory(totalSize);
   },
@@ -246,7 +250,7 @@ var memorySimulator = {
       memory,
     };
   },
-};
+});
 
 // ===== SEGMENTATION UI STATE =====
 let segmentationState = {

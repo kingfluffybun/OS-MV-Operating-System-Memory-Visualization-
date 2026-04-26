@@ -1,4 +1,4 @@
-// ========== COMPARISON SIMULATION CONTROLLER ==========
+﻿// ========== COMPARISON SIMULATION CONTROLLER ==========
 
 const processColorsto = [
     { bg: "#FFADAD", border: "#BF8282" },
@@ -188,12 +188,14 @@ function renderSharedProcessQueue() {
 }
 
 function stepAlgorithm(algoId) {
+    const instance = algoInstances[algoId];
+    if (!instance) return false;
+
     console.log('Step algorithm:', algoId);
     console.log('Config stepFn:', instance.config.stepFn);
     console.log('memorySimulator[stepFn]:', typeof memorySimulator !== 'undefined' ? typeof memorySimulator[instance.config.stepFn] : 'memorySimulator undefined');
 
-    const instance = algoInstances[algoId];
-    if (!instance || instance.currentIndex >= instance.processes.length) return false;
+    if (instance.currentIndex >= instance.processes.length) return false;
 
     const processSize = instance.processes[instance.currentIndex];
     const processId = instance.currentIndex + 1;
@@ -401,3 +403,4 @@ if (document.readyState === 'loading') {
 } else {
     initComparisonPage();
 }
+
