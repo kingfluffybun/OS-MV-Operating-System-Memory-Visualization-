@@ -1,7 +1,14 @@
-let autoInterval;
+if (!window.autoInterval) {
+  var autoInterval = null;
+}
 
-const memorySimulator = {
-  createLinkedMemory(blocks) {
+// Extend existing memorySimulator if it exists
+if (typeof memorySimulator === 'undefined') {
+  var memorySimulator = {};
+}
+
+Object.assign(memorySimulator, {
+  bestFitCreateLinkedMemory(blocks) {
     let head = null,
       tail = null;
     blocks.forEach((size, i) => {
@@ -373,4 +380,6 @@ const memorySimulator = {
   allocateDynamicStep(memoryHead, processSize) {
     return this.bestFitDynamicStep(memoryHead, processSize);
   },
-};
+});
+
+window.memorySimulator = memorySimulator;

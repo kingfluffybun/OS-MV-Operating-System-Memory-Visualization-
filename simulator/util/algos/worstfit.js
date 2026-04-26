@@ -1,4 +1,9 @@
-const memorySimulator = {
+// Extend existing memorySimulator if it exists
+if (typeof memorySimulator === 'undefined') {
+  var memorySimulator = {};
+}
+
+Object.assign(memorySimulator, {
   createLinkedMemory(blocks) {
     let head = null;
     let tail = null;
@@ -85,7 +90,7 @@ const memorySimulator = {
     };
   },
 
-  _worstFitFixedStep(memoryHead, processSize) {
+  worstFitFixedStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
@@ -188,7 +193,7 @@ const memorySimulator = {
     return { head: newHead, idMapping };
   },
 
-  _worstFitDynamicStep(memoryHead, processSize) {
+  worstFitDynamicStep(memoryHead, processSize) {
     let worstBlock = null;
     for (let block = memoryHead; block; block = block.next) {
       if (block.status === "Free" && processSize <= block.size) {
@@ -274,20 +279,13 @@ const memorySimulator = {
     return ids;
   },
 
-  // Compatibility layer for existing script.js calls.
-  worstFitFixedStep(memoryHead, processSize) {
-    return this._worstFitFixedStep(memoryHead, processSize);
-  },
-
-  worstFitDynamicStep(memoryHead, processSize) {
-    return this._worstFitDynamicStep(memoryHead, processSize);
-  },
-
   allocateFixedStep(memoryHead, processSize) {
-    return this._worstFitFixedStep(memoryHead, processSize);
+    return this.worstFitFixedStep(memoryHead, processSize);
   },
 
   allocateDynamicStep(memoryHead, processSize) {
-    return this._worstFitDynamicStep(memoryHead, processSize);
+    return this.worstFitDynamicStep(memoryHead, processSize);
   },
-};
+});
+
+window.memorySimulator = memorySimulator;

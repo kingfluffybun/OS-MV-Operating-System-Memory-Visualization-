@@ -1,29 +1,40 @@
 // ========== COMPARISON SIMULATION CONTROLLER ==========
 
-// Algorithm configurations
+const processColorsto = [
+    { bg: "#FFADAD", border: "#BF8282" },
+    { bg: "#FFD6A5", border: "#BFA07C" },
+    { bg: "#FDFFB6", border: "#BEBF88" },
+    { bg: "#CAFFBF", border: "#98BF8F" },
+    { bg: "#9BF6FF", border: "#7DC6CE" },
+    { bg: "#A0C4FF", border: "#7893BF" },
+    { bg: "#BDB2FF", border: "#8E85BF" },
+    { bg: "#FFC6FF", border: "#BF94BF" }
+];
+
 const ALGO_CONFIG = [
-    // Contiguous - Fixed
-    { id: 'first-fit-fixed', name: 'First Fit', type: 'fixed', category: 'contiguous', script: '../util/algos/firstfit.js' },
-    { id: 'first-fit-dynamic', name: 'First Fit', type: 'dynamic', category: 'contiguous', script: '../util/algos/firstfit.js' },
-    { id: 'next-fit-fixed', name: 'Next Fit', type: 'fixed', category: 'contiguous', script: '../util/algos/nextfit.js' },
-    { id: 'next-fit-dynamic', name: 'Next Fit', type: 'dynamic', category: 'contiguous', script: '../util/algos/nextfit.js' },
-    { id: 'best-fit-fixed', name: 'Best Fit', type: 'fixed', category: 'contiguous', script: '../util/algos/bestfit.js' },
-    { id: 'best-fit-dynamic', name: 'Best Fit', type: 'dynamic', category: 'contiguous', script: '../util/algos/bestfit.js' },
-    { id: 'worst-fit-fixed', name: 'Worst Fit', type: 'fixed', category: 'contiguous', script: '../util/algos/worstfit.js' },
-    { id: 'worst-fit-dynamic', name: 'Worst Fit', type: 'dynamic', category: 'contiguous', script: '../util/algos/worstfit.js' },
-    // Non-contiguous
-    { id: 'paging', name: 'Paging', type: 'paging', category: 'non-contiguous', script: '../util/algos/paging.js' },
-    { id: 'segmentation', name: 'Segmentation', type: 'segmentation', category: 'non-contiguous', script: '../util/algos/segmentation.js' },
-    { id: 'segmentation-paging', name: 'Segmentation with Paging', type: 'segmentation-paging', category: 'non-contiguous', script: '../util/algos/paging-segment.js' }
+    { id: 'first-fit-fixed', name: 'First Fit', type: 'fixed', category: 'contiguous', stepFn: 'firstFitFixedStep' },
+    { id: 'first-fit-dynamic', name: 'First Fit', type: 'dynamic', category: 'contiguous', stepFn: 'firstFitDynamicStep' },
+    { id: 'next-fit-fixed', name: 'Next Fit', type: 'fixed', category: 'contiguous', stepFn: 'nextFitFixedStep' },
+    { id: 'next-fit-dynamic', name: 'Next Fit', type: 'dynamic', category: 'contiguous', stepFn: 'nextFitDynamicStep' },
+    { id: 'best-fit-fixed', name: 'Best Fit', type: 'fixed', category: 'contiguous', stepFn: 'bestFitFixedStep' },
+    { id: 'best-fit-dynamic', name: 'Best Fit', type: 'dynamic', category: 'contiguous', stepFn: 'bestFitDynamicStep' },
+    { id: 'worst-fit-fixed', name: 'Worst Fit', type: 'fixed', category: 'contiguous', stepFn: 'worstFitFixedStep' },
+    { id: 'worst-fit-dynamic', name: 'Worst Fit', type: 'dynamic', category: 'contiguous', stepFn: 'worstFitDynamicStep' },
+    { id: 'paging', name: 'Paging', type: 'paging', category: 'non-contiguous' },
+    { id: 'segmentation', name: 'Segmentation', type: 'segmentation', category: 'non-contiguous' },
+    { id: 'segmentation-paging', name: 'Segmentation with Paging', type: 'segmentation-paging', category: 'non-contiguous' }
 ];
 
 let comparisonData = null;
-let algoInstances = [];
-let isPlaying = false;
-// let playInterval = null;
+let algoInstances = {};
+let isitPlaying = false;
+let playtheInterval = null;
+
+function initComparisonPage() {
+    comparisonSimLoad();
+}
 
 function comparisonSimLoad() {
-    // Load comparison data from sessionStorage
     const stored = sessionStorage.getItem('comparisonData');
     if (!stored) {
         alert('No comparison data found. Redirecting...');
@@ -32,313 +43,256 @@ function comparisonSimLoad() {
     }
 
     comparisonData = JSON.parse(stored);
-    
-    // Build algorithm grids
-    buildContiguousGrid();
-    buildNonContiguousGrid();
-    
-    // Load algorithm scripts
-    loadAlgorithmScripts().then(() => {
-        initAllAlgorithms();
-        setupComparisonControls();
-        updateSummaryTable();
-    });
-}
 
-function buildContiguousGrid() {
-    const grid = document.getElementById('contiguous-grid');
-
-    grid.innerHTML = '';
-
-    const contiguousAlgos = ALGO_CONFIG.filter(a => a.category === 'contiguous');
-
-    contiguousAlgos.forEach(algo => {
-        const div = document.createElement('div');
-        div.className = 'contiguous-algorithm';
-        div.id = algo.id;
-
-        const typeLabel = algo.type.charAt(0).toUpperCase() + algo.type.slice(1);
-
-        div.innerHTML = `
-            <div class="algorithm-header">
-                <h3>${algo.name}</h3>
-                <div class="partition-pill" id="${algo.type}"><p>${typeLabel}</p></div>
-            </div>
-            <div style="display: flex; flex-direction: column; grid-row: span 2;">
-                <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
-                <div class="contiguous-process-queue" id="queue-${algo.id}"></div>
-            </div>
-            <div class="contiguous-container" id="container-${algo.id}"></div>
-            <div class="contiguous-statistics" id="stats-${algo.id}">
-                <div class="stat-container">
-                    <p>Utilization</p>
-                    <p id="util-${algo.id}">0%</p>
-                </div>
-                <div class="stat-container">
-                    <p>Internal Frag.</p>
-                    <p id="intfrag-${algo.id}">0 KB</p>
-                </div>
-                <div class="stat-container">
-                    <p>Success Rate</p>
-                    <p id="success-${algo.id}">0%</p>
-                </div>
-            </div>
-        `;
-        grid.appendChild(div);
-    });
-}
-
-function buildNonContiguousGrid() {
-    const grid = document.getElementById('non-contiguous-grid');
-    
-    grid.innerHTML = '';
-
-    const nonContiguousAlgos = ALGO_CONFIG.filter(a => a.category === 'non-contiguous');
-
-    nonContiguousAlgos.forEach(algo => {
-        const div = document.createElement('div');
-        div.className = 'non-contiguous-algorithm';
-        div.id = algo.id;
-        
-        div.innerHTML = `
-            <h3>${algo.name}</h3>
-            <div class="non-contiguous-container" id="container-${algo.id}"></div>
-            <div class="non-contiguous-stats" id="stats-${algo.id}"></div>
-        `;
-        grid.appendChild(div);
-    });
-}
-
-function loadAlgorithmScripts() {
-    const scriptsToLoad = [...new Set(ALGO_CONFIG.map(a => a.script))];
-    const promises = scriptsToLoad.map(src => {
-        return new Promise((resolve) => {
-            if (document.querySelector(`script[src="${src}"]`)) {
-                resolve();
-                return;
-            }
-            const script = document.createElement('script');
-            script.src = src;
-            script.onload = resolve;
-            script.onerror = () => {
-                console.error('Failed to load:', src);
-                resolve(); // Continue even if one fails
-            };
-            document.head.appendChild(script);
-        });
-    });
-    return Promise.all(promises);
-}
-
-function initAllAlgorithms() {
-    const { processes, partitions, totalMemory, pageSize } = comparisonData;
-
-    algoInstances = ALGO_CONFIG.map(config => {
-        const instance = createAlgoInstance(config, {
-            processes: [...processes],
-            partitions: config.category === 'contiguous' ? [...partitions] : null,
-            totalMemory: totalMemory,
-            pageSize: pageSize
-        });
-        return instance;
+    // Initialize all algorithms
+    ALGO_CONFIG.forEach(function(config) {
+        initAlgorithm(config);
     });
 
-    // Render initial process queues
+    // Render shared process queue to all containers
     renderSharedProcessQueue();
+
+    // Setup controls
+    setupComparisonControls();
+    updateSummaryTable();
 }
 
-function createAlgoInstance(config, data) {
-    return {
-        config: config,
-        data: data,
-        state: null,
-        currentStep: 0,
-        results: {},
-        stats: {
-            allocatedSize: 0,
-            successfulAllocations: 0,
-            intFragmentation: 0
-        },
+function initAlgorithm(config) {
+    const container = document.querySelector('#' + config.id + ' .contiguous-container');
+    const processQueue = document.querySelector('#' + config.id + ' .contiguous-process-queue');
 
-        init: function() {
-            // Initialize based on algorithm type
-            if (this.config.category === 'contiguous') {
-                this.initContiguous();
-            } else {
-                this.initNonContiguous();
-            }
-        },
+    if (!container) return;
 
-        initContiguous: function() {
-            // Create memory structure from partitions
-            const blocks = this.data.partitions.map((size, i) => ({
-                id: i + 1,
-                size: size,
-                status: 'Free'
-            }));
-            
-            this.state = {
-                memoryHead: memorySimulator.createLinkedMemory(blocks),
-                processes: [...this.data.processes],
-                currentIndex: 0
+    if (config.category === 'contiguous') {
+        // Create memory blocks from partitions
+        const blocks = comparisonData.partitions.map(function(size, i) {
+            return { id: i + 1, size: size, status: 'Free' };
+        });
+
+        // Create linked list
+        let head = null;
+        let tail = null;
+        blocks.forEach(function(block) {
+            const node = {
+                id: block.id,
+                size: block.size,
+                status: block.status,
+                processId: null,
+                next: null
             };
-            
-            // Render initial blocks
-            this.renderBlocks();
-        },
+            if (!tail) head = node;
+            else tail.next = node;
+            tail = node;
+        });
 
-        initNonContiguous: function() {
-            if (this.config.type === 'paging') {
-                const frameCount = Math.floor(this.data.totalMemory / this.data.pageSize);
-                this.state = {
-                    frames: memorySimulator.createFrames(frameCount, this.data.pageSize),
-                    processes: [...this.data.processes],
-                    currentIndex: 0
-                };
+        // Store instance state
+        algoInstances[config.id] = {
+            config: config,
+            memoryHead: head,
+            processes: comparisonData.processes.slice(),
+            currentIndex: 0,
+            results: {},
+            stats: {
+                allocatedSize: 0,
+                successfulAllocations: 0,
+                intFragmentation: 0
             }
-            // Segmentation and segmentation-paging similar...
-        },
+        };
 
-        step: function() {
-            if (this.currentStep >= this.data.processes.length) return false;
+        // Render initial blocks
+        renderBlocks(config.id);
+    }
+}
 
-            const processSize = this.data.processes[this.currentStep];
-            const processId = 'Process ' + (this.currentStep + 1);
+function renderBlocks(algoId) {
+    const container = document.querySelector('#' + algoId + ' .contiguous-container');
+    if (!container) return;
 
-            if (this.config.category === 'contiguous') {
-                return this.stepContiguous(processSize, processId);
-            } else {
-                return this.stepNonContiguous(processSize, processId);
-            }
-        },
+    const instance = algoInstances[algoId];
+    if (!instance || !instance.memoryHead) return;
 
-        stepContiguous: function(processSize, processId) {
-            const isFixed = this.config.type === 'fixed';
-            const stepFn = isFixed ? 
-                memorySimulator.allocateFixedStep : 
-                memorySimulator.allocateDynamicStep;
+    container.innerHTML = '';
 
-            const result = stepFn.call(memorySimulator, this.state.memoryHead, processSize);
-            
-            if (result.newMemoryHead) {
-                this.state.memoryHead = result.newMemoryHead;
-            }
+    let node = instance.memoryHead;
+    while (node) {
+        const block = document.createElement('div');
+        block.className = 'block';
+        block.id = 'block-' + node.id;
+        block.dataset.partitionLabel = String(node.id);
 
-            this.results[processId] = result.result;
-            this.stats.allocatedSize += result.allocatedSize;
-            this.stats.successfulAllocations += result.successfulAllocations;
-            this.stats.intFragmentation += result.result.fragmentation || 0;
+        const widthPercent = comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0;
+        block.style.width = widthPercent + '%';
 
-            this.currentStep++;
-            this.updateUI();
-            return true;
-        },
-
-        stepNonContiguous: function(processSize, processId) {
-            // Paging step logic
-            if (this.config.type === 'paging') {
-                const pagesNeeded = Math.ceil(processSize / this.data.pageSize);
-                const stepResult = memorySimulator.pagingStepSingle(
-                    this.state.frames,
-                    processSize,
-                    this.data.pageSize,
-                    processId,
-                    0
-                );
-                
-                if (stepResult.frames) {
-                    this.state.frames = stepResult.frames;
-                }
-                
-                this.results[processId] = stepResult.result;
-                this.currentStep++;
-                this.updateUI();
-                return true;
-            }
-            return false;
-        },
-
-        reset: function() {
-            this.currentStep = 0;
-            this.results = {};
-            this.stats = { allocatedSize: 0, successfulAllocations: 0, intFragmentation: 0 };
-            this.init();
-            this.updateUI();
-        },
-
-        renderBlocks: function() {
-            const container = document.getElementById('container-' + this.config.id);
-            if (!container) {
-                console.error('Container not found for algorithm:', this.config.id);
-                return;
-            };
-            
-            container.innerHTML = '';
-
-            if (!this.state || !this.state.memoryHead) {
-                console.error('Memory head not found for algorithm:', this.config.id);
-                return;
-            }
-            
-            // Render memory blocks from linked list
-            let node = this.state.memoryHead;
-            while (node) {
-                const block = document.createElement('div');
-                block.className = 'block';
-                const widthPercent = this.data.totalMemory > 0 ? (node.size / this.data.totalMemory * 100) : 0;
-                block.style.width = widthPercent + '%';
-                block.style.backgroundColor = node.status === 'Free' ? '#e0e0e0' : getProcessColor(node.processId);
-                block.innerHTML = '<span>' + node.size + 'KB</span>';
-                container.appendChild(block);
-                node = node.next;
-            }
-        },
-
-        updateUI: function() {
-            // Update stats display
-            const utilEl = document.getElementById('util-' + this.config.id);
-            const intfragEl = document.getElementById('intfrag-' + this.config.id);
-            const successEl = document.getElementById('success-' + this.config.id);
-
-            if (utilEl) {
-                const totalMem = this.data.totalMemory;
-                const util = totalMem > 0 ? (this.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
-                utilEl.textContent = util + '%';
-            }
-
-            if (intfragEl) {
-                intfragEl.textContent = this.stats.intFragmentation + ' KB';
-            }
-
-            if (successEl) {
-                const total = this.data.processes.length;
-                const rate = total > 0 ? (this.stats.successfulAllocations / total * 100).toFixed(1) : 0;
-                successEl.textContent = rate + '%';
-            }
-
-            // Update visualization
-            if (this.config.category === 'contiguous') {
-                this.renderBlocks();
-            }
+        let bgColor, borderColor;
+        if (node.status === 'Free') {
+            bgColor = '#e0e0e0';
+            borderColor = 'rgba(0, 0, 0, 0.25)';
+        } else {
+            const colorIndex = ((node.processId || 1) - 1) % processColorsto.length;
+            const colorPair = processColorsto[colorIndex];
+            bgColor = colorPair.bg;
+            borderColor = colorPair.border;
         }
-    };
+        block.style.backgroundColor = bgColor;
+        block.style.borderBottomColor = borderColor;
+
+        const statusText = node.status === 'Free' ? 'Free' : (node.processId ? 'Process ' + node.processId : 'Allocated');
+        const titleText = node.status === 'Free' ? '' : 'Block ' + node.id;
+
+        block.innerHTML = `
+            <p>${titleText}</p>
+            <div class="block-content">
+                <div>
+                    <p class="block-status">${statusText}</p>
+                </div>
+                <div class="block-size">
+                    <h2><span class="block-size-value">${node.size}</span></h2>
+                    <h2>&nbsp;KB</h2>
+                </div>
+            </div>
+            <div></div>
+        `;
+        container.appendChild(block);
+        node = node.next;
+    }
 }
 
 function renderSharedProcessQueue() {
     const processes = comparisonData.processes;
-    
-    ALGO_CONFIG.filter(a => a.category === 'contiguous').forEach(algo => {
-        const queue = document.getElementById('queue-' + algo.id);
+
+    ALGO_CONFIG.forEach(function(algo) {
+        const queue = document.querySelector('#' + algo.id + ' .contiguous-process-queue');
         if (!queue) return;
-        
+
         queue.innerHTML = '';
-        processes.forEach((size, i) => {
-            const div = document.createElement('div');
-            div.className = 'process-item';
-            div.style.backgroundColor = getProcessColor(i);
-            div.innerHTML = `<span>P${i+1}</span><span>${size}KB</span>`;
-            queue.appendChild(div);
+        processes.forEach(function(size, i) {
+            const process = document.createElement('div');
+            process.className = 'process';
+            process.id = 'process-' + (i + 1);
+
+            const colorIndex = i % processColorsto.length;
+            const colorPair = processColorsto[colorIndex];
+            process.style.backgroundColor = colorPair.bg;
+            process.style.borderBottomColor = colorPair.border;
+
+            process.innerHTML = `
+                <div class="process-content">
+                    <p>Process ${i + 1}</p>
+                    <p>${size}</p>
+                    <p>&nbsp;KB</p>
+                </div>
+            `;
+            queue.appendChild(process);
         });
+    });
+}
+
+function stepAlgorithm(algoId) {
+    console.log('Step algorithm:', algoId);
+    console.log('Config stepFn:', instance.config.stepFn);
+    console.log('memorySimulator[stepFn]:', typeof memorySimulator !== 'undefined' ? typeof memorySimulator[instance.config.stepFn] : 'memorySimulator undefined');
+
+    const instance = algoInstances[algoId];
+    if (!instance || instance.currentIndex >= instance.processes.length) return false;
+
+    const processSize = instance.processes[instance.currentIndex];
+    const processId = instance.currentIndex + 1;
+
+    if (instance.config.category === 'contiguous') {
+        const stepFnName = instance.config.stepFn;
+        let stepFn = null;
+
+        // Primary: memorySimulator (where your algos are defined)
+        if (typeof memorySimulator !== 'undefined' && typeof memorySimulator[stepFnName] === 'function') {
+            stepFn = memorySimulator[stepFnName].bind(memorySimulator);
+        } 
+        // Fallback: global window
+        else if (typeof window[stepFnName] === 'function') {
+            stepFn = window[stepFnName];
+        }
+
+        if (!stepFn) {
+            console.error('Step function missing:', stepFnName);
+            console.error('memorySimulator keys:', typeof memorySimulator !== 'undefined' ? Object.keys(memorySimulator).filter(k => k.includes('Fit') || k.includes('Step')) : 'undefined');
+            alert('No step function found for ' + instance.config.name);
+            instance.currentIndex++;
+            return false;
+        }
+
+        const result = stepFn(instance.memoryHead, processSize);
+
+        if (result.newMemoryHead) {
+            instance.memoryHead = result.newMemoryHead;
+        }
+
+        if (result.result && result.result.status === 'Allocated') {
+            // Find the block and update it
+            let node = instance.memoryHead;
+            while (node) {
+                if (node.id === result.result.block) {
+                    node.status = 'Occupied';
+                    node.processId = processId;
+                    break;
+                }
+                node = node.next;
+            }
+
+            instance.stats.allocatedSize += result.allocatedSize || 0;
+            instance.stats.successfulAllocations += result.successfulAllocations || 0;
+            instance.stats.intFragmentation += result.result.fragmentation || 0;
+        }
+
+        instance.results[processId] = result.result;
+        instance.currentIndex++;
+        renderBlocks(algoId);
+        updateAlgorithmStats(algoId);
+    }
+
+    return true;
+}
+
+function updateAlgorithmStats(algoId) {
+    const instance = algoInstances[algoId];
+    if (!instance) return;
+
+    const algoDiv = document.getElementById(algoId);
+    if (!algoDiv) return;
+
+    const utilEl = algoDiv.querySelector('.contiguous-statistics .stat-container:nth-child(1) p:last-child');
+    const intfragEl = algoDiv.querySelector('.contiguous-statistics .stat-container:nth-child(2) p:last-child');
+    const successEl = algoDiv.querySelector('.contiguous-statistics .stat-container:nth-child(3) p:last-child');
+
+    const totalMem = comparisonData.totalMemory;
+    const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
+    const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
+
+    if (utilEl) utilEl.textContent = util + '%';
+    if (intfragEl) intfragEl.textContent = instance.stats.intFragmentation + ' KB';
+    if (successEl) successEl.textContent = success + '%';
+}
+
+function updateSummaryTable() {
+    const tbody = document.getElementById('summary-body');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    ALGO_CONFIG.filter(a => a.category === 'contiguous').forEach(function(config) {
+        const instance = algoInstances[config.id];
+        if (!instance) return;
+
+        const row = document.createElement('tr');
+        const totalMem = comparisonData.totalMemory;
+        const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
+        const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
+
+        row.innerHTML =
+            '<td>' + config.name + ' - ' + config.type + '</td>' +
+            '<td>' + util + '%</td>' +
+            '<td>' + instance.stats.intFragmentation + ' KB</td>' +
+            '<td>0 KB</td>' +
+            '<td>' + success + '%</td>';
+        tbody.appendChild(row);
     });
 }
 
@@ -348,68 +302,87 @@ function setupComparisonControls() {
     const resetBtn = document.getElementById('reset-btn');
     const nextBtn = document.getElementById('next-btn');
 
-    playBtn.addEventListener('load', () => {
-        isPlaying = true;
-        playBtn.style.display = 'none';
-        stopBtn.style.display = 'flex';
-        startAllSimulations();
-    });
+    if (playBtn) {
+        playBtn.addEventListener('click', function() {
+            isitPlaying = true;
+            playBtn.style.display = 'none';
+            if (stopBtn) stopBtn.style.display = 'flex';
+            startAllSimulations();
+        });
+    }
 
-    stopBtn.addEventListener('click', () => {
-        isPlaying = false;
-        stopBtn.style.display = 'none';
-        playBtn.style.display = 'flex';
-        stopAllSimulations();
-    });
+    if (stopBtn) {
+        stopBtn.addEventListener('click', function() {
+            isitPlaying = false;
+            stopBtn.style.display = 'none';
+            if (playBtn) playBtn.style.display = 'flex';
+            stopAllSimulations();
+        });
+    }
 
-    resetBtn.addEventListener('click', () => {
-        isPlaying = false;
-        stopBtn.style.display = 'none';
-        playBtn.style.display = 'flex';
-        resetAllSimulations();
-    });
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            isitPlaying = false;
+            if (stopBtn) stopBtn.style.display = 'none';
+            if (playBtn) playBtn.style.display = 'flex';
+            resetAllSimulations();
+        });
+    }
 
-    nextBtn.addEventListener('click', () => {
-        stepAllSimulations();
-    });
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function() {
+            stepAllSimulations();
+        });
+    }
 }
 
 function startAllSimulations() {
     const delay = getComparisonStepDelay();
-    
-    playInterval = setInterval(() => {
+
+    playtheInterval = setInterval(function() {
         const allDone = stepAllSimulations();
         if (allDone) {
             stopAllSimulations();
-            document.getElementById('stop-btn').style.display = 'none';
-            document.getElementById('play-btn').style.display = 'flex';
+            const stopBtn = document.getElementById('stop-btn');
+            const playBtn = document.getElementById('play-btn');
+            if (stopBtn) stopBtn.style.display = 'none';
+            if (playBtn) playBtn.style.display = 'flex';
         }
     }, delay);
 }
 
 function stopAllSimulations() {
-    if (playInterval) {
-        clearInterval(playInterval);
-        playInterval = null;
+    if (playtheInterval) {
+        clearInterval(playtheInterval);
+        playtheInterval = null;
     }
-    isPlaying = false;
+    isitPlaying = false;
 }
 
 function stepAllSimulations() {
     let allDone = true;
-    
-    algoInstances.forEach(instance => {
-        const hasMore = instance.step();
-        if (hasMore) allDone = false;
+
+    ALGO_CONFIG.filter(a => a.category === 'contiguous').forEach(function(config) {
+        const hadMore = stepAlgorithm(config.id);
+        if (hadMore && algoInstances[config.id] && algoInstances[config.id].currentIndex < algoInstances[config.id].processes.length) {
+            allDone = false;
+        }
     });
-    
+
     updateSummaryTable();
     return allDone;
 }
 
 function resetAllSimulations() {
     stopAllSimulations();
-    algoInstances.forEach(instance => instance.reset());
+
+    ALGO_CONFIG.forEach(function(config) {
+        if (config.category === 'contiguous') {
+            initAlgorithm(config);
+            updateAlgorithmStats(config.id);
+        }
+    });
+
     updateSummaryTable();
 }
 
@@ -422,33 +395,9 @@ function getComparisonStepDelay() {
     return maxDelay - normalized * (maxDelay - minDelay);
 }
 
-function updateSummaryTable() {
-    const tbody = document.getElementById('summary-body');
-    if (!tbody) return;
-    
-    tbody.innerHTML = '';
-    
-    algoInstances.forEach(instance => {
-        const row = document.createElement('tr');
-        const totalMem = instance.data.totalMemory;
-        const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
-        const success = instance.data.processes.length > 0 ? 
-            (instance.stats.successfulAllocations / instance.data.processes.length * 100).toFixed(1) : 0;
-        
-        row.innerHTML = `
-            <td>${instance.config.name} - ${instance.config.type}</td>
-            <td>${util}%</td>
-            <td>${instance.stats.intFragmentation} KB</td>
-            <td>0 KB</td>
-            <td>${success}%</td>
-        `;
-        tbody.appendChild(row);
-    });
+// Initialize on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initComparisonPage);
+} else {
+    initComparisonPage();
 }
-
-function getProcessColor(index) {
-    const colors = ['#FFADAD', '#FFD6A5', '#FDFFB6', '#CAFFBF', '#9BF6FF', '#A0C4FF', '#BDB2FF', '#FFC6FF'];
-    return colors[index % colors.length];
-}
-
-window.addEventListener('load', comparisonSimLoad);

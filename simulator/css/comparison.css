@@ -71,10 +71,26 @@
 
 .contiguous-process-queue {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 6px 8px 6px 2px;
+    overflow-y: auto;
+    scroll-padding-bottom: 8px;
+    scroll-padding-top: 8px;
+    scroll-behavior: smooth;
 }
 
 .contiguous-container {
     min-height: 160px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    gap: 10px;
+    overflow-x: auto;
+    scrollbar-width: auto;
+    padding: 2vh;
+    padding-bottom: 12px;
 }
 
 .contiguous-statistics {
@@ -107,16 +123,23 @@
     gap: 12px;
 }
 
-/* Process items in comparison queue */
+/* Process items in comparison queue - matches single mode style */
 .process-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 6px;
-    border-radius: 8px;
+    gap: 8px;
+    padding: 12px;
+    background-color: white;
+    border-radius: 12px;
+    border-bottom: 4px solid rgba(0, 0, 0, 0.25);
+    height: 40px;
     font-size: 12px;
     font-weight: 500;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.process-item > span:first-child {
+    margin-right: auto;
 }
 
 /* Non-contiguous algorithm containers */
@@ -165,18 +188,61 @@
     font-size: 14px;
 }
 
-/* Block visualization in contiguous containers */
+/* Block visualization in contiguous containers - matches single mode style */
 .contiguous-container .block {
-    display: inline-block;
-    height: 60px;
-    margin: 2px;
-    border-radius: 8px;
+    border-radius: 12px;
+    height: 100%;
+    max-height: 2048px;
+    padding: 12px 0;
+    position: relative;
+}
+
+.contiguous-container .block > p {
+    font-weight: 400;
+    font-size: 0.75rem;
+    padding: 0 12px 0 12px;
+}
+
+.contiguous-container .block > .block-content {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+}
+
+.contiguous-container .block > .block-content .block-size {
+    display: flex;
     justify-content: center;
-    font-size: 12px;
+    align-items: center;
+}
+
+.contiguous-container .block > .block-content .block-size h2 {
+    font-size: 1.25rem;
+}
+
+.contiguous-container .block > .block-content .block-status {
+    text-align: center;
     font-weight: 500;
-    color: white;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
-    transition: all 300ms ease;
+    font-size: 12px;
+}
+
+.contiguous-container .block {
+    animation: pop-in 250ms ease;
+    background-color: white;
+    border-bottom: 8px solid rgba(0, 0, 0, 0.25);
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-rows: 1.5fr 1fr 1.5fr;
+    transition: width 0.3s ease, background 0.3s ease;
+}
+
+@keyframes pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0.75);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }

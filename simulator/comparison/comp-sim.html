@@ -8,10 +8,17 @@
     <link rel="stylesheet" href="../css/test.css">
     <title>OS-MV</title>
     <link rel="icon" type="image/x-icon" href="../../LOGO/favicon.ico">
+    <script src="../util/algos/firstfit.js" defer></script>
+    <script src="../util/algos/nextfit.js" defer></script>
+    <script src="../util/algos/bestfit.js" defer></script>
+    <script src="../util/algos/worstfit.js" defer></script>
+    <script src="../util/algos/paging.js" defer></script>
+    <script src="../util/algos/segmentation.js" defer></script>
+    <script src="../util/algos/paging-segment.js" defer></script>
     <script src="../util/script.js" defer></script>
     <script src="../util/comparison.js" defer></script>
-    <script src="../util/comp-sim.js" defer></script>
     <script src="../../database/db.js" defer></script>
+    <script src="../util/comp-sim.js" defer></script>
 </head>
 <body>
 
@@ -41,7 +48,7 @@
                 </button>
             </div>
             <div>
-                <button id="nex-btn">
+                <button id="next-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-step-forward-icon lucide-step-forward"><path d="M10.029 4.285A2 2 0 0 0 7 6v12a2 2 0 0 0 3.029 1.715l9.997-5.998a2 2 0 0 0 .003-3.432z"/><path d="M3 4v16"/></svg>
                     <p>Next</p>
                 </button>
@@ -76,7 +83,7 @@
 
         <!-- Algorithms -->
         <div class="contiguous-allocation" id="contiguous-grid">
-            <!-- <div class="contiguous-algorithm" data-algo="first-fit-fixed" id="first-fit-fixed">
+            <div class="contiguous-algorithm" class="algo-card" id="first-fit-fixed">
                 <div class="algorithm-header">
                     <h3>First Fit</h3>
                     <div class="partition-pill" id="fixed"><p>Fixed</p></div>
@@ -89,19 +96,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="first-fit-dynamic">
+            <div class="contiguous-algorithm" class="algo-card" id="first-fit-dynamic">
                 <div class="algorithm-header">
                     <h3>First Fit</h3>
                     <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
@@ -114,15 +121,15 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
@@ -139,19 +146,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="next-fit-dynamic">
+            <div class="contiguous-algorithm" class="algo-card" id="next-fit-dynamic">
                 <div class="algorithm-header">
                     <h3>Next Fit</h3>
                     <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
@@ -164,19 +171,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="best-fit-fixed">
+            <div class="contiguous-algorithm" class="algo-card" id="best-fit-fixed">
                 <div class="algorithm-header">
                     <h3>Best Fit</h3>
                     <div class="partition-pill" id="fixed"><p>Fixed</p></div>
@@ -189,19 +196,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="best-fit-dynamic">
+            <div class="contiguous-algorithm" class="algo-card" id="best-fit-dynamic">
                 <div class="algorithm-header">
                     <h3>Best Fit</h3>
                     <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
@@ -214,19 +221,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="worst-fit-fixed">
+            <div class="contiguous-algorithm" class="algo-card" id="worst-fit-fixed">
                 <div class="algorithm-header">
                     <h3>Worst Fit</h3>
                     <div class="partition-pill" id="fixed"><p>Fixed</p></div>
@@ -239,19 +246,19 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
             </div>
-            <div class="contiguous-algorithm" id="worst-fit-dynamic">
+            <div class="contiguous-algorithm" class="algo-card" id="worst-fit-dynamic">
                 <div class="algorithm-header">
                     <h3>Worst Fit</h3>
                     <div class="partition-pill" id="dynamic"><p>Dynamic</p></div>
@@ -264,29 +271,94 @@
                 <div class="contiguous-statistics">
                     <div class="stat-container">
                         <p>Utilization</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                     <div class="stat-container">
                         <p>Internal Fragmentation</p>
-                        <p>100 KB</p>
+                        <p>0 KB</p>
                     </div>
                     <div class="stat-container">
                         <p>Success Rate</p>
-                        <p>100%</p>
+                        <p>0%</p>
                     </div>
                 </div>
-            </div> -->
+            </div>
         </div>
+        
+        <!-- Non-Contiguous -->
         <div class="non-contiguous-allocation" id="non-contiguous-grid">
-            <!-- <div class="non-contiguous-algorithm">
-                <h3>Paging</h3>
+            <div class="non-contiguous-algorithm" class="algo-card" id="paging">
+                <div class="algorithm-header">
+                    <h3>Paging</h3>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="non-contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>0%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>0 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>0%</p>
+                    </div>
+                </div>
             </div>
-            <div class="non-contiguous-algorithm">
-                <h3>Segmentation</h3>
+            <div class="non-contiguous-algorithm" class="algo-card" id="segmentation">
+                <div class="algorithm-header">
+                    <h3>Segmentation</h3>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="non-contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>0%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>0 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>0%</p>
+                    </div>
+                </div>
             </div>
-            <div class="non-contiguous-algorithm">
-                <h3>Segmentation with Paging</h3>
-            </div> -->
+            <div class="non-contiguous-algorithm" class="algo-card" id="segmentation-paging">
+                <div class="algorithm-header">
+                    <h3>Segmentation with Paging</h3>
+                </div>
+                <div style="display: flex; flex-direction: column; grid-row: span 2;">
+                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 12px;">Process Queue</p>
+                    <div class="contiguous-process-queue"></div>
+                </div>
+                <div class="non-contiguous-container"></div>
+                <div class="contiguous-statistics">
+                    <div class="stat-container">
+                        <p>Utilization</p>
+                        <p>0%</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Internal Fragmentation</p>
+                        <p>0 KB</p>
+                    </div>
+                    <div class="stat-container">
+                        <p>Success Rate</p>
+                        <p>0%</p>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 </body>

@@ -1,6 +1,6 @@
 // ========== DB SETUP ==========
-const SQL_JS_URL = '../database/sql-wasm.js';
-const SQL_JS_WASM = '../database/sql-wasm.wasm';
+const SQL_JS_URL = '../../../../database/sql-wasm.js';
+const SQL_JS_WASM = '../../../../database/sql-wasm.wasm';
 
 let SQL = null;
 let db = null;

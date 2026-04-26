@@ -1,6 +1,10 @@
-const memorySimulator = {
+// Extend existing memorySimulator if it exists (from firstfit.js, etc.)
+if (typeof memorySimulator === 'undefined') {
+    memorySimulator = {};
+}
 
-    createFrames(frameCount, frameSize = 100) {
+Object.assign(memorySimulator, {
+    createFrames(frameCount, frameSize) {
         const frames = {};
         for (let i = 1; i <= frameCount; i++) {
             frames[i] = {
@@ -268,7 +272,7 @@ pagingStepSingle(memoryFrames, processSize, pageSize, processId, pageIndexToAllo
         }
         return table;
     }
-};
+});
 
 const memoryFrames = memorySimulator.createFrames(16, 100);
 const processes = {
@@ -288,7 +292,7 @@ const processOrder = {
 const pageSize = 100;
 let frameState = memorySimulator.cloneFrames(memoryFrames);
 let currentProcessIndex = 1;
-let autoInterval = null;
+var autoInterval = null;
 let currentIntervalSpeed = null;
 
 function getSliderValue() {
@@ -345,6 +349,12 @@ function stopInterval() {
     console.log("Paging interval stopped");
 }
 
-console.log("Paging simulation result:", memorySimulator.paging(memoryFrames, pageSize, processes));
-console.log("Sample page table:", memorySimulator.createPageTable(memorySimulator.paging(memoryFrames, pageSize, processes).frames));
-startInterval();
+// Only auto-run on standalone paging page (not in comparison mode)
+if (typeof window !== 'undefined' && !window.comparisonModeActive) {
+    const isPagingPage = document && document.querySelector('#paging-simulation');
+    if (isPagingPage) {
+        console.log("Paging simulation result:", memorySimulator.paging(memoryFrames, pageSize, processes));
+        console.log("Sample page table:", memorySimulator.createPageTable(memorySimulator.paging(memoryFrames, pageSize, processes).frames));
+        startInterval();
+    }
+}

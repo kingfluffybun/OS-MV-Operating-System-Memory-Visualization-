@@ -149,7 +149,7 @@ class SegmentationMemory {
   }
 }
 
-const memorySimulator = {
+var memorySimulator = {
   createMemory(totalSize = 1024) {
     return new SegmentationMemory(totalSize);
   },
