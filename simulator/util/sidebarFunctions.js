@@ -170,6 +170,7 @@ const restoreSidebarState = () => {
 
   if (isClosed && sidebar) {
     sidebar.classList.add("close");
+    document.body.classList.add("sidebar-closed");
     if (toggleButton) toggleButton.classList.add("rotate");
     if (logo) logo.classList.add("hidden");
     if (logoH1) logoH1.classList.add("hidden");
@@ -177,6 +178,7 @@ const restoreSidebarState = () => {
     console.log("Sidebar restored as closed");
   } else {
     if (sidebar) sidebar.classList.remove("close");
+    document.body.classList.remove("sidebar-closed");
     if (toggleButton) toggleButton.classList.remove("rotate");
     if (logo) logo.classList.remove("hidden");
     if (logoH1) logoH1.classList.remove("hidden");
@@ -210,7 +212,9 @@ const toggleSideBar = () => {
   const logoH1 = window.logoH1 || document.getElementById("h1");
   const logoP = logo && logo.querySelector("p");
 
+  document.body.classList.add("sidebar-ready");
   if (sidebar) sidebar.classList.toggle("close");
+  document.body.classList.toggle("sidebar-closed");
   if (toggleButton) toggleButton.classList.toggle("rotate");
   if (logo) logo.classList.toggle("hidden");
   if (logoH1) logoH1.classList.toggle("hidden");
