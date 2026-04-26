@@ -64,7 +64,7 @@
 
 .contiguous-container, .contiguous-process-queue {
     background-color: #f6f6f6;
-    padding: 24px;
+    padding: 12px;
     border-radius: 12px;
     border: #e0e0e0 solid 1px;
 }
@@ -107,7 +107,7 @@
     gap: 12px;
 }
 
-* Process items in comparison queue */
+/* Process items in comparison queue */
 .process-item {
     display: flex;
     justify-content: space-between;

@@ -462,6 +462,7 @@ const initPartitionListeners = () => {
         const block = event.target.closest('.process');
         if (block) {
           block.remove();
+          renumberPartitionBlocks();
           updatePartitionProgressBar();
           appendConsoleMessage('Block deleted.');
         }
@@ -831,6 +832,22 @@ const renumberProcessesInSettings = () => {
   });
 
   updateProcessSettingsSummary();
+};
+
+/**
+ * Renumber partition blocks after deletion
+ */
+const renumberPartitionBlocks = () => {
+  const partitionContainer = document.querySelector('.partition-setting .process-container');
+  if (!partitionContainer) return;
+
+  const blocks = partitionContainer.querySelectorAll('.process');
+  blocks.forEach((block, index) => {
+    const newId = index + 1;
+    const label = block.querySelector('.process-content p:first-child');
+    if (label) label.textContent = `Block ${newId}`;
+    block.id = `partition-block-${newId}`;
+  });
 };
 
 /**

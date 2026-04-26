@@ -115,6 +115,7 @@ const allProcessContainers = Array.from(
 );
 const getProcessContainer = (element) =>
   element ? element.closest(".process-container") : null;
+const isComparisonPage = window.location.pathname.includes("/simulator/comparison/");
 
 const simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
@@ -368,7 +369,7 @@ if (add_block_btn) {
   });
 }
 
-if (allProcessContainers.length) {
+if (allProcessContainers.length && !isComparisonPage) {
   allProcessContainers.forEach((container) => {
     container.addEventListener("click", (event) => {
       const target = event.target.closest("button");
