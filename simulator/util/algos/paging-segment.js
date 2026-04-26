@@ -538,13 +538,14 @@ const PagingSegmentSimulator = {
           if (colorPair) {
             bg = colorPair.bg;
             border = colorPair.border;
+            text = colorPair.text;
           }
         } catch (e) {
           console.error("Color lookup failed:", e);
         }
 
         frameContent = `
-          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr; color: ${text}">
             <p>${frame.processName || "Unknown"} - ${frame.segmentType || "Page"}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : "?"}</p>
             <p>${frame.used} KB</p>
