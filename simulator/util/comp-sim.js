@@ -31,7 +31,7 @@ let isitPlaying = false;
 let playtheInterval = null;
 let currentSort = {
     column: null, // 'utilization', 'intFrag', 'extFrag', 'success'
-    direction: 0 // 0: default, 1: asc, 2: desc
+    direction: 0 // 0: default, 1: desc, 2: asc
 };
 
 function initComparisonPage() {
@@ -1014,10 +1014,10 @@ function updateSummaryTable() {
             let valA = a[currentSort.column];
             let valB = b[currentSort.column];
             
-            if (currentSort.direction === 1) { // Ascending
-                return valA - valB;
-            } else { // Descending
+            if (currentSort.direction === 1) { // Descending
                 return valB - valA;
+            } else { // Ascending
+                return valA - valB;
             }
         });
     } else if (currentSort.direction === 0) {
@@ -1065,7 +1065,7 @@ function setupTableSorting() {
                 currentSort.direction = (currentSort.direction + 1) % 3;
             } else {
                 currentSort.column = columnName;
-                currentSort.direction = 1;
+                currentSort.direction = 1; // Start with Descending
             }
             updateSummaryTable();
         });
@@ -1094,7 +1094,7 @@ function updateSortIndicators() {
             const span = document.createElement('span');
             span.className = 'sort-indicator';
             span.style.marginLeft = '5px';
-            span.textContent = currentSort.direction === 1 ? '↑' : '↓';
+            span.textContent = currentSort.direction === 1 ? '↓' : '↑';
             header.appendChild(span);
         }
     });
@@ -1138,12 +1138,31 @@ function setupComparisonControls() {
             stepAllSimulations();
         });
     }
+
+    const slider = document.getElementById('slider');
+    if (slider) {
+        slider.addEventListener('input', function() {
+            // Update the display text if there was one (e.g., "1.5x")
+            const speedText = slider.parentElement.querySelector('p:nth-child(2)');
+            if (speedText) {
+                speedText.textContent = slider.value + 'x';
+            }
+
+            // If playing, restart the timer with new delay immediately
+            if (isitPlaying) {
+                if (playtheInterval) clearTimeout(playtheInterval);
+                startAllSimulations();
+            }
+        });
+    }
 }
 
 function startAllSimulations() {
-    const delay = getComparisonStepDelay();
+    if (playtheInterval) clearTimeout(playtheInterval);
 
-    playtheInterval = setInterval(function() {
+    function runStep() {
+        if (!isitPlaying) return;
+
         const allDone = stepAllSimulations();
         if (allDone) {
             stopAllSimulations();
@@ -1151,13 +1170,19 @@ function startAllSimulations() {
             const playBtn = document.getElementById('play-btn');
             if (stopBtn) stopBtn.style.display = 'none';
             if (playBtn) playBtn.style.display = 'flex';
+        } else {
+            const delay = getComparisonStepDelay();
+            playtheInterval = setTimeout(runStep, delay);
         }
-    }, delay);
+    }
+
+    const delay = getComparisonStepDelay();
+    playtheInterval = setTimeout(runStep, delay);
 }
 
 function stopAllSimulations() {
     if (playtheInterval) {
-        clearInterval(playtheInterval);
+        clearTimeout(playtheInterval);
         playtheInterval = null;
     }
     isitPlaying = false;
