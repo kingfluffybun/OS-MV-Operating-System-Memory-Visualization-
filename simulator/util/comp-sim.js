@@ -532,7 +532,7 @@ function renderBlocks(algoId) {
             isFirstInGroup: logicalId !== prevLogicalId,
             isLastInGroup: logicalId !== nextLogicalId,
             logicalId: logicalId,
-            widthPx: 40 + (node.size * 0.5), // Same calculation as single mode: minWidth + (blockSize * pxPerKb)
+            widthPx: 80 + (node.size * 0.5), // Same calculation as single mode: minWidth + (blockSize * pxPerKb)
             bgColor: colorPair.bg,
             borderColor: colorPair.border,
             isFixed: instance.config.type === 'fixed'
