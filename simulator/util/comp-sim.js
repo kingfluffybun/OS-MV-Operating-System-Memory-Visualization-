@@ -30,8 +30,8 @@ let algoInstances = {};
 let isitPlaying = false;
 let playtheInterval = null;
 let currentSort = {
-    column: null, // 'utilization', 'intFrag', 'extFrag', 'success'
-    direction: 0 // 0: default, 1: desc, 2: asc
+    column: 'utilization',
+    direction: 1 // default: desc
 };
 
 function initComparisonPage() {
@@ -1090,11 +1090,18 @@ function updateSortIndicators() {
         const existingIndicator = header.querySelector('.sort-indicator');
         if (existingIndicator) existingIndicator.remove();
 
-        if (columnName && currentSort.column === columnName && currentSort.direction !== 0) {
+        if (columnName) {
             const span = document.createElement('span');
             span.className = 'sort-indicator';
             span.style.marginLeft = '5px';
-            span.textContent = currentSort.direction === 1 ? '↓' : '↑';
+            
+            if (currentSort.column === columnName) {
+                if (currentSort.direction === 1) span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-down-icon lucide-arrow-down"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>';
+                else if (currentSort.direction === 2) span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-up-icon lucide-arrow-up"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>';
+                else span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus"><path d="M5 12h14"/></svg>';
+            } else {
+                span.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus"><path d="M5 12h14"/></svg>';
+            }
             header.appendChild(span);
         }
     });
