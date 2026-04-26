@@ -220,7 +220,7 @@ function renderPagingPages(algoId) {
     const pageSize = comparisonData.pageSize;
 
     instance.processes.forEach((size, i) => {
-        const processIdStr = `Process ${i + 1}`;
+        const processIdStr = `P${i + 1}`;
         const pagesNeeded = Math.ceil(size / pageSize);
         const colors = processColorsto[i % processColorsto.length];
 
