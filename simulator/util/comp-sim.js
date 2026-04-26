@@ -104,6 +104,10 @@ function initContiguousAlgorithm(config) {
             allocatedSize: 0,
             successfulAllocations: 0,
             internalFragmentation: 0
+        },
+        lastAllocated: {
+            procIndex: -1,
+            blockId: -1
         }
     };
 
@@ -627,7 +631,17 @@ function renderBlocks(algoId) {
             isFixed: instance.config.type === 'fixed'
         }); 
 
+        const isCurrentBlock = instance.lastAllocated && instance.lastAllocated.blockId === node.id;
+        if (isCurrentBlock) {
+            blockEl.classList.add('current');
+        }
+
         container.appendChild(blockEl);
+        
+        if (isCurrentBlock) {
+            scrollToHighlight(container, blockEl);
+        }
+
         prevLogicalId = logicalId;
         node = node.next;
     }
@@ -644,7 +658,7 @@ function renderSharedProcessQueue() {
         processes.forEach(function(size, i) {
             const process = document.createElement('div');
             process.className = 'process';
-            process.id = 'process-' + (i + 1);
+            process.id = 'process-' + algo.id + '-' + (i + 1);
 
             const colorIndex = i % processColorsto.length;
             const colorPair = processColorsto[colorIndex];
@@ -662,6 +676,25 @@ function renderSharedProcessQueue() {
             queue.appendChild(process);
         });
     });
+}
+
+function updateContiguousProcessQueue(algoId) {
+    const instance = algoInstances[algoId];
+    if (!instance) return;
+    
+    const queue = document.querySelector('#' + algoId + ' .contiguous-process-queue');
+    if (!queue) return;
+    
+    queue.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    
+    const procIndex = instance.lastAllocated ? instance.lastAllocated.procIndex : -1;
+    if (procIndex >= 0) {
+        const processEl = document.getElementById('process-' + algoId + '-' + (procIndex + 1));
+        if (processEl) {
+            processEl.classList.add('current');
+            scrollToHighlight(queue, processEl);
+        }
+    }
 }
 
 function stepAlgorithm(algoId) {
@@ -734,11 +767,22 @@ function stepContiguousAlgorithm(algoId, processSize, processId) {
         if (instance.config.type === 'fixed') {
             instance.stats.internalFragmentation += result.result.fragmentation || 0;
         }
+        
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            blockId: result.result.block
+        };
+    } else {
+        instance.lastAllocated = {
+            procIndex: processId - 1,
+            blockId: -1
+        };
     }
 
     instance.results[processId] = result.result;
     instance.currentIndex++;
     renderBlocks(algoId);
+    updateContiguousProcessQueue(algoId);
     updateAlgorithmStats(algoId);
     return true;
 }
@@ -1342,12 +1386,19 @@ function getComparisonStepDelay() {
 
 const containers = document.querySelectorAll('.contiguous-container');
 
+window.lastAutoScrollTime = 0;
+let isSyncingScroll = false;
 containers.forEach(container => {
   container.addEventListener('scroll', () => {
+    if (isitPlaying || isSyncingScroll || (Date.now() - window.lastAutoScrollTime < 800)) return;
+    isSyncingScroll = true;
     containers.forEach(target => {
       if (target !== container) {
         target.scrollLeft = container.scrollLeft;
       }
+    });
+    requestAnimationFrame(() => {
+        isSyncingScroll = false;
     });
   });
 });
@@ -1377,8 +1428,9 @@ function scrollToHighlight(container, element) {
     // in a non-scrollable div inside a scrollable visualization container.
     let scrollable = container;
     while (scrollable && scrollable !== document.body) {
-        const overflowY = window.getComputedStyle(scrollable).overflowY;
-        if (overflowY === 'auto' || overflowY === 'scroll') {
+        const computedStyle = window.getComputedStyle(scrollable);
+        if (computedStyle.overflowY === 'auto' || computedStyle.overflowY === 'scroll' || 
+            computedStyle.overflowX === 'auto' || computedStyle.overflowX === 'scroll') {
             break;
         }
         scrollable = scrollable.parentElement;
@@ -1393,21 +1445,31 @@ function scrollToHighlight(container, element) {
     setTimeout(() => {
         const containerRect = scrollable.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
+        const computedStyle = window.getComputedStyle(scrollable);
         
-        // Calculate the relative position of the element within the container's visible area
-        const relativeTop = elementRect.top - containerRect.top;
+        let scrollToOptions = { behavior: 'smooth' };
+        let doScroll = false;
         
-        // targetScroll = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
-        // This centers the element within the scrollable container
-        const targetScroll = scrollable.scrollTop + relativeTop - (scrollable.clientHeight / 2) + (element.offsetHeight / 2);
-        
-        if (scrollable.scrollTo) {
-            scrollable.scrollTo({
-                top: targetScroll,
-                behavior: 'smooth'
-            });
-        } else {
-            scrollable.scrollTop = targetScroll;
+        if (computedStyle.overflowY === 'auto' || computedStyle.overflowY === 'scroll') {
+            const relativeTop = elementRect.top - containerRect.top;
+            scrollToOptions.top = scrollable.scrollTop + relativeTop - (scrollable.clientHeight / 2) + (element.offsetHeight / 2);
+            doScroll = true;
+        }
+
+        if (computedStyle.overflowX === 'auto' || computedStyle.overflowX === 'scroll') {
+            const relativeLeft = elementRect.left - containerRect.left;
+            scrollToOptions.left = scrollable.scrollLeft + relativeLeft - (scrollable.clientWidth / 2) + (element.offsetWidth / 2);
+            doScroll = true;
+        }
+
+        if (doScroll) {
+            window.lastAutoScrollTime = Date.now();
+            if (scrollable.scrollTo) {
+                scrollable.scrollTo(scrollToOptions);
+            } else {
+                if (scrollToOptions.top !== undefined) scrollable.scrollTop = scrollToOptions.top;
+                if (scrollToOptions.left !== undefined) scrollable.scrollLeft = scrollToOptions.left;
+            }
         }
     }, 100);
 }
