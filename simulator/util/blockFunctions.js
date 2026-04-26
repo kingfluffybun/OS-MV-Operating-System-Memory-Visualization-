@@ -260,24 +260,29 @@ const renderMemoryNode = (node, options = {}) => {
   // Handle Internal Fragmentation in Fixed Partition (Visual Split)
   if (node.status === 'Occupied' && isFixed && node.fragmentation > 0) {
     const processSize = node.size - node.fragmentation;
-    const processWidth = (processSize / node.size) * 100;
-    const wasteWidth = (node.fragmentation / node.size) * 100;
+    const pxPerKb = 0.5;
+    const minWidth = 80; // Comparison mode base width (updated to match single mode)
+    const pWidth = minWidth + (processSize * pxPerKb);
+    const wWidth = minWidth + (node.fragmentation * pxPerKb);
 
     const wrapper = document.createElement('div');
     wrapper.className = 'block-wrapper';
     wrapper.style.display = 'flex';
     wrapper.style.flex = '0 0 auto';
+    wrapper.style.width = (pWidth + wWidth - 10) + 'px'; // Account for overlap
+    wrapper.style.position = 'relative';
+
+    applyBlockGroupStyles(wrapper, isFirstInGroup, isLastInGroup);
 
     const pBlock = document.createElement('div');
     pBlock.className = 'block';
     if (options.popin) pBlock.classList.add('popin');
-    pBlock.style.width = processWidth + '%';
+    pBlock.style.width = pWidth + 'px';
     pBlock.style.backgroundColor = bgColor;
     pBlock.style.borderBottom = `8px solid ${borderColor}`;
-    pBlock.style.borderRadius = "12px 0px 0px 12px";
-    // pBlock.style.marginRight = "-5px";
+    pBlock.style.borderRadius = `${isFirstInGroup ? "12px" : "0px"} 0px 0px ${isFirstInGroup ? "12px" : "0px"}`;
     pBlock.innerHTML = `
-      <p>Block ${logicalId}</p>
+      <p>${isFirstInGroup ? 'Block ' + logicalId : ''}</p>
       <div class="block-content">
         <div class="block-status">Process ${node.processId}</div>
         <div class="block-size"><h2>${processSize} KB</h2></div>
@@ -287,10 +292,12 @@ const renderMemoryNode = (node, options = {}) => {
     const wBlock = document.createElement('div');
     wBlock.className = 'block';
     if (options.popin) wBlock.classList.add('popin');
-    wBlock.style.width = wasteWidth + '%';
-    wBlock.style.borderRadius = "0px 12px 12px 0px";
+    wBlock.style.width = wWidth + 'px';
+    wBlock.style.borderRadius = `0px ${isLastInGroup ? "12px" : "0px"} ${isLastInGroup ? "12px" : "0px"} 0px`;
     wBlock.style.borderBottom = `8px solid ${borderColor}`;
     wBlock.style.background = getHatchPattern(bgColor, borderColor);
+    wBlock.style.marginLeft = "-10px";
+    wBlock.style.zIndex = "1";
     wBlock.innerHTML = `
       <p></p>
       <div class="block-content">
