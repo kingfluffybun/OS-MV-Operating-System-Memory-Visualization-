@@ -123,29 +123,39 @@ function initNonContiguousAlgorithm(config) {
             internalFragmentation: 0
         },
         // Paging state
-        frames: [],
+        memoryFrames: null,
         pageTable: {},
         // Segmentation state
         segments: [],
         segmentTable: {}
     };
 
+    const instance = algoInstances[config.id];
+
     // Initialize frames for paging
     if (config.type === 'paging' || config.type === 'segmentation-paging') {
-        for (let i = 0; i < frameCount; i++) {
-            algoInstances[config.id].frames.push({
-                id: i,
-                size: comparisonData.pageSize,
-                status: 'Free',
-                processId: null,
-                pageId: null
-            });
+        if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.createFrames === 'function') {
+            instance.memoryFrames = window.memorySimulator.createFrames(frameCount, comparisonData.pageSize);
+        } else {
+            // Fallback if memorySimulator is not available
+            const frames = {};
+            for (let i = 1; i <= frameCount; i++) {
+                frames[i] = {
+                    id: i,
+                    size: comparisonData.pageSize,
+                    status: 'Free',
+                    process: null,
+                    page: null,
+                    used: 0
+                };
+            }
+            instance.memoryFrames = { frames, count: frameCount, frameSize: comparisonData.pageSize };
         }
     }
 
     // Initialize physical memory for segmentation
     if (config.type === 'segmentation') {
-        algoInstances[config.id].physicalMemory = {
+        instance.physicalMemory = {
             totalSize: comparisonData.totalMemory,
             usedSize: 0,
             blocks: []
@@ -186,25 +196,34 @@ function renderPagingPages(algoId) {
     const pageSize = comparisonData.pageSize;
 
     instance.processes.forEach((size, i) => {
+        const processIdStr = `Process ${i + 1}`;
         const pagesNeeded = Math.ceil(size / pageSize);
-        const colorIndex = i % processColorsto.length;
-        const colors = processColorsto[colorIndex];
+        const colors = processColorsto[i % processColorsto.length];
 
         for (let j = 0; j < pagesNeeded; j++) {
             const pageEl = document.createElement('div');
             pageEl.className = 'page';
             pageEl.id = `page-${algoId}-${i}-${j}`;
             pageEl.innerHTML = `
+                <p id="page-number">P${j}</p>
                 <div class="page-content" style="background-color: white; border-bottom: 2px solid #eee; color: #666;">
-                    <p>P${i + 1} - Page ${j}</p>
+                    <p>${processIdStr}</p>
+                    <p>&nbsp;(Waiting for allocation)</p>
                 </div>
             `;
+            const contentDiv = pageEl.querySelector('.page-content');
+            if (contentDiv) {
+                contentDiv.style.backgroundColor = colors.bg;
+                contentDiv.style.borderBottom = `4px solid ${colors.border}`;
+                contentDiv.style.color = colors.text;
+            }
             pagesContainer.appendChild(pageEl);
         }
 
         if (i < instance.processes.length - 1) {
             const spacer = document.createElement('div');
-            spacer.style.height = '8px';
+            spacer.style.gridColumn = "1 / -1";
+            spacer.style.minHeight = "8px";
             pagesContainer.appendChild(spacer);
         }
     });
@@ -307,55 +326,55 @@ function renderSegmentationPagingSegments(algoId) {
 function renderPagingFrames(algoId) {
     const instance = algoInstances[algoId];
     const framesContainer = document.querySelector('#' + algoId + ' .frames-container');
-    if (!framesContainer) return;
+    if (!framesContainer || !instance.memoryFrames) return;
 
     framesContainer.innerHTML = '';
 
-    instance.frames.forEach(function(frame) {
+    Object.values(instance.memoryFrames.frames).forEach(function(frame) {
         const frameEl = document.createElement('div');
         frameEl.className = 'frame';
-        
+        frameEl.id = `frame-${algoId}-${frame.id}`;
+
         if (frame.status === 'Occupied') {
-            const colorIndex = (frame.processId - 1) % processColorsto.length;
-            const colorPair = processColorsto[colorIndex];
+            const procNum = parseInt(frame.process.split('_')[1]) || 1;
+            const procIndex = procNum - 1;
+            const colorPair = processColorsto[procIndex % processColorsto.length];
+            const pageIndex = frame.page - 1;
+            
             frameEl.innerHTML = `
-                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}">
-                    <p style="font-weight: 600;">P${frame.processId} - Page ${frame.pageId}</p>
-                    <p>${frame.size} KB</p>
+                <p id="frame-number">F${frame.id}</p>
+                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text}; grid-template-columns: repeat(3, 1fr);">
+                    <p>P${procNum}</p>
+                    <p>Page ${pageIndex}</p>
+                    <p>${frame.used} KB</p>
                 </div>
             `;
 
-            // Highlight in pages-container or segmentation-paging list
+            // Highlight in pages-container
             if (instance.config.type === 'paging') {
-                const pageId = `page-${algoId}-${frame.processId - 1}-${frame.pageId}`;
+                const pageId = `page-${algoId}-${procIndex}-${pageIndex}`;
                 const pageEl = document.getElementById(pageId);
                 if (pageEl) {
                     const content = pageEl.querySelector('.page-content');
                     if (content) {
+                        content.innerHTML = `
+                            <p>Process ${procNum}</p>
+                            <p>${frame.used}KB</p>
+                        `;
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
-                        content.style.color = '#333';
+                        content.style.color = colorPair.text;
                     }
                 }
-            } else if (instance.config.type === 'segmentation-paging') {
-                // For segmentation-paging, we need to know the segment type.
-                // In our simplified stepPaging used by seg-paging, we don't have segment type in frame yet.
-                // But we can find the page by searching for the ID that matches.
-                const pageIdPattern = `page-seg-${algoId}-${frame.processId - 1}-`;
-                const allPages = document.querySelectorAll(`[id^="${pageIdPattern}"]`);
-                allPages.forEach(pEl => {
-                    if (pEl.id.endsWith(`-${frame.pageId}`)) {
-                        const content = pEl.querySelector('.page-content');
-                        if (content) {
-                            content.style.backgroundColor = colorPair.bg;
-                            content.style.borderBottomColor = colorPair.border;
-                            content.style.color = '#333';
-                        }
-                    }
-                });
             }
         } else {
-            frameEl.innerHTML = '<div class="frame-content"><p>Frame ' + frame.id + '</p><p>' + frame.size + ' KB</p></div>';
+            frameEl.innerHTML = `
+                <p id="frame-number">F${frame.id}</p>
+                <div class="frame-content">
+                    <p>Free</p>
+                    <p>${frame.size} KB</p>
+                </div>
+            `;
         }
         framesContainer.appendChild(frameEl);
     });
@@ -577,52 +596,33 @@ function stepNonContiguousAlgorithm(algoId, processSize, processId) {
 function stepPaging(algoId, processSize, processId) {
     const instance = algoInstances[algoId];
     const pageSize = comparisonData.pageSize;
-    const pagesNeeded = Math.ceil(processSize / pageSize);
-    const lastPageSize = processSize % pageSize || pageSize;
-    let pagesAllocated = 0;
-    let internalFrag = 0;
+    const procIdStr = `process_${processId}`;
 
-    // Find free frames
-    const freeFrames = instance.frames.filter(function(f) { return f.status === 'Free'; });
-
-    if (freeFrames.length < pagesNeeded) {
-        instance.results[processId] = { status: 'Failed', reason: 'Not enough frames' };
+    if (typeof window.memorySimulator === 'undefined' || typeof window.memorySimulator.pagingStep !== 'function') {
+        console.error('pagingStep function missing in memorySimulator');
         instance.currentIndex++;
-        updateAlgorithmStats(algoId);
-        return true;
+        return false;
     }
 
-    // Allocate pages to frames
-    instance.pageTable[processId] = [];
+    const result = window.memorySimulator.pagingStep(instance.memoryFrames, processSize, pageSize, procIdStr);
     
-    for (let i = 0; i < pagesNeeded; i++) {
-        const frame = freeFrames[i];
-        frame.status = 'Occupied';
-        frame.processId = processId;
-        frame.pageId = i;
+    if (result.result.status === 'Allocated') {
+        instance.memoryFrames = result.frames;
+        instance.results[processId] = { 
+            status: 'Allocated', 
+            pages: result.result.pagesNeeded, 
+            fragmentation: result.result.internalFragmentation 
+        };
         
-        const actualSize = (i === pagesNeeded - 1) ? lastPageSize : pageSize;
-        const frag = pageSize - actualSize;
-        internalFrag += frag;
-
-        instance.pageTable[processId].push({
-            pageId: i,
-            frameId: frame.id,
-            size: actualSize
-        });
-        
-        pagesAllocated++;
+        // Update statistics
+        instance.stats.allocatedSize += processSize;
+        instance.stats.successfulAllocations++;
+        instance.stats.internalFragmentation += result.result.internalFragmentation;
+    } else {
+        instance.results[processId] = { status: 'Failed', reason: 'Not enough frames' };
     }
-
-    instance.results[processId] = { status: 'Allocated', pages: pagesAllocated, fragmentation: internalFrag };
-    
-    // Update statistics
-    instance.stats.allocatedSize += processSize;
-    instance.stats.successfulAllocations++;
-    instance.stats.internalFragmentation += internalFrag;
 
     instance.currentIndex++;
-
     renderPagingFrames(algoId);
     updateAlgorithmStats(algoId);
     return true;
@@ -840,363 +840,8 @@ containers.forEach(container => {
   });
 });
 
-// ========== PAGING UI HELPERS FOR COMPARISON ==========
 
-function initPagingUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
 
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const pagesContainer = container.querySelector('.pages-container');
-    const framesContainer = container.querySelector('.frames-container');
-    
-    if (framesContainer) {
-        framesContainer.innerHTML = '';
-        Object.values(instance.memoryFrames.frames).forEach(frame => {
-            const frameEl = document.createElement('div');
-            frameEl.className = 'frame';
-            frameEl.innerHTML = `
-                <p id="frame-number">F${frame.id}</p>
-                <div class="frame-content">
-                    <p>Free</p>
-                    <p>${frame.size} KB</p>
-                </div>
-            `;
-            framesContainer.appendChild(frameEl);
-        });
-    }
-
-    if (pagesContainer) {
-        pagesContainer.innerHTML = '';
-        const pageSize = comparisonData.pageSize;
-        
-        instance.processes.forEach((size, i) => {
-            const procName = `Process ${i + 1}`;
-            const pagesNeeded = Math.ceil(size / pageSize);
-            const colorIndex = i % processColorsto.length;
-            const colors = processColorsto[colorIndex];
-
-            for (let j = 0; j < pagesNeeded; j++) {
-                const pageEl = document.createElement('div');
-                pageEl.className = 'page';
-                pageEl.id = `page-${algoId}-${i}-${j}`;
-                pageEl.innerHTML = `
-                    <div class="page-content" style="background-color: ${colors.bg}; border-bottom-color: ${colors.border}; color: ${colors.text};">
-                        <p>P${i + 1} - Page ${j}</p>
-                    </div>
-                `;
-                pagesContainer.appendChild(pageEl);
-            }
-
-            if (i < instance.processes.length - 1) {
-                const spacer = document.createElement('div');
-                spacer.style.height = '8px';
-                pagesContainer.appendChild(spacer);
-            }
-        });
-    }
-}
-
-function updatePagingUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
-
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const pagesContainer = container.querySelector('.pages-container');
-    const framesContainer = container.querySelector('.frames-container');
-
-    if (framesContainer) {
-        framesContainer.innerHTML = '';
-        Object.values(instance.memoryFrames.frames).forEach(frame => {
-            const frameEl = document.createElement('div');
-            frameEl.className = 'frame';
-            
-            if (frame.status === 'Occupied') {
-                const procId = parseInt(frame.process.split(' ')[1]) - 1;
-                const colors = processColorsto[procId % processColorsto.length];
-                frameEl.innerHTML = `
-                    <p id="frame-number">F${frame.id - 1}</p>
-                    <div class="frame-content" style="background-color: ${colors.bg}; border-bottom-color: ${colors.border}; color: ${colors.text};">
-                        <p>P${procId + 1} - Page ${frame.page - 1}</p>
-                        <p>${frame.used} KB</p>
-                    </div>
-                `;
-            } else {
-                frameEl.innerHTML = `
-                    <p id="frame-number">F${frame.id - 1}</p>
-                    <div class="frame-content">
-                        <p>Free</p>
-                    </div>
-                `;
-            }
-            framesContainer.appendChild(frameEl);
-        });
-    }
-
-    if (pagesContainer) {
-        // Update waiting labels for allocated pages
-        Object.values(instance.memoryFrames.frames).forEach(frame => {
-            if (frame.status === 'Occupied') {
-                const procId = parseInt(frame.process.split(' ')[1]) - 1;
-                const pageNum = frame.page - 1;
-                const pageEl = document.getElementById(`page-${algoId}-${procId}-${pageNum}`);
-                if (pageEl) {
-                    const statusP = pageEl.querySelector('.page-content p:last-child');
-                    if (statusP) statusP.textContent = `${frame.used} KB`;
-                }
-            }
-        });
-    }
-}
-
-// ========== SEGMENTATION UI HELPERS FOR COMPARISON ==========
-
-function initSegmentationUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
-
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const segmentationContainer = container.querySelector('.segmentation-container');
-    const physicalMemoryContainer = container.querySelector('.physical-memory-container');
-    
-    if (physicalMemoryContainer) {
-        physicalMemoryContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 11px;">Empty Memory</div>';
-    }
-
-    if (segmentationContainer) {
-        segmentationContainer.innerHTML = '';
-        
-        instance.processes.forEach((size, i) => {
-            const procName = `Process ${i + 1}`;
-            const colorIndex = i % processColorsto.length;
-            const colors = processColorsto[colorIndex];
-            const breakdown = SegmentationMemory.breakdownSize(size);
-
-            const procDiv = document.createElement('div');
-            procDiv.className = 'segmentation';
-            
-            const header = document.createElement('h4');
-            header.textContent = procName;
-            procDiv.appendChild(header);
-
-            const types = ['code', 'heap', 'data', 'stack'];
-            types.forEach((type, idx) => {
-                const segSize = breakdown[type];
-                if (segSize > 0) {
-                    const segEl = document.createElement('div');
-                    segEl.className = 'segments-container';
-                    segEl.innerHTML = `
-                        <div id="segment-number">S${idx}</div>
-                        <div class="segments" style="background-color: ${colors.bg}; border-bottom-color: ${colors.border}; color: ${colors.text};">
-                            <p class="segment-type">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
-                            <p id="segment-size">${segSize} KB</p>
-                        </div>
-                    `;
-                    procDiv.appendChild(segEl);
-                }
-            });
-            segmentationContainer.appendChild(procDiv);
-        });
-    }
-}
-
-function updateSegmentationUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
-
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const physicalMemoryContainer = container.querySelector('.physical-memory-container');
-    const status = instance.memory.getStatus();
-
-    if (physicalMemoryContainer) {
-        physicalMemoryContainer.innerHTML = '';
-        const memDiv = document.createElement('div');
-        memDiv.className = 'physical-memory';
-
-        if (status.allocated.length === 0) {
-             physicalMemoryContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 11px;">Empty Memory</div>';
-             return;
-        }
-
-        status.allocated.forEach(seg => {
-            const procId = parseInt(seg.name.split(' ')[1]) - 1;
-            const colors = processColorsto[procId % processColorsto.length];
-            
-            const segDiv = document.createElement('div');
-            segDiv.className = 'allocated-segments';
-            segDiv.style.backgroundColor = colors.bg;
-            segDiv.style.borderBottomColor = colors.border;
-            segDiv.style.marginBottom = '4px';
-
-            segDiv.innerHTML = `
-                <div>
-                    <p class="process-segment" style="font-size: 10px;">${seg.name}</p>
-                    <p class="segment-type" style="font-size: 9px;">${seg.type.charAt(0).toUpperCase() + seg.type.slice(1)}</p>
-                </div>
-                <div class="segment-base-limit">
-                    <p class="segment-base">${seg.base}</p>
-                    <p class="segment-limit">${seg.end + 1}</p>
-                </div>
-            `;
-            memDiv.appendChild(segDiv);
-        });
-
-        if (status.free && status.free.length > 0) {
-            status.free.forEach(free => {
-                const freeDiv = document.createElement('div');
-                freeDiv.style.padding = '8px';
-                freeDiv.style.backgroundColor = '#f0f0f0';
-                freeDiv.style.textAlign = 'center';
-                freeDiv.style.fontSize = '9px';
-                freeDiv.style.color = '#999';
-                freeDiv.style.borderRadius = '4px';
-                freeDiv.style.marginBottom = '4px';
-                freeDiv.textContent = `Free: ${free.size} KB`;
-                memDiv.appendChild(freeDiv);
-            });
-        }
-
-        physicalMemoryContainer.appendChild(memDiv);
-    }
-}
-
-// ========== SEGMENTATION WITH PAGING UI HELPERS FOR COMPARISON ==========
-
-function initSegmentationPagingUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
-
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const segmentationContainer = container.querySelector('.segmentation-paging-container');
-    const framesContainer = container.querySelector('.frames-container');
-    
-    if (framesContainer) {
-        framesContainer.innerHTML = '<div style="padding: 10px; text-align: center; color: #999; font-size: 11px;">Empty Memory</div>';
-    }
-
-    if (segmentationContainer) {
-        segmentationContainer.innerHTML = '';
-        
-        instance.processes.forEach((size, i) => {
-            const procName = `Process ${i + 1}`;
-            const colorIndex = i % processColorsto.length;
-            const colors = processColorsto[colorIndex];
-            const pageSize = comparisonData.pageSize;
-            const breakdown = PagingSegmentSimulator.breakdownSize(size);
-
-            const procDiv = document.createElement('div');
-            procDiv.className = 'segmentation-paging-group';
-            
-            const header = document.createElement('h4');
-            header.textContent = procName;
-            header.style.fontSize = '11px';
-            header.style.color = '#666';
-            header.style.margin = '12px 0 6px 0';
-            procDiv.appendChild(header);
-
-            const segmentTypes = ['code', 'heap', 'data', 'stack'];
-            segmentTypes.forEach((type, idx) => {
-                const segSize = breakdown[type];
-                if (segSize > 0) {
-                    const { pages } = PagingSegmentSimulator.segmentToPages(segSize, pageSize);
-                    
-                    const segCard = document.createElement('div');
-                    segCard.className = 'segments-paging-container';
-                    
-                    const pagesHtml = pages.map(p => `
-                        <div class="page" id="page-${algoId}-${i}-${type}-${p.pageIndex}">
-                            <div class="page-content" style="background-color: white; border-bottom-color: #eee; color: #666;">
-                                <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
-                            </div>
-                        </div>
-                    `).join('');
-
-                    segCard.innerHTML = `
-                        <div id="segment-number">S${idx}</div>
-                        <div class="segments-paging" style="border-color: ${colors.bg};">
-                            <div class="segment-paging-header" style="background-color: ${colors.bg}; color: ${colors.text};">
-                                <div>
-                                    <p class="segment-type" style="font-weight: 600;">${type.charAt(0).toUpperCase() + type.slice(1)}</p>
-                                </div>
-                                <div><p style="font-weight: 600;">${segSize} KB</p></div>
-                            </div>
-                            <div class="segment-pages">
-                                ${pagesHtml}
-                            </div>
-                        </div>
-                    `;
-                    procDiv.appendChild(segCard);
-                }
-            });
-            segmentationContainer.appendChild(procDiv);
-        });
-    }
-}
-
-function updateSegmentationPagingUIInComparison(algoId) {
-    const instance = algoInstances[algoId];
-    if (!instance) return;
-
-    const container = document.getElementById(algoId);
-    if (!container) return;
-
-    const framesContainer = container.querySelector('.frames-container');
-    const frames = instance.memory.frames;
-
-    if (framesContainer) {
-        framesContainer.innerHTML = '';
-        
-        frames.forEach(frame => {
-            const frameEl = document.createElement('div');
-            frameEl.className = 'frame';
-            
-            if (frame.status === 'Occupied') {
-                const procId = parseInt(frame.processName.split(' ')[1]) - 1;
-                const colors = processColorsto[procId % processColorsto.length];
-                frameEl.innerHTML = `
-                    <p id="frame-number">F${frame.frameId - 1}</p>
-                    <div class="frame-content" style="background-color: ${colors.bg}; border-bottom-color: ${colors.border}; color: ${colors.text};">
-                        <p style="font-size: 9px;">P${procId + 1} - ${frame.segmentType.charAt(0).toUpperCase()} - Page ${frame.pageIndex}</p>
-                        <p style="font-size: 9px;">${frame.used} KB</p>
-                    </div>
-                `;
-
-                // Also update the page in the segmentation list
-                const pageId = `page-${algoId}-${procId}-${frame.segmentType.toLowerCase()}-${frame.pageIndex}`;
-                const pageEl = document.getElementById(pageId);
-                if (pageEl) {
-                    const content = pageEl.querySelector('.page-content');
-                    if (content) {
-                        content.style.backgroundColor = colors.bg;
-                        content.style.borderBottomColor = colors.border;
-                        content.style.color = colors.text;
-                        const statusP = content.querySelector('p:last-child');
-                        if (statusP) statusP.textContent = `${frame.used} KB`;
-                    }
-                }
-            } else {
-                frameEl.innerHTML = `
-                    <p id="frame-number">F${frame.frameId}</p>
-                    <div class="frame-content">
-                        <p>Free</p>
-                        <p>${frame.size} KB</p>
-                    </div>
-                `;
-            }
-            framesContainer.appendChild(frameEl);
-        });
-    }
-}
 
 
 // Initialize on page load
