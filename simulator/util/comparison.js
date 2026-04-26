@@ -6,7 +6,9 @@
  */
 const getTotalMemorySize = () => {
   const globalSetting = document.querySelector('.global-setting-input div:first-child input');
-  return globalSetting ? parseInt(globalSetting.value, 10) || 0 : 0;
+  let val = globalSetting ? parseInt(globalSetting.value, 10) || 0 : 0;
+  if (val > 1000000) val = 1000000;
+  return val;
 };
 
 /**
@@ -15,7 +17,9 @@ const getTotalMemorySize = () => {
  */
 const getPageSize = () => {
   const pageSizeInput = document.querySelector('.global-setting-input div:last-child input');
-  return pageSizeInput ? parseInt(pageSizeInput.value, 10) || 1 : 1;
+  let val = pageSizeInput ? parseInt(pageSizeInput.value, 10) || 1 : 1;
+  if (val > 1000000) val = 1000000;
+  return val;
 };
 
 /**
@@ -138,7 +142,8 @@ const canAddBlock = (blockSize) => {
  * @returns {Object} { isValid: boolean, value: number, message: string }
  */
 const validateBlockInput = (inputValue) => {
-  const parsed = parseInt(inputValue, 10);
+  let parsed = parseInt(inputValue, 10);
+  if (parsed > 1000000) parsed = 1000000;
 
   if (Number.isNaN(parsed) || parsed <= 0) {
     return {
@@ -571,7 +576,11 @@ const startInlineEditPartition = (element, onCommit) => {
     const text = element.textContent.trim();
     const parsed = parseInt(text, 10);
     const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
+    let finalValue = valid ? parsed : null;
+    if (finalValue !== null && finalValue > 1000000) {
+      finalValue = 1000000;
+    }
+    cleanup(finalValue);
   };
 
   const onKeyDown = (event) => {
@@ -696,7 +705,7 @@ const createProcessSettingElement = (processNumber, sizeKb) => {
  * @returns {Object} { success: boolean, message: string }
  */
 const addProcessSetting = (processSize) => {
-  const parsed = parseInt(processSize, 10);
+  let parsed = parseInt(processSize, 10);
 
   if (Number.isNaN(parsed) || parsed <= 0) {
     return {
@@ -704,6 +713,8 @@ const addProcessSetting = (processSize) => {
       message: 'Process size must be a positive number.',
     };
   }
+
+  if (parsed > 1000000) parsed = 1000000;
 
   const processContainer = document.querySelector('.process-setting .process-container');
   if (!processContainer) {
@@ -761,7 +772,11 @@ const startInlineEditProcess = (element, onCommit) => {
     const text = element.textContent.trim();
     const parsed = parseInt(text, 10);
     const valid = !Number.isNaN(parsed) && parsed > 0;
-    cleanup(valid ? parsed : null);
+    let finalValue = valid ? parsed : null;
+    if (finalValue !== null && finalValue > 1000000) {
+      finalValue = 1000000;
+    }
+    cleanup(finalValue);
   };
 
   const onKeyDown = (event) => {

@@ -325,9 +325,12 @@ const getSegmentationInputs = () => {
     memorySizeInput = document.getElementById("memory-size");
   }
 
-  const memorySize = memorySizeInput
+  let memorySize = memorySizeInput
     ? parseInt(memorySizeInput.value, 10)
     : 1024;
+
+  if (memorySize > 1000000) memorySize = 1000000;
+
   return { memorySize };
 };
 
