@@ -96,7 +96,8 @@ function initAlgorithm(config) {
             stats: {
                 allocatedSize: 0,
                 successfulAllocations: 0,
-                intFragmentation: 0
+                internalFragmentation: 0,
+                externalFragmentation: 0
             }
         };
 
@@ -125,7 +126,8 @@ function initAlgorithm(config) {
             stats: {
                 allocatedSize: 0,
                 successfulAllocations: 0,
-                internalFragmentation: 0
+                internalFragmentation: 0,
+                externalFragmentation: 0
             }
         };
         
@@ -141,7 +143,8 @@ function initAlgorithm(config) {
             stats: {
                 allocatedSize: 0,
                 successfulAllocations: 0,
-                internalFragmentation: 0
+                internalFragmentation: 0,
+                externalFragmentation: 0
             }
         };
         
@@ -162,7 +165,8 @@ function initAlgorithm(config) {
             stats: {
                 allocatedSize: 0,
                 successfulAllocations: 0,
-                internalFragmentation: 0
+                internalFragmentation: 0,
+                externalFragmentation: 0
             }
         };
         
@@ -428,7 +432,7 @@ function updateSummaryTable() {
 
     tbody.innerHTML = '';
 
-    ALGO_CONFIG.filter(a => a.category === 'contiguous').forEach(function(config) {
+    ALGO_CONFIG.forEach(function(config) {
         const instance = algoInstances[config.id];
         if (!instance) return;
 
@@ -437,11 +441,25 @@ function updateSummaryTable() {
         const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
         const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
 
+        let extFrag = 0;
+        if (config.category === 'contiguous') {
+            if (typeof memorySimulator !== 'undefined' && typeof memorySimulator.externalFragmentation === 'function') {
+                extFrag = memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
+            }
+        } else if (instance.stats.externalFragmentation !== undefined) {
+            extFrag = instance.stats.externalFragmentation;
+        } else if (config.id === 'segmentation' && instance.memory && typeof instance.memory.getStatus === 'function') {
+            const status = instance.memory.getStatus();
+            extFrag = status.free.reduce((a, f) => a + f.size, 0);
+        }
+
+        const displayName = config.name + (config.type && config.type !== config.id ? ' - ' + config.type : '');
+
         row.innerHTML =
-            '<td>' + config.name + ' - ' + config.type + '</td>' +
+            '<td>' + displayName + '</td>' +
             '<td>' + util + '%</td>' +
-            '<td>' + instance.stats.internalFragmentation + ' KB</td>' +
-            '<td>0 KB</td>' +
+            '<td>' + (instance.stats.internalFragmentation || 0) + ' KB</td>' +
+            '<td>' + extFrag + ' KB</td>' +
             '<td>' + success + '%</td>';
         tbody.appendChild(row);
     });
