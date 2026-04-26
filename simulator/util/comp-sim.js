@@ -544,6 +544,7 @@ function renderSegmentationMemory(algoId) {
             const isCurrent = instance.lastAllocated.procIndex === (procNum - 1) && instance.lastAllocated.type === seg.type.toLowerCase();
             if (isCurrent) {
                 segDiv.classList.add('current');
+                scrollToHighlight(physContainer, segDiv);
             }
 
             memDiv.appendChild(segDiv);
@@ -1372,9 +1373,25 @@ document.querySelector('.comparison-grid').addEventListener('scroll', transparen
 function scrollToHighlight(container, element) {
     if (!container || !element) return;
     
+    // Find the actual scrollable container. Some algorithms wrap their content 
+    // in a non-scrollable div inside a scrollable visualization container.
+    let scrollable = container;
+    while (scrollable && scrollable !== document.body) {
+        const overflowY = window.getComputedStyle(scrollable).overflowY;
+        if (overflowY === 'auto' || overflowY === 'scroll') {
+            break;
+        }
+        scrollable = scrollable.parentElement;
+    }
+    
+    // Fallback if we somehow didn't find one
+    if (!scrollable || scrollable === document.body) {
+        scrollable = container;
+    }
+
     // Use setTimeout to ensure the element is in the DOM and layout is complete
     setTimeout(() => {
-        const containerRect = container.getBoundingClientRect();
+        const containerRect = scrollable.getBoundingClientRect();
         const elementRect = element.getBoundingClientRect();
         
         // Calculate the relative position of the element within the container's visible area
@@ -1382,15 +1399,15 @@ function scrollToHighlight(container, element) {
         
         // targetScroll = currentScroll + relativeTop - (containerHeight / 2) + (elementHeight / 2)
         // This centers the element within the scrollable container
-        const targetScroll = container.scrollTop + relativeTop - (container.clientHeight / 2) + (element.offsetHeight / 2);
+        const targetScroll = scrollable.scrollTop + relativeTop - (scrollable.clientHeight / 2) + (element.offsetHeight / 2);
         
-        if (container.scrollTo) {
-            container.scrollTo({
+        if (scrollable.scrollTo) {
+            scrollable.scrollTo({
                 top: targetScroll,
                 behavior: 'smooth'
             });
         } else {
-            container.scrollTop = targetScroll;
+            scrollable.scrollTop = targetScroll;
         }
     }, 100);
 }
