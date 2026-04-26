@@ -1,4 +1,4 @@
-﻿// ========== COMPARISON SIMULATION CONTROLLER ==========
+// ========== COMPARISON SIMULATION CONTROLLER ==========
 
 const processColorsto = [
     { bg: "#FFADAD", border: "#BF8282" },
@@ -91,6 +91,7 @@ function initAlgorithm(config) {
             memoryHead: head,
             processes: comparisonData.processes.slice(),
             currentIndex: 0,
+            lastBlock: null,
             results: {},
             stats: {
                 allocatedSize: 0,
@@ -98,6 +99,10 @@ function initAlgorithm(config) {
                 intFragmentation: 0
             }
         };
+
+        if (config.id.includes('next-fit') && typeof memorySimulator !== 'undefined') {
+            memorySimulator._nextLastBlock = null;
+        }
 
         // Render initial blocks
         renderBlocks(config.id);
@@ -221,7 +226,17 @@ function stepAlgorithm(algoId) {
             return false;
         }
 
+        // Sync Next Fit pointer for this instance
+        if (typeof memorySimulator !== 'undefined') {
+            memorySimulator._nextLastBlock = instance.lastBlock;
+        }
+
         const result = stepFn(instance.memoryHead, processSize);
+
+        // Save back Next Fit pointer
+        if (typeof memorySimulator !== 'undefined') {
+            instance.lastBlock = memorySimulator._nextLastBlock;
+        }
 
         if (result.newMemoryHead) {
             instance.memoryHead = result.newMemoryHead;

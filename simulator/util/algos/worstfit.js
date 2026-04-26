@@ -24,6 +24,8 @@ Object.assign(memorySimulator, {
         id: node.id,
         size: node.size,
         status: node.status,
+        processId: node.processId,
+        originalLabel: node.originalLabel || node.parentId || node.id,
         next: null,
       };
       if (!tail) newHead = copy;
@@ -151,6 +153,7 @@ Object.assign(memorySimulator, {
           id: newBlockId,
           size: node.size,
           status: "Occupied",
+          processId: node.processId,
           originalLabel: node.originalLabel || node.parentId || node.id,
           next: null,
         };
