@@ -181,8 +181,7 @@ function renderPagingFrames(algoId) {
     instance.frames.forEach(function(frame) {
         const frameEl = document.createElement('div');
         frameEl.className = 'frame';
-        frameEl.style.backgroundColor = frame.status === 'Free' ? '#e0e0e0' : getProcessColor(frame.processId - 1);
-        frameEl.innerHTML = '<span>Frame ' + frame.id + '</span><span>' + frame.size + ' KB</span>';
+        frameEl.innerHTML = '<div class="frame-content"><p>Frame ' + frame.id + '</p><p>' + frame.size + ' KB</p></div>';
         framesContainer.appendChild(frameEl);
     });
 }
@@ -752,6 +751,18 @@ function getComparisonStepDelay() {
     const normalized = (value - 1) / 2;
     return maxDelay - normalized * (maxDelay - minDelay);
 }
+
+const containers = document.querySelectorAll('.contiguous-container');
+
+containers.forEach(container => {
+  container.addEventListener('scroll', () => {
+    containers.forEach(target => {
+      if (target !== container) {
+        target.scrollLeft = container.scrollLeft;
+      }
+    });
+  });
+});
 
 // ========== PAGING UI HELPERS FOR COMPARISON ==========
 
