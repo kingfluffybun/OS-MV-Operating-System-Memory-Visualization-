@@ -961,47 +961,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Start Comparison
 function startComparison(event) {
-  event.preventDefault();
+    event.preventDefault();
 
-  // Validate inputs
     const totalMemory = parseInt(document.getElementById('total-memory').value, 10);
     const pageSize = parseInt(document.getElementById('page-size').value, 10);
     
     // Get processes
     const processElements = document.querySelectorAll('#process-container .process');
-    const processes = Array.from(processElements).map(el => {
+    const processes = Array.from(processElements).map(function(el) {
         const sizeEl = el.querySelector('.process-content p:nth-child(2)');
         return sizeEl ? parseInt(sizeEl.textContent, 10) : 0;
-    }).filter(s => s > 0);
+    }).filter(function(s) { return s > 0; });
     
-    if (processes.length === 0) {
-        alert('Please add at least one process.');
-        return;
-    }
-    
-    // Get partitions
-    const partitionElements = document.querySelectorAll('#partition-container .process');
-    const partitions = Array.from(partitionElements).map(el => {
+    // Get partitions - FIX: Use correct selector
+    const partitionContainer = document.getElementById('partition-container');
+    const partitionElements = partitionContainer ? partitionContainer.querySelectorAll('.process') : [];
+    const partitions = Array.from(partitionElements).map(function(el) {
         const sizeEl = el.querySelector('.process-content p:nth-child(2)');
         return sizeEl ? parseInt(sizeEl.textContent, 10) : 0;
-    }).filter(s => s > 0);
+    }).filter(function(s) { return s > 0; });
+    
+    console.log('Collected partitions:', partitions.length, partitions);
     
     // Validate partition sum equals total memory
-    const partitionSum = partitions.reduce((a, b) => a + b, 0);
-    if (partitionSum !== totalMemory) {
-        // Auto-fill or prompt
-        if (partitionSum < totalMemory) {
-            const remaining = totalMemory - partitionSum;
-            const result = autoFillFinalBlock();
-            if (!result.success) {
-                alert('Partition allocation incomplete. Please fix.');
-                return;
-            }
-        } else {
-            alert('Partition allocation exceeds total memory. Please fix.');
-            return;
-        }
+    const partitionSum = partitions.reduce(function(a, b) { return a + b; }, 0);
+    
+    // Auto-fill if needed
+    if (partitionSum < totalMemory && partitions.length > 0) {
+        const remaining = totalMemory - partitionSum;
+        partitions.push(remaining);
+        console.log('Auto-filled final block:', remaining);
     }
+    
+    if (partitions.length === 0) {
+        // Create default single partition
+        partitions.push(totalMemory);
+        console.log('Created default partition:', totalMemory);
+    }
+    
+    console.log('Final partitions:', partitions);
     
     // Store comparison data
     const comparisonData = {
@@ -1011,8 +1009,8 @@ function startComparison(event) {
         partitions: partitions,
         timestamp: Date.now()
     };
-    
     sessionStorage.setItem('comparisonData', JSON.stringify(comparisonData));
+    console.log('Stored comparisonData:', comparisonData);
     
     // Redirect to simulation page
     window.location.href = '../comparison/comp-sim.html';

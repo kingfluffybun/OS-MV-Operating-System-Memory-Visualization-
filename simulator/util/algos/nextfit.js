@@ -1,4 +1,9 @@
-const memorySimulator = {
+// Extend existing memorySimulator if it exists
+if (typeof memorySimulator === 'undefined') {
+  var memorySimulator = {};
+}
+
+Object.assign(memorySimulator, {
   _nextLastBlock: null,
 
   createLinkedMemory(blocks) {
@@ -89,7 +94,7 @@ const memorySimulator = {
     };
   },
 
-  _nextFitFixedStep(memoryHead, processSize) {
+  nextFitFixedStep(memoryHead, processSize) {
     // Start from last allocated block, or beginning if first call / after reset
     let start = this._nextLastBlock || memoryHead;
     let block = start;
@@ -210,7 +215,7 @@ const memorySimulator = {
     return { head: newHead, idMapping };
   },
 
-  _nextFitDynamicStep(memoryHead, processSize) {
+  nextFitDynamicStep(memoryHead, processSize) {
     const tryAllocateOn = (searchHead) => {
       let current = searchHead;
       while (current) {
@@ -294,20 +299,13 @@ const memorySimulator = {
     return ids;
   },
 
-  // Compatibility layer for existing script.js calls.
-  nextFitFixedStep(memoryHead, processSize) {
-    return this._nextFitFixedStep(memoryHead, processSize);
-  },
-
-  nextFitDynamicStep(memoryHead, processSize) {
-    return this._nextFitDynamicStep(memoryHead, processSize);
-  },
-
   allocateFixedStep(memoryHead, processSize) {
-    return this._nextFitFixedStep(memoryHead, processSize);
+    return this.nextFitFixedStep(memoryHead, processSize);
   },
 
   allocateDynamicStep(memoryHead, processSize) {
-    return this._nextFitDynamicStep(memoryHead, processSize);
+    return this.nextFitDynamicStep(memoryHead, processSize);
   },
-};
+});
+
+window.memorySimulator = memorySimulator;

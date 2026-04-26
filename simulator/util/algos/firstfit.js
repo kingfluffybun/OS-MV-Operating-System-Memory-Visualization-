@@ -1,6 +1,8 @@
-let autoInterval;
+if (typeof memorySimulator === 'undefined') {
+  var memorySimulator = {};
+}
 
-const memorySimulator = {
+Object.assign(memorySimulator, {
   createLinkedMemory(blocks) {
     let head = null;
     let tail = null;
@@ -257,15 +259,6 @@ const memorySimulator = {
     return ids;
   },
 
-  // Compatibility layer for existing script.js calls.
-  bestFitFixedStep(memoryHead, processSize) {
-    return this.firstFitFixedStep(memoryHead, processSize);
-  },
-
-  bestFitDynamicStep(memoryHead, processSize) {
-    return this.firstFitDynamicStep(memoryHead, processSize);
-  },
-
   allocateFixedStep(memoryHead, processSize) {
     return this.firstFitFixedStep(memoryHead, processSize);
   },
@@ -273,4 +266,6 @@ const memorySimulator = {
   allocateDynamicStep(memoryHead, processSize) {
     return this.firstFitDynamicStep(memoryHead, processSize);
   },
-};
+});
+
+window.memorySimulator = memorySimulator;
