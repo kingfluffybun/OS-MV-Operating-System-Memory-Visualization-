@@ -125,9 +125,11 @@ function initNonContiguousAlgorithm(config) {
         // Paging state
         memoryFrames: null,
         pageTable: {},
+        pageAllocationIndex: 0, // Track current page being allocated
         // Segmentation state
         segments: [],
-        segmentTable: {}
+        segmentTable: {},
+        segmentIndex: 0 // Track current segment being allocated (0-3: code, heap, data, stack)
     };
 
     const instance = algoInstances[config.id];
@@ -155,11 +157,24 @@ function initNonContiguousAlgorithm(config) {
 
     // Initialize physical memory for segmentation
     if (config.type === 'segmentation') {
-        instance.physicalMemory = {
-            totalSize: comparisonData.totalMemory,
-            usedSize: 0,
-            blocks: []
-        };
+        if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.createMemory === 'function') {
+            instance.physicalMemory = window.memorySimulator.createMemory(comparisonData.totalMemory);
+        } else if (typeof SegmentationMemory !== 'undefined') {
+            instance.physicalMemory = new SegmentationMemory(comparisonData.totalMemory);
+        } else {
+            instance.physicalMemory = {
+                totalSize: comparisonData.totalMemory,
+                usedSize: 0,
+                blocks: [],
+                getStatus: function() { return { allocated: this.blocks, free: [{ size: this.totalSize - this.usedSize }] }; },
+                allocateSegment: function(name, type, size) {
+                    const seg = { id: this.blocks.length + 1, name, type, size, base: this.usedSize, end: this.usedSize + size - 1 };
+                    this.blocks.push(seg);
+                    this.usedSize += size;
+                    return seg;
+                }
+            };
+        }
     }
 
     renderNonContiguousInitial(config.id);
@@ -330,22 +345,29 @@ function renderPagingFrames(algoId) {
 
     framesContainer.innerHTML = '';
 
-    Object.values(instance.memoryFrames.frames).forEach(function(frame) {
+    const framesArray = Array.isArray(instance.memoryFrames.frames) 
+        ? instance.memoryFrames.frames 
+        : Object.values(instance.memoryFrames.frames);
+
+    framesArray.forEach(function(frame) {
         const frameEl = document.createElement('div');
         frameEl.className = 'frame';
-        frameEl.id = `frame-${algoId}-${frame.id}`;
+        const fId = frame.id !== undefined ? frame.id : frame.frameId;
+        frameEl.id = `frame-${algoId}-${fId}`;
 
         if (frame.status === 'Occupied') {
-            const procNum = parseInt(frame.process.split('_')[1]) || 1;
+            const procId = frame.process || frame.processName || "process_1";
+            const procNum = parseInt(procId.split('_')[1]) || 1;
             const procIndex = procNum - 1;
             const colorPair = processColorsto[procIndex % processColorsto.length];
-            const pageIndex = frame.page - 1;
+            const pageIndex = (frame.page !== undefined) ? frame.page - 1 : frame.pageIndex;
+            const segmentType = frame.segmentType || "";
             
             frameEl.innerHTML = `
-                <p id="frame-number">F${frame.id}</p>
-                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text}; grid-template-columns: repeat(3, 1fr);">
+                <p id="frame-number">F${fId}</p>
+                <div class="frame-content" style="background-color: ${colorPair.bg}; border-bottom: 4px solid ${colorPair.border}; color: ${colorPair.text || '#333'}; grid-template-columns: repeat(3, 1fr);">
                     <p>P${procNum}</p>
-                    <p>Page ${pageIndex}</p>
+                    <p>${segmentType ? segmentType.charAt(0).toUpperCase() : 'Page'} ${pageIndex}</p>
                     <p>${frame.used} KB</p>
                 </div>
             `;
@@ -363,13 +385,24 @@ function renderPagingFrames(algoId) {
                         `;
                         content.style.backgroundColor = colorPair.bg;
                         content.style.borderBottomColor = colorPair.border;
-                        content.style.color = colorPair.text;
+                        content.style.color = colorPair.text || '#333';
+                    }
+                }
+            } else if (instance.config.type === 'segmentation-paging') {
+                const pageId = `page-seg-${algoId}-${procIndex}-${segmentType.toLowerCase()}-${pageIndex}`;
+                const pageEl = document.getElementById(pageId);
+                if (pageEl) {
+                    const content = pageEl.querySelector('.page-content');
+                    if (content) {
+                        content.style.backgroundColor = colorPair.bg;
+                        content.style.borderBottomColor = colorPair.border;
+                        content.style.color = colorPair.text || '#333';
                     }
                 }
             }
         } else {
             frameEl.innerHTML = `
-                <p id="frame-number">F${frame.id}</p>
+                <p id="frame-number">F${fId}</p>
                 <div class="frame-content">
                     <p>Free</p>
                     <p>${frame.size} KB</p>
@@ -410,21 +443,17 @@ function renderSegmentationMemory(algoId) {
     instance.segments.forEach(seg => {
         const colorIndex = (seg.processId - 1) % processColorsto.length;
         const colorPair = processColorsto[colorIndex];
-        const types = ['code', 'heap', 'data', 'stack'];
         
-        // In our simplified stepSegmentation, we allocate one big segment.
-        // We'll highlight all segment types for this process.
-        types.forEach(type => {
-            const segEl = document.getElementById(`seg-list-${algoId}-${seg.processId - 1}-${type}`);
-            if (segEl) {
-                const content = segEl.querySelector('.segments');
-                if (content) {
-                    content.style.backgroundColor = colorPair.bg;
-                    content.style.borderBottomColor = colorPair.border;
-                    content.style.color = '#333';
-                }
+        // Find segment element and highlight it
+        const segEl = document.getElementById(`seg-list-${algoId}-${seg.processId - 1}-${seg.type || 'code'}`);
+        if (segEl) {
+            const content = segEl.querySelector('.segments');
+            if (content) {
+                content.style.backgroundColor = colorPair.bg;
+                content.style.borderBottomColor = colorPair.border;
+                content.style.color = colorPair.text || '#333';
             }
-        });
+        }
     });
 }
 
@@ -598,31 +627,66 @@ function stepPaging(algoId, processSize, processId) {
     const pageSize = comparisonData.pageSize;
     const procIdStr = `process_${processId}`;
 
-    if (typeof window.memorySimulator === 'undefined' || typeof window.memorySimulator.pagingStep !== 'function') {
-        console.error('pagingStep function missing in memorySimulator');
+    if (typeof window.memorySimulator === 'undefined' || typeof window.memorySimulator.pagingStepSingle !== 'function') {
+        console.error('pagingStepSingle function missing in memorySimulator');
         instance.currentIndex++;
         return false;
     }
 
-    const result = window.memorySimulator.pagingStep(instance.memoryFrames, processSize, pageSize, procIdStr);
+    if (instance.pageAllocationIndex === undefined) {
+        instance.pageAllocationIndex = 0;
+    }
+
+    const pagesNeeded = Math.ceil(processSize / pageSize);
+
+    // Call pagingStepSingle for the current page
+    const result = window.memorySimulator.pagingStepSingle(
+        instance.memoryFrames, 
+        processSize, 
+        pageSize, 
+        procIdStr, 
+        instance.pageAllocationIndex
+    );
     
     if (result.result.status === 'Allocated') {
         instance.memoryFrames = result.frames;
-        instance.results[processId] = { 
-            status: 'Allocated', 
-            pages: result.result.pagesNeeded, 
-            fragmentation: result.result.internalFragmentation 
-        };
         
-        // Update statistics
-        instance.stats.allocatedSize += processSize;
-        instance.stats.successfulAllocations++;
-        instance.stats.internalFragmentation += result.result.internalFragmentation;
+        // Initialize results for this process if it's the first page
+        if (instance.pageAllocationIndex === 0) {
+            instance.results[processId] = { 
+                status: 'Allocated', 
+                pages: pagesNeeded, 
+                pagesAllocated: 0,
+                fragmentation: result.result.internalFragmentation 
+            };
+            
+            // Initial stats for the process
+            instance.stats.successfulAllocations++;
+            instance.stats.internalFragmentation += result.result.internalFragmentation;
+        }
+        
+        // Update allocated size per page (approximately) or once per process?
+        // Let's do it per page for real-time utility update
+        const pageUsed = Math.min(pageSize, processSize - (instance.pageAllocationIndex * pageSize));
+        instance.stats.allocatedSize += pageUsed;
+
+        instance.results[processId].pagesAllocated++;
+        instance.pageAllocationIndex++;
+
+        // If all pages are allocated, move to next process
+        if (instance.pageAllocationIndex >= pagesNeeded) {
+            instance.currentIndex++;
+            instance.pageAllocationIndex = 0;
+        }
     } else {
+        // Failed to allocate a page, mark process as failed and move on
+        // If we already allocated some pages, we should probably rollback? 
+        // But for visualization, maybe just stop.
         instance.results[processId] = { status: 'Failed', reason: 'Not enough frames' };
+        instance.currentIndex++;
+        instance.pageAllocationIndex = 0;
     }
 
-    instance.currentIndex++;
     renderPagingFrames(algoId);
     updateAlgorithmStats(algoId);
     return true;
@@ -630,33 +694,84 @@ function stepPaging(algoId, processSize, processId) {
 
 function stepSegmentation(algoId, processSize, processId) {
     const instance = algoInstances[algoId];
-    const totalMem = comparisonData.totalMemory;
-    const remainingSpace = totalMem - instance.stats.allocatedSize;
+    
+    if (instance.segmentIndex === undefined) {
+        instance.segmentIndex = 0;
+    }
 
-    if (processSize > remainingSpace) {
-        instance.results[processId] = { status: 'Failed', reason: 'Not enough memory' };
+    const breakdown = SegmentationMemory.breakdownSize(processSize);
+    const types = ['code', 'heap', 'data', 'stack'];
+    
+    // Find the next non-zero segment to allocate
+    let currentType = null;
+    while (instance.segmentIndex < types.length) {
+        const type = types[instance.segmentIndex];
+        if (breakdown[type] > 0) {
+            currentType = type;
+            break;
+        }
+        instance.segmentIndex++;
+    }
+
+    if (!currentType) {
+        // No more segments for this process
         instance.currentIndex++;
-        updateAlgorithmStats(algoId);
+        instance.segmentIndex = 0;
         return true;
     }
 
-    // Create segment
-    const segment = {
-        id: instance.segments.length + 1,
-        processId: processId,
-        size: processSize,
-        base: instance.stats.allocatedSize
-    };
+    const segSize = breakdown[currentType];
+    const procIdStr = `Process ${processId}`;
 
-    instance.segments.push(segment);
-    instance.segmentTable[processId] = segment;
-    instance.results[processId] = { status: 'Allocated', segmentId: segment.id, size: processSize };
-    
-    // Update statistics
-    instance.stats.allocatedSize += processSize;
-    instance.stats.successfulAllocations++;
+    if (typeof window.memorySimulator === 'undefined' || typeof window.memorySimulator.segmentationStepSingle !== 'function') {
+        // Fallback to simplified allocation
+        instance.stats.allocatedSize += processSize;
+        instance.stats.successfulAllocations++;
+        instance.currentIndex++;
+        return true;
+    }
 
-    instance.currentIndex++;
+    // Call segmentationStepSingle
+    const result = window.memorySimulator.segmentationStepSingle(instance.physicalMemory, procIdStr, currentType, segSize);
+
+    if (result.result.status === 'Allocated') {
+        const segment = {
+            id: result.result.segment.id,
+            processId: processId,
+            type: currentType,
+            size: segSize,
+            base: result.result.segment.base
+        };
+
+        instance.segments.push(segment);
+        instance.segmentTable[`${processId}-${currentType}`] = segment;
+        
+        if (instance.segmentIndex === 0) {
+            instance.results[processId] = { status: 'Allocated', size: processSize };
+            instance.stats.successfulAllocations++;
+        }
+        
+        instance.stats.allocatedSize += segSize;
+        instance.segmentIndex++;
+
+        // Check if finished with all segments
+        let hasMore = false;
+        for (let i = instance.segmentIndex; i < types.length; i++) {
+            if (breakdown[types[i]] > 0) {
+                hasMore = true;
+                break;
+            }
+        }
+
+        if (!hasMore) {
+            instance.currentIndex++;
+            instance.segmentIndex = 0;
+        }
+    } else {
+        instance.results[processId] = { status: 'Failed', reason: 'Not enough memory' };
+        instance.currentIndex++;
+        instance.segmentIndex = 0;
+    }
 
     renderSegmentationMemory(algoId);
     updateAlgorithmStats(algoId);
@@ -664,8 +779,82 @@ function stepSegmentation(algoId, processSize, processId) {
 }
 
 function stepSegmentationPaging(algoId, processSize, processId) {
-    // Simplified: treat as paging with larger "pages" (segments divided into pages)
-    return stepPaging(algoId, processSize, processId);
+    const instance = algoInstances[algoId];
+    const pageSize = comparisonData.pageSize;
+    const procIdStr = `process_${processId}`;
+
+    if (typeof window.PagingSegmentSimulator === 'undefined') {
+        return stepPaging(algoId, processSize, processId);
+    }
+
+    if (instance.pageAllocationIndex === undefined) {
+        instance.pageAllocationIndex = 0;
+    }
+
+    const breakdown = window.PagingSegmentSimulator.breakdownSize(processSize);
+    const types = ['code', 'heap', 'data', 'stack'];
+    
+    // Flatten segments into pages
+    const allPages = [];
+    types.forEach(type => {
+        const segSize = breakdown[type];
+        if (segSize > 0) {
+            const { pages } = window.PagingSegmentSimulator.segmentToPages(segSize, pageSize);
+            pages.forEach(p => {
+                allPages.push({ type, page: p });
+            });
+        }
+    });
+
+    if (instance.pageAllocationIndex >= allPages.length) {
+        instance.currentIndex++;
+        instance.pageAllocationIndex = 0;
+        return true;
+    }
+
+    const currentPageInfo = allPages[instance.pageAllocationIndex];
+    
+    // Call allocatePageStepSingle
+    const result = window.PagingSegmentSimulator.allocatePageStepSingle(
+        instance.memoryFrames.frames, 
+        procIdStr, 
+        currentPageInfo.type, 
+        currentPageInfo.page
+    );
+
+    if (result.success) {
+        if (instance.pageAllocationIndex === 0) {
+            instance.results[processId] = { status: 'Allocated', pages: allPages.length, pagesAllocated: 0 };
+            instance.stats.successfulAllocations++;
+            
+            // Calculate total internal fragmentation for the whole process once
+            let totalFrag = 0;
+            types.forEach(t => {
+                const sSize = breakdown[t];
+                if (sSize > 0) {
+                    totalFrag += (Math.ceil(sSize / pageSize) * pageSize) - sSize;
+                }
+            });
+            instance.stats.internalFragmentation += totalFrag;
+        }
+        
+        instance.stats.allocatedSize += currentPageInfo.page.size;
+        instance.results[processId].pagesAllocated++;
+        instance.pageAllocationIndex++;
+        
+        if (instance.pageAllocationIndex >= allPages.length) {
+            instance.currentIndex++;
+            instance.pageAllocationIndex = 0;
+        }
+    } else {
+        instance.results[processId] = { status: 'Failed', reason: 'Not enough frames' };
+        instance.currentIndex++;
+        instance.pageAllocationIndex = 0;
+    }
+
+    renderPagingFrames(algoId);
+    updateAlgorithmStats(algoId);
+    return true;
 }
 
 function updateAlgorithmStats(algoId) {
