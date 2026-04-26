@@ -3,11 +3,11 @@
 
 const PagingSegmentSimulator = {
   processColors: [
-    { bg: "#FFADAD", border: "#BF8282" }, // Powder Blush
-    { bg: "#FFD6A5", border: "#BFA07C" }, // Apricot Cream
-    { bg: "#FDFFB6", border: "#BEBF88" }, // Cream
-    { bg: "#CAFFBF", border: "#98BF8F" }, // Tea Green
-    { bg: "#9BF6FF", border: "#7DC6CE" }, // Electric Aqua
+    { bg: "#FFADAD", border: "#BF8282", text: "#791F1F" }, // Powder Blush
+    { bg: "#FFD6A5", border: "#BFA07C", text: "#633806" }, // Apricot Cream
+    { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" }, // Cream
+    { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" }, // Tea Green
+    { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" }, // Electric Aqua
     { bg: "#A0C4FF", border: "#7893BF" }, // Baby Blue Ice
     { bg: "#BDB2FF", border: "#8E85BF" }, // Periwinkle
     { bg: "#FFC6FF", border: "#BF94BF" }, // Mavue
@@ -462,7 +462,7 @@ const PagingSegmentSimulator = {
           pagesHtml += `
             <div class="page" id="seg-page-${process.processName.replace(/\s+/g, "-")}-${segment.segmentType}-${page.pageIndex}">
               <p id="page-number">P${page.pageIndex}</p>
-              <div class="page-content${currentClass}" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}">
+              <div class="page-content${currentClass}" style="background-color: ${colorPair.bg}; border-bottom-color: ${colorPair.border}; color: ${colorPair.text}">
                 <p>${process.processName} - ${segment.segmentType}</p>
                 <p>${page.size} KB</p>
               </div>
@@ -471,7 +471,7 @@ const PagingSegmentSimulator = {
         });
 
         segmentsPaging.innerHTML = `
-          <div class="segment-paging-header" style="background-color: ${colorPair.bg}">
+          <div class="segment-paging-header" style="background-color: ${colorPair.bg}; color: ${colorPair.text}">
             <div>
               <p><b>${process.processName}</b></p>
               <p class="segment-type">${segment.segmentType}</p>
@@ -544,7 +544,7 @@ const PagingSegmentSimulator = {
         }
 
         frameContent = `
-          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
+          <div class="frame-content${currentClass}" style="background-color: ${bg}; border-bottom-color: ${border}; color: ${colorPair?.text || '#27500A'}; display:grid; grid-template-columns: 1fr 1fr 1fr;">
             <p>${frame.processName || "Unknown"} - ${frame.segmentType || "Page"}</p>
             <p>Page ${frame.pageIndex !== null ? frame.pageIndex : "?"}</p>
             <p>${frame.used} KB</p>
