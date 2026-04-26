@@ -265,6 +265,7 @@ const renderMemoryNode = (node, options = {}) => {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'block-wrapper';
+    if (widthPx) wrapper.style.width = widthPx + 'px';
     wrapper.style.display = 'flex';
     wrapper.style.flex = '0 0 auto';
 
