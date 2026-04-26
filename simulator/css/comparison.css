@@ -99,7 +99,6 @@
     padding: 12px;
     border-radius: 12px;
     border: #e0e0e0 solid 1px;
-    max-height: 320px;
 }
 
 .contiguous-process-queue {
@@ -112,6 +111,7 @@
     scroll-padding-bottom: 8px;
     scroll-padding-top: 8px;
     scroll-behavior: smooth;
+    max-height: 300px;
 }
 
 .contiguous-container {
@@ -405,19 +405,27 @@
 }
 
 .non-contiguous-container .segmentation-viz,
-.non-contiguous-container .physical-viz {
+.non-contiguous-container .physical-viz,
+.non-contiguous-container .segmentation-paging-viz {
     display: flex;
     flex-direction: column;
     gap: 8px;
     height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
+    min-height: 0;
+    overflow: hidden;
 }
 
-.non-contiguous-container .segmentation-viz {padding: 12px;}
+.segmentation-container {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 10px;
+    flex-grow: 1;
+    min-height: 0;
+}
 
 .non-contiguous-container .segmentation-viz h3,
-.non-contiguous-container .physical-viz h3 {
+.non-contiguous-container .physical-viz h3, .non-contiguous-container .segmentation-paging-viz h3 {
     font-size: 14px;
     text-align: left;
     color: #000;
@@ -425,11 +433,14 @@
 }
 
 .non-contiguous-container .segmentation-container,
-.non-contiguous-container .physical-memory-container {
+.non-contiguous-container .physical-memory-container,
+.non-contiguous-container .segmentation-paging-container {
     flex-grow: 1;
+    min-height: 0;
     background-color: transparent;
     border-radius: 0;
     border: none;
+    overflow-y: auto;
 }
 
 .non-contiguous-container .physical-memory-container {
