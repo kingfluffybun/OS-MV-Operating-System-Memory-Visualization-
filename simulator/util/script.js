@@ -27,19 +27,19 @@
   });
 })();
 
-const processContainer = document.querySelector(".process-container");
-const allProcessContainers = Array.from(
+var processContainer = document.querySelector(".process-container");
+var allProcessContainers = Array.from(
   document.querySelectorAll(".process-container"),
 );
 const getProcessContainer = (element) =>
   element ? element.closest(".process-container") : null;
 const isComparisonPage = window.location.pathname.includes("/simulator/comparison/");
 
-const simulationContainer =
+var simulationContainer =
   document.querySelector(".simulation .simulation-scroll-track") ||
   document.querySelector(".simulation .container") ||
   document.querySelector(".simulation-paging .container");
-const totalMemoryValue = document.getElementById("total-memory-value");
+var totalMemoryValue = document.getElementById("total-memory-value");
 
 let preSimBlockState = null;
 
