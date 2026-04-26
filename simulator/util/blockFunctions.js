@@ -265,8 +265,6 @@ const renderMemoryNode = (node, options = {}) => {
 
     const wrapper = document.createElement('div');
     wrapper.className = 'block-wrapper';
-    if (widthPercent) wrapper.style.width = widthPercent + '%';
-    if (widthPx) wrapper.style.width = widthPx + 'px';
     wrapper.style.display = 'flex';
     wrapper.style.flex = '0 0 auto';
 
@@ -277,7 +275,7 @@ const renderMemoryNode = (node, options = {}) => {
     pBlock.style.backgroundColor = bgColor;
     pBlock.style.borderBottom = `8px solid ${borderColor}`;
     pBlock.style.borderRadius = "12px 0px 0px 12px";
-    pBlock.style.marginRight = "-5px";
+    // pBlock.style.marginRight = "-5px";
     pBlock.innerHTML = `
       <p>Block ${logicalId}</p>
       <div class="block-content">
