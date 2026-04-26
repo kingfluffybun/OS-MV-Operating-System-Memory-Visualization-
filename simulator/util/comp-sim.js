@@ -119,7 +119,17 @@ function renderBlocks(algoId) {
     container.innerHTML = '';
 
     let node = instance.memoryHead;
+    let prevLogicalId = null;
+
     while (node) {
+        const logicalId = String(node.originalLabel || node.parentId || node.id);
+        const nextLogicalId = node.next
+            ? String(node.next.originalLabel || node.next.parentId || node.next.id)
+            : null;
+
+        const isFirstInGroup = logicalId !== prevLogicalId;
+        const isLastInGroup = logicalId !== nextLogicalId;
+
         const block = document.createElement('div');
         block.className = 'block';
         block.id = 'block-' + node.id;
@@ -127,6 +137,21 @@ function renderBlocks(algoId) {
 
         const widthPercent = comparisonData.totalMemory > 0 ? (node.size / comparisonData.totalMemory * 100) : 0;
         block.style.width = widthPercent + '%';
+
+        // Apply "together blocks" visual grouping
+        if (!isFirstInGroup || !isLastInGroup) {
+            if (isFirstInGroup && !isLastInGroup) {
+                block.style.borderRadius = "12px 0px 0px 12px";
+            } else if (!isFirstInGroup && !isLastInGroup) {
+                block.style.borderRadius = "0px 0px 0px 0px";
+                block.style.marginLeft = "-10px";
+                block.style.zIndex = "1";
+            } else if (!isFirstInGroup && isLastInGroup) {
+                block.style.borderRadius = "0px 12px 12px 0px";
+                block.style.marginLeft = "-10px";
+                block.style.zIndex = "1";
+            }
+        }
 
         let bgColor, borderColor;
         if (node.status === 'Free') {
@@ -141,8 +166,9 @@ function renderBlocks(algoId) {
         block.style.backgroundColor = bgColor;
         block.style.borderBottomColor = borderColor;
 
-        const statusText = node.status === 'Free' ? 'Free' : (node.processId ? 'Process ' + node.processId : 'Allocated');
-        const titleText = node.status === 'Free' ? '' : 'Block ' + node.id;
+        // Only show "Block X" label for the first block in a group
+        const statusText = node.status === 'Free' ? (node.isSplit ? 'Hole' : 'Free') : (node.processId ? 'Process ' + node.processId : 'Allocated');
+        const titleText = isFirstInGroup ? 'Block ' + logicalId : '';
 
         block.innerHTML = `
             <p>${titleText}</p>
@@ -158,6 +184,8 @@ function renderBlocks(algoId) {
             <div></div>
         `;
         container.appendChild(block);
+        
+        prevLogicalId = logicalId;
         node = node.next;
     }
 }
