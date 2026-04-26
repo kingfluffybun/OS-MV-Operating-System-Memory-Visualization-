@@ -29,9 +29,14 @@ let comparisonData = null;
 let algoInstances = {};
 let isitPlaying = false;
 let playtheInterval = null;
+let currentSort = {
+    column: null, // 'utilization', 'intFrag', 'extFrag', 'success'
+    direction: 0 // 0: default, 1: desc, 2: asc
+};
 
 function initComparisonPage() {
     comparisonSimLoad();
+    setupTableSorting();
 }
 
 function comparisonSimLoad() {
@@ -964,56 +969,134 @@ function updateSummaryTable() {
     const tbody = document.getElementById('summary-body');
     if (!tbody) return;
 
-    tbody.innerHTML = '';
-
-    ALGO_CONFIG.forEach(function(config) {
+    // Collect data for all algorithms
+    const tableData = ALGO_CONFIG.map(function(config) {
         const instance = algoInstances[config.id];
-        if (!instance) return;
+        if (!instance) return null;
 
-        const row = document.createElement('tr');
         const totalMem = comparisonData.totalMemory;
-        const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
-        const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
-
-        const displayName = config.name + (config.type && config.type !== config.id ? ' - ' + config.type : '');
+        const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100) : 0;
+        const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
         const type = config.type;
 
-        // Rules for fragmentation:
-        // 1. Fixed: Internal (YES), External (NO)
-        // 2. Dynamic: External (YES), Internal (NO)
-        // 3. Paging: Internal (YES), External (NO)
-        // 4. Segmentation: External (YES), Internal (NO)
-        // 5. Segmentation with Paging: Internal (YES), External (NO)
+        let intFrag = 0;
+        let extFrag = 0;
 
-        let intFragDisplay = "0 KB";
-        let extFragDisplay = "0 KB";
-
-        // Internal Frag Calculation/Display
         if (type === 'fixed' || type === 'paging' || type === 'segmentation-paging') {
-            intFragDisplay = (instance.stats.internalFragmentation || 0) + ' KB';
+            intFrag = (instance.stats.internalFragmentation || 0);
         }
 
-        // External Frag Calculation/Display
         if (type === 'dynamic' || type === 'segmentation') {
-            let extFragValue = 0;
             if (type === 'dynamic') {
                 if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.externalFragmentation === 'function') {
-                    extFragValue = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
+                    extFrag = window.memorySimulator.externalFragmentation(instance.memoryHead, instance.results);
                 }
             } else if (type === 'segmentation' && instance.memory && typeof instance.memory.getStatus === 'function') {
                 const status = instance.memory.getStatus();
-                extFragValue = status.free.reduce((a, f) => a + f.size, 0);
+                extFrag = status.free.reduce((a, f) => a + f.size, 0);
             }
-            extFragDisplay = extFragValue + ' KB';
         }
 
-        row.innerHTML =
-            '<td>' + displayName + '</td>' +
-            '<td>' + util + '%</td>' +
-            '<td>' + intFragDisplay + '</td>' +
-            '<td>' + extFragDisplay + '</td>' +
-            '<td>' + success + '%</td>';
-        tbody.appendChild(row);
+        return {
+            config: config,
+            displayName: config.name + (config.type && config.type !== config.id ? ' - ' + config.type : ''),
+            utilization: util,
+            intFrag: intFrag,
+            extFrag: extFrag,
+            success: success,
+            originalIndex: ALGO_CONFIG.indexOf(config)
+        };
+    }).filter(d => d !== null);
+
+    // Apply sorting
+    if (currentSort.column && currentSort.direction !== 0) {
+        tableData.sort((a, b) => {
+            let valA = a[currentSort.column];
+            let valB = b[currentSort.column];
+            
+            if (currentSort.direction === 1) { // Descending
+                return valB - valA;
+            } else { // Ascending
+                return valA - valB;
+            }
+        });
+    } else if (currentSort.direction === 0) {
+        // Default sorting by original order
+        tableData.sort((a, b) => a.originalIndex - b.originalIndex);
+    }
+
+    tbody.innerHTML = '';
+
+    tableData.forEach(function(row) {
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td>' + row.displayName + '</td>' +
+            '<td>' + row.utilization.toFixed(1) + '%</td>' +
+            '<td>' + row.intFrag + ' KB</td>' +
+            '<td>' + row.extFrag + ' KB</td>' +
+            '<td>' + row.success.toFixed(1) + '%</td>';
+        tbody.appendChild(tr);
+    });
+
+    updateSortIndicators();
+}
+
+function setupTableSorting() {
+    const table = document.getElementById('summary-table-body');
+    if (!table) return;
+
+    const headers = table.querySelectorAll('thead th');
+    const columnMap = {
+        1: 'utilization',
+        2: 'intFrag',
+        3: 'extFrag',
+        4: 'success'
+    };
+
+    headers.forEach((header, index) => {
+        if (index === 0) return; // Skip Algorithm name for now or add if wanted
+
+        const columnName = columnMap[index];
+        if (!columnName) return;
+
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', () => {
+            if (currentSort.column === columnName) {
+                currentSort.direction = (currentSort.direction + 1) % 3;
+            } else {
+                currentSort.column = columnName;
+                currentSort.direction = 1; // Start with Descending
+            }
+            updateSummaryTable();
+        });
+    });
+}
+
+function updateSortIndicators() {
+    const table = document.getElementById('summary-table-body');
+    if (!table) return;
+
+    const headers = table.querySelectorAll('thead th');
+    const columnMap = {
+        1: 'utilization',
+        2: 'intFrag',
+        3: 'extFrag',
+        4: 'success'
+    };
+
+    headers.forEach((header, index) => {
+        const columnName = columnMap[index];
+        // Remove existing indicators
+        const existingIndicator = header.querySelector('.sort-indicator');
+        if (existingIndicator) existingIndicator.remove();
+
+        if (columnName && currentSort.column === columnName && currentSort.direction !== 0) {
+            const span = document.createElement('span');
+            span.className = 'sort-indicator';
+            span.style.marginLeft = '5px';
+            span.textContent = currentSort.direction === 1 ? '↓' : '↑';
+            header.appendChild(span);
+        }
     });
 }
 
@@ -1055,12 +1138,31 @@ function setupComparisonControls() {
             stepAllSimulations();
         });
     }
+
+    const slider = document.getElementById('slider');
+    if (slider) {
+        slider.addEventListener('input', function() {
+            // Update the display text if there was one (e.g., "1.5x")
+            const speedText = slider.parentElement.querySelector('p:nth-child(2)');
+            if (speedText) {
+                speedText.textContent = slider.value + 'x';
+            }
+
+            // If playing, restart the timer with new delay immediately
+            if (isitPlaying) {
+                if (playtheInterval) clearTimeout(playtheInterval);
+                startAllSimulations();
+            }
+        });
+    }
 }
 
 function startAllSimulations() {
-    const delay = getComparisonStepDelay();
+    if (playtheInterval) clearTimeout(playtheInterval);
 
-    playtheInterval = setInterval(function() {
+    function runStep() {
+        if (!isitPlaying) return;
+
         const allDone = stepAllSimulations();
         if (allDone) {
             stopAllSimulations();
@@ -1068,13 +1170,19 @@ function startAllSimulations() {
             const playBtn = document.getElementById('play-btn');
             if (stopBtn) stopBtn.style.display = 'none';
             if (playBtn) playBtn.style.display = 'flex';
+        } else {
+            const delay = getComparisonStepDelay();
+            playtheInterval = setTimeout(runStep, delay);
         }
-    }, delay);
+    }
+
+    const delay = getComparisonStepDelay();
+    playtheInterval = setTimeout(runStep, delay);
 }
 
 function stopAllSimulations() {
     if (playtheInterval) {
-        clearInterval(playtheInterval);
+        clearTimeout(playtheInterval);
         playtheInterval = null;
     }
     isitPlaying = false;
