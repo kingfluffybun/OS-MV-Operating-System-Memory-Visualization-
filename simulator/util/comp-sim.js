@@ -259,7 +259,7 @@ function renderPagingPages(algoId) {
                 <p id="page-number">P${j}</p>
                 <div class="page-content${currentClass}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                     <p>${processIdStr}</p>
-                    <p>&nbsp;(Waiting for allocation)</p>
+                    <p>&nbsp;(Waiting)</p>
                 </div>
             `;
             pagesContainer.appendChild(pageEl);
@@ -344,7 +344,7 @@ function renderSegmentationPagingSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation-paging-group';
-        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 4px 0; font-weight:500;">Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 4px 0; font-weight:600;">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -363,8 +363,9 @@ function renderSegmentationPagingSegments(algoId) {
                     if (pageIsCurrent) segmentHasHighlight = true;
                     return `
                         <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
-                            <div class="page-content${pageIsCurrent ? ' current' : ''}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
-                                <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
+                            <div class="page-content${pageIsCurrent ? ' current' : ''}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text}; display:grid; grid-template-columns: 1fr 1fr">
+                                <p>Page ${p.pageIndex}</p>
+                                <p>${p.size} KB</p>
                             </div>
                         </div>
                     `;

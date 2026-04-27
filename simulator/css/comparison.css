@@ -375,7 +375,7 @@
 .non-contiguous-container .page-content {
     flex-grow: 1;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     padding: 6px 16px;
     border-radius: 8px;
     font-size: 11px;
@@ -387,6 +387,7 @@
 }
 
 .non-contiguous-container .frame-content {
+    text-wrap-mode: nowrap;
     flex-grow: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -454,11 +455,8 @@
 }
 
 .non-contiguous-container .physical-memory-container {
-    background-color: white;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    border: 1px solid #eee;
-    padding: 8px;
+    padding: 8px !important;
 }
 
 .non-contiguous-container .segmentation h4 {

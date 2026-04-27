@@ -398,6 +398,7 @@ button:disabled svg {
             padding: 12px 24px;
             margin-right: 12px;
             overflow-y: auto;
+            overflow-x: hidden;
         }
     }
 }
