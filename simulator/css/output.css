@@ -394,6 +394,7 @@ form {
                     padding: 2px 8px; 
                     background-color: var(--primary-color); 
                     color: white; border-radius: 8px;
+                    font-size: 12px;
                 }
             }
         }
@@ -410,7 +411,7 @@ form {
                 background-color: transparent;
                 > .process-container {
                     display: grid;
-                    grid-template-columns: repeat(3, 1fr);
+                    grid-template-columns: repeat(2, 1fr);
                     grid-template-rows: auto;
                     align-content: start;
                     gap: 8px;
