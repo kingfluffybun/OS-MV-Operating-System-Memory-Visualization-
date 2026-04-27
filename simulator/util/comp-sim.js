@@ -60,6 +60,12 @@ function comparisonSimLoad() {
     // Setup controls
     setupComparisonControls();
     updateSummaryTable();
+
+    // Toggle sidebar on first load
+    const sidebar = window.sidebar || document.getElementById("sidebar");
+    if (sidebar && !sidebar.classList.contains("close")) {
+        toggleSideBar();
+    }
 }
 
 function initAlgorithm(config) {

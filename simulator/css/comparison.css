@@ -389,7 +389,7 @@
 .non-contiguous-container .frame-content {
     flex-grow: 1;
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     padding: 6px 16px;
     border-radius: 8px;
     font-size: 11px;
@@ -471,7 +471,7 @@
 .non-contiguous-container .segments-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .segmentation {
