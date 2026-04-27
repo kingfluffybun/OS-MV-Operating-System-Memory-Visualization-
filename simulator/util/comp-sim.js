@@ -49,6 +49,12 @@ function comparisonSimLoad() {
 
     comparisonData = JSON.parse(stored);
 
+    if (!comparisonData.processes || comparisonData.processes.length === 0) {
+        alert('No processes found. Please add at least one process.');
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Initialize all algorithms
     ALGO_CONFIG.forEach(function(config) {
         initAlgorithm(config);
