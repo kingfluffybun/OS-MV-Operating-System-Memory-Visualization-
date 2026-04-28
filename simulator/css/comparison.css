@@ -49,6 +49,10 @@
     }
 }
 
+#summary-body tr:first-child {
+    border-left: var(--primary-color) 4px solid;
+}
+
 .contiguous-allocation {
     display: grid;
     grid-template-columns: 1fr 1fr;
