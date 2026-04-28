@@ -142,7 +142,9 @@ function initNonContiguousAlgorithm(config) {
             allocatedSize: 0,
             successfulAllocations: 0,
             internalFragmentation: 0,
-            externalFragmentation: 0
+            externalFragmentation: 0,
+            totalPagesNeeded: 0,
+            totalPagesAllocated: 0
         },
         // Paging state
         memoryFrames: null,
@@ -170,20 +172,25 @@ function initNonContiguousAlgorithm(config) {
         if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.createFrames === 'function') {
             instance.memoryFrames = window.memorySimulator.createFrames(frameCount, comparisonData.pageSize);
         } else {
-            // Fallback if memorySimulator is not available
             const frames = {};
             for (let i = 1; i <= frameCount; i++) {
-                frames[i] = {
-                    id: i,
-                    size: comparisonData.pageSize,
-                    status: 'Free',
-                    process: null,
-                    page: null,
-                    used: 0
-                };
+                frames[i] = { id: i, size: comparisonData.pageSize, status: 'Free', process: null, page: null, used: 0 };
             }
             instance.memoryFrames = { frames, count: frameCount, frameSize: comparisonData.pageSize };
         }
+        const pageSize = comparisonData.pageSize;
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            return sum + Math.ceil(size / pageSize);
+        }, 0);
+    } else if (config.type === 'segmentation-paging') {
+        if (typeof PagingSegmentSimulator !== 'undefined') {
+            instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, comparisonData.pageSize);
+        }
+        const pageSize = comparisonData.pageSize;
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            const breakdown = PagingSegmentSimulator.breakdownSize(size);
+            return sum + Object.values(breakdown).reduce((s, segSize) => s + Math.ceil(segSize / pageSize), 0);
+        }, 0);
     }
 
     // Initialize memory for segmentation
@@ -206,13 +213,12 @@ function initNonContiguousAlgorithm(config) {
                 }
             };
         }
-    }
-
-    // Initialize for segmentation with paging
-    if (config.type === 'segmentation-paging') {
-        if (typeof PagingSegmentSimulator !== 'undefined') {
-            instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, comparisonData.pageSize);
-        }
+        // Pre-calculate total segments needed across all processes
+        const types = ['code', 'heap', 'data', 'stack'];
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            const breakdown = SegmentationMemory.breakdownSize(size);
+            return sum + types.filter(t => breakdown[t] > 0).length;
+        }, 0);
     }
 
     renderNonContiguousInitial(config.id);
@@ -894,16 +900,18 @@ function stepPaging(algoId, processSize, processId) {
                 pagesAllocated: 0,
                 fragmentation: result.result.internalFragmentation 
             };
-            
-            // Initial stats for the process
-            instance.stats.successfulAllocations++;
-            instance.stats.internalFragmentation += result.result.internalFragmentation;
         }
         
-        // Update allocated size per page (approximately) or once per process?
-        // Let's do it per page for real-time utility update
+        // Per-page tracking (mirrors single mode)
         const pageUsed = Math.min(pageSize, processSize - (instance.pageAllocationIndex * pageSize));
         instance.stats.allocatedSize += pageUsed;
+        instance.stats.totalPagesAllocated++;
+
+        // Recompute internal fragmentation dynamically from frames (mirrors single mode)
+        const framesArray = Object.values(instance.memoryFrames.frames);
+        const totalUsed = framesArray.reduce((sum, f) => sum + (f.status === 'Occupied' ? (f.used || 0) : 0), 0);
+        const occupiedCount = framesArray.filter(f => f.status === 'Occupied').length;
+        instance.stats.internalFragmentation = (occupiedCount * pageSize) - totalUsed;
 
         instance.results[processId].pagesAllocated++;
         
@@ -994,10 +1002,10 @@ function stepSegmentation(algoId, processSize, processId) {
         
         if (instance.segmentIndex === 0) {
             instance.results[processId] = { status: 'Allocated', size: processSize };
-            instance.stats.successfulAllocations++;
         }
         
         instance.stats.allocatedSize += segSize;
+        instance.stats.totalPagesAllocated++; // counts segments allocated, mirrors page tracking
 
         // Update last allocated for highlight
         instance.lastAllocated = {
@@ -1082,20 +1090,17 @@ function stepSegmentationPaging(algoId, processSize, processId) {
     if (result.success) {
         if (instance.pageAllocationIndex === 0) {
             instance.results[processId] = { status: 'Allocated', pages: allPages.length, pagesAllocated: 0 };
-            instance.stats.successfulAllocations++;
-            
-            // Calculate total internal fragmentation for the whole process once
-            let totalFrag = 0;
-            types.forEach(t => {
-                const sSize = breakdown[t];
-                if (sSize > 0) {
-                    totalFrag += (Math.ceil(sSize / pageSize) * pageSize) - sSize;
-                }
-            });
-            instance.stats.internalFragmentation += totalFrag;
         }
         
         instance.stats.allocatedSize += currentPageInfo.page.size;
+        instance.stats.totalPagesAllocated++;
+
+        // Recompute internal fragmentation dynamically from frames (mirrors single mode)
+        const framesArray = Array.isArray(instance.memory.frames) ? instance.memory.frames : Object.values(instance.memory.frames);
+        const totalUsed = framesArray.reduce((sum, f) => sum + (f.status === 'Occupied' ? (f.used || 0) : 0), 0);
+        const occupiedCount = framesArray.filter(f => f.status === 'Occupied').length;
+        instance.stats.internalFragmentation = (occupiedCount * pageSize) - totalUsed;
+
         instance.results[processId].pagesAllocated++;
 
         // Update last allocated for highlight
@@ -1138,8 +1143,14 @@ function updateAlgorithmStats(algoId) {
 
     const totalMem = comparisonData.totalMemory;
     const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
-    const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
-
+    let success;
+    const type = instance.config.type;
+    if ((type === 'paging' || type === 'segmentation-paging' || type === 'segmentation') && instance.stats.totalPagesNeeded > 0) {
+        success = (instance.stats.totalPagesAllocated / instance.stats.totalPagesNeeded * 100);
+    } else {
+        success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
+    }
+    
     if (utilEl) utilEl.textContent = util + '%';
     
     // Conditional Fragmentation logic for Algorithm Cards
@@ -1169,7 +1180,7 @@ function updateAlgorithmStats(algoId) {
         }
     }
 
-    if (successEl) successEl.textContent = success + '%';
+    if (successEl) successEl.textContent = parseFloat(success).toFixed(1) + '%';
 }
 
 function updateSummaryTable() {
@@ -1183,8 +1194,13 @@ function updateSummaryTable() {
 
         const totalMem = comparisonData.totalMemory;
         const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100) : 0;
-        const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
         const type = config.type;
+        let success;
+        if ((type === 'paging' || type === 'segmentation-paging' || type === 'segmentation') && instance.stats.totalPagesNeeded > 0) {
+        success = (instance.stats.totalPagesAllocated / instance.stats.totalPagesNeeded * 100);
+        } else {
+            success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
+        }
 
         let intFrag = 0;
         let extFrag = 0;
