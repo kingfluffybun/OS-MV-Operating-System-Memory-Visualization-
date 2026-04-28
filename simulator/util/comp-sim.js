@@ -249,7 +249,7 @@ function renderPagingPages(algoId) {
     const pageSize = comparisonData.pageSize;
 
     instance.processes.forEach((size, i) => {
-        const processIdStr = `P${i + 1}`;
+        const processIdStr = `Process ${i + 1}`;
         const pagesNeeded = Math.ceil(size / pageSize);
         const colors = processColorsto[i % processColorsto.length];
 
@@ -265,7 +265,7 @@ function renderPagingPages(algoId) {
                 <p id="page-number">P${j}</p>
                 <div class="page-content${currentClass}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                     <p>${processIdStr}</p>
-                    <p>&nbsp;(Waiting)</p>
+                    <p>${pageSize} KB</p>
                 </div>
             `;
             pagesContainer.appendChild(pageEl);
@@ -640,6 +640,7 @@ function renderBlocks(algoId) {
             widthPx: 80 + (node.size * 0.5), // Same calculation as single mode: minWidth + (blockSize * pxPerKb)
             bgColor: colorPair.bg,
             borderColor: colorPair.border,
+            textColor: colorPair.text,
             isFixed: instance.config.type === 'fixed'
         }); 
 

@@ -492,7 +492,7 @@ const initPartitionListeners = () => {
             return;
         }
         // random value para sa blocks
-        const min = 5;
+        const min = 6;
         const max = 8;
         let size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
         if (size > remaining) {
@@ -832,7 +832,7 @@ const initProcessListeners = () => {
   if (randomizeBtn && processSizeInput) {
     randomizeBtn.addEventListener('click', () => {
         // random value para sa processes
-        const min = 5;
+        const min = 6;
         const max = 8;
         const size = Math.pow(2, Math.floor(Math.random() * (max - min + 1)) + min);
         const result = addProcessSetting(size);
@@ -873,14 +873,14 @@ const renumberProcessesInSettings = () => {
   if (!processContainer) return;
 
   const processColors = [
-    { bg: '#FFADAD', border: '#BF8282' },
-    { bg: '#FFD6A5', border: '#BFA07C' },
-    { bg: '#FDFFB6', border: '#BEBF88' },
-    { bg: '#CAFFBF', border: '#98BF8F' },
-    { bg: '#9BF6FF', border: '#7DC6CE' },
-    { bg: '#A0C4FF', border: '#7893BF' },
-    { bg: '#BDB2FF', border: '#8E85BF' },
-    { bg: '#FFC6FF', border: '#BF94BF' },
+    { bg: "#FFADAD", border: "#BF8282", text: "#791F1F" },
+    { bg: "#FFD6A5", border: "#BFA07C", text: "#633806" },
+    { bg: "#FDFFB6", border: "#BEBF88", text: "#444441" },
+    { bg: "#CAFFBF", border: "#98BF8F", text: "#27500A" },
+    { bg: "#9BF6FF", border: "#7DC6CE", text: "#085041" },
+    { bg: "#A0C4FF", border: "#7893BF", text: "#042C53" },
+    { bg: "#BDB2FF", border: "#8E85BF", text: "#26215C" },
+    { bg: "#FFC6FF", border: "#BF94BF", text: "#4B1528" },
   ];
 
   const processes = processContainer.querySelectorAll('.process');
@@ -899,6 +899,9 @@ const renumberProcessesInSettings = () => {
     process.style.backgroundColor = colorPair.bg;
     process.style.borderBottomColor = colorPair.border;
     process.style.color = colorPair.text;
+    process.querySelectorAll('.process-content p').forEach((p) => {
+      p.style.color = colorPair.text;
+    });
   });
 
   updateProcessSettingsSummary();

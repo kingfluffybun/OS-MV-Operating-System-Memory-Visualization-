@@ -108,7 +108,10 @@ const renumberProcesses = (container) => {
     process.setAttribute("data-text", colorPair.text);
     process.style.backgroundColor = colorPair.bg;
     process.style.borderBottomColor = colorPair.border;
-    process.style.color = colorIndex.text;
+    process.style.color = colorPair.text;
+    process.querySelectorAll('.process-content p').forEach((p) => {
+      p.style.color = colorPair.text;
+    });
   });
 };
 
@@ -256,6 +259,7 @@ const renderMemoryNode = (node, options = {}) => {
     widthPx = null,
     bgColor = '#e0e0e0',
     borderColor = 'rgba(0, 0, 0, 0.25)',
+    textColor = null,
     isFixed = false
   } = options;
 
@@ -281,6 +285,7 @@ const renderMemoryNode = (node, options = {}) => {
     if (options.popin) pBlock.classList.add('popin');
     pBlock.style.width = pWidth + 'px';
     pBlock.style.backgroundColor = bgColor;
+    pBlock.style.color = textColor;
     pBlock.style.borderBottom = `8px solid ${borderColor}`;
     pBlock.style.borderRadius = `${isFirstInGroup ? "12px" : "0px"} 0px 0px ${isFirstInGroup ? "12px" : "0px"}`;
     pBlock.innerHTML = `
@@ -298,6 +303,7 @@ const renderMemoryNode = (node, options = {}) => {
     wBlock.style.borderRadius = `0px ${isLastInGroup ? "12px" : "0px"} ${isLastInGroup ? "12px" : "0px"} 0px`;
     wBlock.style.borderBottom = `8px solid ${borderColor}`;
     wBlock.style.background = getHatchPattern(bgColor, borderColor);
+    wBlock.style.color = textColor;
     wBlock.style.marginLeft = "-10px";
     wBlock.style.zIndex = "1";
     wBlock.innerHTML = `
@@ -321,6 +327,7 @@ const renderMemoryNode = (node, options = {}) => {
   if (widthPx) block.style.width = widthPx + 'px';
   block.style.flex = '0 0 auto';
   block.style.backgroundColor = bgColor;
+  block.style.color = textColor;
   block.style.borderBottom = `8px solid ${borderColor}`;
 
   applyBlockGroupStyles(block, isFirstInGroup, isLastInGroup);

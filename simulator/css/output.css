@@ -295,6 +295,7 @@ body.sidebar-closed #toggle-btn {
     p {
         font-weight: 500;
         padding: 4px 0;
+        font-size: 18px;
     }
 }
 
