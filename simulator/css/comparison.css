@@ -13,9 +13,9 @@
     }
 }
 
-.scrolled-style div button:hover {
+/* .scrolled-style div button:hover {
     background-color: white !important;
-}
+} */
 
 .comparison-grid {
     background-color: #f6f6f6;
@@ -33,7 +33,7 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    min-height: 300px;
+    min-height: 314px;
     .summary-table-container {
         height: 100%;
         background-color: #f6f6f6;
@@ -43,10 +43,14 @@
             width: 100%; 
             border-collapse: collapse;
         }
-        th, td {text-align: right; padding: 8px 24px;}
+        th, td {text-align: right; padding: 8px 24px; font-size: 12px;}
         td:first-child, th:first-child {text-align: left;}
         tr {border-bottom: #999 1px solid;}
     }
+}
+
+#summary-body tr:first-child {
+    border-left: var(--primary-color) 4px solid;
 }
 
 .contiguous-allocation {
@@ -157,6 +161,7 @@
 }
 
 /* Process items in comparison queue - matches single mode style */
+.contiguous-process-queue .process,
 .process-item {
     display: flex;
     align-items: center;
@@ -171,8 +176,13 @@
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.process-item > span:first-child {
+.process-item > span:first-child,
+.contiguous-process-queue .process > .process-content p:first-child {
     margin-right: auto;
+}
+
+.contiguous-process-queue .process.unallocated {
+    border-bottom-color: rgba(0, 0, 0, 0.12);
 }
 
 /* Non-contiguous algorithm containers */
@@ -259,7 +269,6 @@
 }
 
 .contiguous-container .block {
-    animation: pop-in 250ms ease;
     background-color: white;
     border-bottom: 8px solid rgba(0, 0, 0, 0.25);
     box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.08), 0px 12px 24px rgba(0, 0, 0, 0.1);
@@ -279,8 +288,12 @@
     }
 }
 
-.contiguous-container .block.popin {
-    animation: pop-in 250ms ease;
+
+.segmentation-hole {
+    background-color: #f7f7f7;
+    background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.9) 5px, rgba(0,0,0,0.08) 5px, rgba(0,0,0,0.08) 10px);
+    color: #666;
+    border: 1px dashed #ccc;
 }
 
 .contiguous-container .block.popin {
@@ -365,7 +378,7 @@
 .non-contiguous-container .page-content {
     flex-grow: 1;
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     padding: 6px 16px;
     border-radius: 8px;
     font-size: 11px;
@@ -377,9 +390,10 @@
 }
 
 .non-contiguous-container .frame-content {
+    text-wrap-mode: nowrap;
     flex-grow: 1;
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     padding: 6px 16px;
     border-radius: 8px;
     font-size: 11px;
@@ -444,11 +458,8 @@
 }
 
 .non-contiguous-container .physical-memory-container {
-    background-color: white;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-    border: 1px solid #eee;
-    padding: 8px;
+    padding: 8px !important;
 }
 
 .non-contiguous-container .segmentation h4 {
@@ -461,7 +472,7 @@
 .non-contiguous-container .segments-container {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
 }
 
 .segmentation {
@@ -543,7 +554,7 @@
 
 .segmentation-paging-group {
     display: flex;
-    gap: 4px;
+    gap: 8px;
     flex-direction: column;
 }
 

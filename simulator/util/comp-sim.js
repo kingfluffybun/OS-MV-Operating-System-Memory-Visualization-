@@ -49,6 +49,12 @@ function comparisonSimLoad() {
 
     comparisonData = JSON.parse(stored);
 
+    if (!comparisonData.processes || comparisonData.processes.length === 0) {
+        alert('No processes found. Please add at least one process.');
+        window.location.href = 'index.html';
+        return;
+    }
+
     // Initialize all algorithms
     ALGO_CONFIG.forEach(function(config) {
         initAlgorithm(config);
@@ -60,6 +66,12 @@ function comparisonSimLoad() {
     // Setup controls
     setupComparisonControls();
     updateSummaryTable();
+
+    // Toggle sidebar on first load
+    const sidebar = window.sidebar || document.getElementById("sidebar");
+    if (sidebar && !sidebar.classList.contains("close")) {
+        toggleSideBar();
+    }
 }
 
 function initAlgorithm(config) {
@@ -130,7 +142,9 @@ function initNonContiguousAlgorithm(config) {
             allocatedSize: 0,
             successfulAllocations: 0,
             internalFragmentation: 0,
-            externalFragmentation: 0
+            externalFragmentation: 0,
+            totalPagesNeeded: 0,
+            totalPagesAllocated: 0
         },
         // Paging state
         memoryFrames: null,
@@ -158,20 +172,25 @@ function initNonContiguousAlgorithm(config) {
         if (typeof window.memorySimulator !== 'undefined' && typeof window.memorySimulator.createFrames === 'function') {
             instance.memoryFrames = window.memorySimulator.createFrames(frameCount, comparisonData.pageSize);
         } else {
-            // Fallback if memorySimulator is not available
             const frames = {};
             for (let i = 1; i <= frameCount; i++) {
-                frames[i] = {
-                    id: i,
-                    size: comparisonData.pageSize,
-                    status: 'Free',
-                    process: null,
-                    page: null,
-                    used: 0
-                };
+                frames[i] = { id: i, size: comparisonData.pageSize, status: 'Free', process: null, page: null, used: 0 };
             }
             instance.memoryFrames = { frames, count: frameCount, frameSize: comparisonData.pageSize };
         }
+        const pageSize = comparisonData.pageSize;
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            return sum + Math.ceil(size / pageSize);
+        }, 0);
+    } else if (config.type === 'segmentation-paging') {
+        if (typeof PagingSegmentSimulator !== 'undefined') {
+            instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, comparisonData.pageSize);
+        }
+        const pageSize = comparisonData.pageSize;
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            const breakdown = PagingSegmentSimulator.breakdownSize(size);
+            return sum + Object.values(breakdown).reduce((s, segSize) => s + Math.ceil(segSize / pageSize), 0);
+        }, 0);
     }
 
     // Initialize memory for segmentation
@@ -194,13 +213,12 @@ function initNonContiguousAlgorithm(config) {
                 }
             };
         }
-    }
-
-    // Initialize for segmentation with paging
-    if (config.type === 'segmentation-paging') {
-        if (typeof PagingSegmentSimulator !== 'undefined') {
-            instance.memory = PagingSegmentSimulator.createFrames(comparisonData.totalMemory, comparisonData.pageSize);
-        }
+        // Pre-calculate total segments needed across all processes
+        const types = ['code', 'heap', 'data', 'stack'];
+        instance.stats.totalPagesNeeded = instance.processes.reduce((sum, size) => {
+            const breakdown = SegmentationMemory.breakdownSize(size);
+            return sum + types.filter(t => breakdown[t] > 0).length;
+        }, 0);
     }
 
     renderNonContiguousInitial(config.id);
@@ -237,7 +255,7 @@ function renderPagingPages(algoId) {
     const pageSize = comparisonData.pageSize;
 
     instance.processes.forEach((size, i) => {
-        const processIdStr = `P${i + 1}`;
+        const processIdStr = `Process ${i + 1}`;
         const pagesNeeded = Math.ceil(size / pageSize);
         const colors = processColorsto[i % processColorsto.length];
 
@@ -253,7 +271,7 @@ function renderPagingPages(algoId) {
                 <p id="page-number">P${j}</p>
                 <div class="page-content${currentClass}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
                     <p>${processIdStr}</p>
-                    <p>&nbsp;(Waiting for allocation)</p>
+                    <p>${pageSize} KB</p>
                 </div>
             `;
             pagesContainer.appendChild(pageEl);
@@ -289,7 +307,7 @@ function renderSegmentationSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation';
-        procDiv.innerHTML = `<h4>Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="color:${colors.bg} font-weight:700">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -338,7 +356,7 @@ function renderSegmentationPagingSegments(algoId) {
 
         const procDiv = document.createElement('div');
         procDiv.className = 'segmentation-paging-group';
-        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 8px 0; font-weight:500;">Process ${i + 1}</h4>`;
+        procDiv.innerHTML = `<h4 style="font-size: 11px; color: #666; margin: 4px 0; font-weight:600;">Process ${i + 1}</h4>`;
 
         const types = ['code', 'heap', 'data', 'stack'];
         types.forEach((type, idx) => {
@@ -357,8 +375,9 @@ function renderSegmentationPagingSegments(algoId) {
                     if (pageIsCurrent) segmentHasHighlight = true;
                     return `
                         <div class="page" id="page-seg-${algoId}-${i}-${type}-${p.pageIndex}">
-                            <div class="page-content${pageIsCurrent ? ' current' : ''}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text};">
-                                <p>P${i + 1} - ${type.charAt(0).toUpperCase()} - Page ${p.pageIndex}</p>
+                            <div class="page-content${pageIsCurrent ? ' current' : ''}" style="background-color: ${colors.bg}; border-bottom: 4px solid ${colors.border}; color: ${colors.text}; display:grid; grid-template-columns: 1fr 1fr">
+                                <p>Page ${p.pageIndex}</p>
+                                <p>${p.size} KB</p>
                             </div>
                         </div>
                     `;
@@ -627,6 +646,7 @@ function renderBlocks(algoId) {
             widthPx: 80 + (node.size * 0.5), // Same calculation as single mode: minWidth + (blockSize * pxPerKb)
             bgColor: colorPair.bg,
             borderColor: colorPair.border,
+            textColor: colorPair.text,
             isFixed: instance.config.type === 'fixed'
         }); 
 
@@ -656,7 +676,7 @@ function renderSharedProcessQueue() {
         queue.innerHTML = '';
         processes.forEach(function(size, i) {
             const process = document.createElement('div');
-            process.className = 'process';
+            process.className = 'process process-item';
             process.id = 'process-' + algo.id + '-' + (i + 1);
 
             const colorIndex = i % processColorsto.length;
@@ -664,6 +684,10 @@ function renderSharedProcessQueue() {
             process.style.backgroundColor = colorPair.bg;
             process.style.borderBottomColor = colorPair.border;
             process.style.color = colorPair.text;
+
+            process.setAttribute("data-bg", colorPair.bg);
+            process.setAttribute("data-border", colorPair.border);
+            process.setAttribute("data-text", colorPair.text);
 
             process.innerHTML = `
                 <div class="process-content">
@@ -677,6 +701,15 @@ function renderSharedProcessQueue() {
     });
 }
 
+function clearProcessQueueHashes() {
+    document.querySelectorAll('.contiguous-process-queue .process').forEach(processEl => {
+        processEl.style.backgroundImage = '';
+        processEl.style.backgroundColor = processEl.getAttribute('data-bg') || 'white';
+        processEl.style.color = processEl.getAttribute('data-text') || 'black';
+        processEl.classList.remove('unallocated', 'current');
+    });
+}
+
 function updateContiguousProcessQueue(algoId) {
     const instance = algoInstances[algoId];
     if (!instance) return;
@@ -684,8 +717,35 @@ function updateContiguousProcessQueue(algoId) {
     const queue = document.querySelector('#' + algoId + ' .contiguous-process-queue');
     if (!queue) return;
     
-    queue.querySelectorAll('.current').forEach(el => el.classList.remove('current'));
+    queue.querySelectorAll('.current, .unallocated').forEach(el => el.classList.remove('current', 'unallocated'));
     
+    const processEls = Array.from(queue.querySelectorAll('.process'));
+    processEls.forEach((processEl) => {
+        const processId = parseInt(processEl.id.split('-').slice(-1)[0], 10);
+        const processResult = instance.results && instance.results[processId];
+        if (processResult && processResult.status !== 'Allocated') {
+            processEl.classList.add('unallocated');
+            // Apply hash pattern using process colors
+            const bgColor = processEl.getAttribute('data-bg') || '#f7f7f7';
+            const borderColor = processEl.getAttribute('data-border') || 'rgba(0, 0, 0, 0.25)';
+            const hatchPattern = `repeating-linear-gradient(
+                45deg,
+                ${bgColor},
+                ${bgColor} 5px,
+                ${borderColor} 5px,
+                ${borderColor} 10px
+            )`;
+            processEl.style.backgroundImage = hatchPattern;
+            processEl.style.backgroundColor = bgColor;
+            processEl.style.color = processEl.getAttribute('data-text') || '#666';
+        } else {
+            // Reset for allocated processes
+            processEl.style.backgroundImage = '';
+            processEl.style.backgroundColor = processEl.getAttribute('data-bg') || 'white';
+            processEl.style.color = processEl.getAttribute('data-text') || 'black';
+        }
+    });
+
     const procIndex = instance.lastAllocated ? instance.lastAllocated.procIndex : -1;
     if (procIndex >= 0) {
         const processEl = document.getElementById('process-' + algoId + '-' + (procIndex + 1));
@@ -840,16 +900,18 @@ function stepPaging(algoId, processSize, processId) {
                 pagesAllocated: 0,
                 fragmentation: result.result.internalFragmentation 
             };
-            
-            // Initial stats for the process
-            instance.stats.successfulAllocations++;
-            instance.stats.internalFragmentation += result.result.internalFragmentation;
         }
         
-        // Update allocated size per page (approximately) or once per process?
-        // Let's do it per page for real-time utility update
+        // Per-page tracking (mirrors single mode)
         const pageUsed = Math.min(pageSize, processSize - (instance.pageAllocationIndex * pageSize));
         instance.stats.allocatedSize += pageUsed;
+        instance.stats.totalPagesAllocated++;
+
+        // Recompute internal fragmentation dynamically from frames (mirrors single mode)
+        const framesArray = Object.values(instance.memoryFrames.frames);
+        const totalUsed = framesArray.reduce((sum, f) => sum + (f.status === 'Occupied' ? (f.used || 0) : 0), 0);
+        const occupiedCount = framesArray.filter(f => f.status === 'Occupied').length;
+        instance.stats.internalFragmentation = (occupiedCount * pageSize) - totalUsed;
 
         instance.results[processId].pagesAllocated++;
         
@@ -940,10 +1002,10 @@ function stepSegmentation(algoId, processSize, processId) {
         
         if (instance.segmentIndex === 0) {
             instance.results[processId] = { status: 'Allocated', size: processSize };
-            instance.stats.successfulAllocations++;
         }
         
         instance.stats.allocatedSize += segSize;
+        instance.stats.totalPagesAllocated++; // counts segments allocated, mirrors page tracking
 
         // Update last allocated for highlight
         instance.lastAllocated = {
@@ -1028,20 +1090,17 @@ function stepSegmentationPaging(algoId, processSize, processId) {
     if (result.success) {
         if (instance.pageAllocationIndex === 0) {
             instance.results[processId] = { status: 'Allocated', pages: allPages.length, pagesAllocated: 0 };
-            instance.stats.successfulAllocations++;
-            
-            // Calculate total internal fragmentation for the whole process once
-            let totalFrag = 0;
-            types.forEach(t => {
-                const sSize = breakdown[t];
-                if (sSize > 0) {
-                    totalFrag += (Math.ceil(sSize / pageSize) * pageSize) - sSize;
-                }
-            });
-            instance.stats.internalFragmentation += totalFrag;
         }
         
         instance.stats.allocatedSize += currentPageInfo.page.size;
+        instance.stats.totalPagesAllocated++;
+
+        // Recompute internal fragmentation dynamically from frames (mirrors single mode)
+        const framesArray = Array.isArray(instance.memory.frames) ? instance.memory.frames : Object.values(instance.memory.frames);
+        const totalUsed = framesArray.reduce((sum, f) => sum + (f.status === 'Occupied' ? (f.used || 0) : 0), 0);
+        const occupiedCount = framesArray.filter(f => f.status === 'Occupied').length;
+        instance.stats.internalFragmentation = (occupiedCount * pageSize) - totalUsed;
+
         instance.results[processId].pagesAllocated++;
 
         // Update last allocated for highlight
@@ -1084,8 +1143,14 @@ function updateAlgorithmStats(algoId) {
 
     const totalMem = comparisonData.totalMemory;
     const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100).toFixed(1) : 0;
-    const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100).toFixed(1) : 0;
-
+    let success;
+    const type = instance.config.type;
+    if ((type === 'paging' || type === 'segmentation-paging' || type === 'segmentation') && instance.stats.totalPagesNeeded > 0) {
+        success = (instance.stats.totalPagesAllocated / instance.stats.totalPagesNeeded * 100);
+    } else {
+        success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
+    }
+    
     if (utilEl) utilEl.textContent = util + '%';
     
     // Conditional Fragmentation logic for Algorithm Cards
@@ -1115,7 +1180,7 @@ function updateAlgorithmStats(algoId) {
         }
     }
 
-    if (successEl) successEl.textContent = success + '%';
+    if (successEl) successEl.textContent = parseFloat(success).toFixed(1) + '%';
 }
 
 function updateSummaryTable() {
@@ -1129,8 +1194,13 @@ function updateSummaryTable() {
 
         const totalMem = comparisonData.totalMemory;
         const util = totalMem > 0 ? (instance.stats.allocatedSize / totalMem * 100) : 0;
-        const success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
         const type = config.type;
+        let success;
+        if ((type === 'paging' || type === 'segmentation-paging' || type === 'segmentation') && instance.stats.totalPagesNeeded > 0) {
+        success = (instance.stats.totalPagesAllocated / instance.stats.totalPagesNeeded * 100);
+        } else {
+            success = instance.processes.length > 0 ? (instance.stats.successfulAllocations / instance.processes.length * 100) : 0;
+        }
 
         let intFrag = 0;
         let extFrag = 0;
@@ -1152,7 +1222,7 @@ function updateSummaryTable() {
 
         return {
             config: config,
-            displayName: config.name + (config.type && config.type !== config.id ? ' - ' + config.type : ''),
+            displayName: config.name + (config.type && config.type !== config.id ? ' - ' + config.type.charAt(0).toUpperCase() + config.type.slice(1) : ''),
             utilization: util,
             intFrag: intFrag,
             extFrag: extFrag,
@@ -1366,6 +1436,10 @@ function stepAllSimulations() {
 function resetAllSimulations() {
     stopAllSimulations();
 
+    // Clear process queue hashes before reinitializing
+    clearProcessQueueHashes();
+    renderSharedProcessQueue();
+
     ALGO_CONFIG.forEach(function(config) {
         initAlgorithm(config);
         updateAlgorithmStats(config.id);
@@ -1401,6 +1475,10 @@ containers.forEach(container => {
     });
   });
 });
+
+const processContainers = document.querySelectorAll('.contiguous-process-queue')
+
+
 
 function transparentController() {
     const body = document.querySelector(".comparison-grid")
