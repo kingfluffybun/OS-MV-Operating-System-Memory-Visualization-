@@ -84,12 +84,12 @@ OS-MV features a **Premium UI/UX** designed to provide a professional and engagi
 
 | Name | Role |
 | :--- | :--- |
-| **kingfluffybun** | Master Coder |
-| **harB33** | Developer  |
-| **GaZeRnG** | Developer  |
-| **jomariwamil1012-ai** | Developer  |
-| **henrykashlie-sketch** | Developer  |
-| **kevenluistro7-gif** | Developer  |
+| **[kingfluffybun](https://github.com/kingfluffybun)** | Master Coder |
+| **[harB33](https://github.com/harB33)** | Developer  |
+| **[GaZeRnG](https://github.com/GaZeRnG)** | Developer  |
+| **[jomariwamil1012-ai](https://github.com/jomariwamil1012-ai)** | Developer  |
+| **[henrykashlie-sketch](https://github.com/henrykashlie-sketch)** | Developer  |
+| **[kevenluistro7-gif](https://github.com/kevenluistro7-gif)** | Developer  |
 
 *Full member list available in the application dashboard.*
 
